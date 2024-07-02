@@ -1,9 +1,7 @@
-import React from "react"
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from "react-router-dom"
+import React, { useState } from "react"
+import { Layout, Menu } from "antd"
+import { TeamOutlined, SettingOutlined, ApiOutlined, LogoutOutlined } from "@ant-design/icons"
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom"
 
 import SignIn from "./pages/auth/sign-in"
 import SignUp from "./pages/auth/sign-up"
@@ -12,27 +10,65 @@ import AdminManageUsers from "./pages/admin/manage-users"
 import AdminManageApiKeys from "./pages/admin/manage-api-keys"
 import MyApiKeys from "./pages/account/my-api-keys"
 import { PrivateRoute } from "./modules/auth/private-route"
+import SubMenu from "antd/es/menu/SubMenu"
+
+const { Sider, Content } = Layout
 
 const App = () => {
+  const [collapsed, setCollapsed] = useState(false)
+
+  const toggleCollapsed = () => {
+    setCollapsed(!collapsed)
+  }
+
   return (
     <Router>
-      <Routes>
-        {/* Non-Authorized Routes */}
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/sign-in" element={<SignIn />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Layout style={{ minHeight: "100vh" }}>
+        <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
+          <div className="demo-logo-vertical" />
 
-        {/* Authorized Routes for Admin */}
-        <Route element={<PrivateRoute role="admin" />}>
-          <Route path="/admin/manage-users" element={<AdminManageUsers />} />
-          <Route path="/admin/manage-api-keys" element={<AdminManageApiKeys />} />
-        </Route>
-
-        {/* Authorized Routes for User */}
-        <Route element={<PrivateRoute role="user" />}>
-          <Route path="/my-api-keys" element={<MyApiKeys />} />
-        </Route>
-      </Routes>
+          <Menu theme="dark" defaultSelectedKeys={["3"]} mode="inline">
+            <SubMenu key="sub1" icon={<SettingOutlined />} title="Administrate">
+              <Menu.Item key="1" icon={<TeamOutlined />}>
+                <Link to="/admin/manage-users">Users</Link>
+              </Menu.Item>
+              <Menu.Item key="2" icon={<ApiOutlined />}>
+                <Link to="/admin/manage-api-keys">API Keys</Link>
+              </Menu.Item>
+            </SubMenu>
+            <Menu.Item key="3" icon={<ApiOutlined />}>
+              <Link to="/my-api-keys">My API Keys</Link>
+            </Menu.Item>
+            <Menu.Item key="4" icon={<LogoutOutlined />}>
+              <Link to="/sign-out">Sign Out</Link>
+            </Menu.Item>
+          </Menu>
+        </Sider>
+        <Layout>
+          <Content style={{ margin: "16px" }}>
+            <div style={{ padding: 24, minHeight: 360, background: "#fff" }}>
+              <Routes>
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/admin/*" element={<PrivateRoute role="admin" />}>
+                  <Route path="manage-users" element={<AdminManageUsers />} />
+                  <Route
+                    path="manage-api-keys"
+                    element={<AdminManageApiKeys />}
+                  />
+                </Route>
+                <Route
+                  path="/my-api-keys/*"
+                  element={<PrivateRoute role="user" />}
+                >
+                  <Route index element={<MyApiKeys />} />
+                </Route>
+              </Routes>
+            </div>
+          </Content>
+        </Layout>
+      </Layout>
     </Router>
   )
 }
