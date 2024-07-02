@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input } from 'antd';
+import { Button, Form, Input, message } from 'antd';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
-const LoginForm = () => {
-  const onFinish = (values) => {
-    console.log('Received values of form: ', values);
+const SignInForm = () => {
+  const [error, setError] = useState(null);
+
+  const onFinish = async (values) => {
+    try {
+      const response = await axios.post('/api/sign-in', {
+        username: values.username,
+        password: values.password,
+      });
+      console.log('SignIn response:', response.data);
+      message.success('Logged in successfully!');
+    } catch (error) {
+      console.error('SignIn error:', error.response);
+      setError(error.response?.data?.message || 'Something went wrong!');
+    }
   };
 
   return (
@@ -30,24 +44,24 @@ const LoginForm = () => {
           placeholder="Password"
         />
       </Form.Item>
-      <Form.Item>
-        <Form.Item name="remember" valuePropName="checked" noStyle>
-          <Checkbox>Remember me</Checkbox>
-        </Form.Item>
 
-        <a className="login-form-forgot" href="">
-          Forgot password
-        </a>
-      </Form.Item>
+      {error && (
+        <Form.Item>
+          <span style={{ color: 'red' }}>{error}</span>
+        </Form.Item>
+      )}
 
       <Form.Item>
         <Button type="primary" htmlType="submit" className="login-form-button">
           Log in
         </Button>
-        Or <a href="">register now!</a>
+        Or <Link to="/sign-up">register now!</Link>
+      </Form.Item>
+      <Form.Item>
+        <Link to="/forgot-password">Forgot password</Link>
       </Form.Item>
     </Form>
   );
 };
 
-export default LoginForm;
+export default SignInForm;
