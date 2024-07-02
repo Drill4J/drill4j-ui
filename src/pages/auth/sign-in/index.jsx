@@ -1,25 +1,26 @@
-import React, { useState } from 'react';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Form, Input, message } from 'antd';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react"
+import { LockOutlined, UserOutlined } from "@ant-design/icons"
+import { Button, Form, Input, message } from "antd"
+import axios from "axios"
+import { Link } from "react-router-dom"
 
 const SignInForm = () => {
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null)
 
   const onFinish = async (values) => {
     try {
-      const response = await axios.post('/api/sign-in', {
+      const response = await axios.post("/api/sign-in", {
         username: values.username,
         password: values.password,
-      });
-      console.log('SignIn response:', response.data);
-      message.success('Logged in successfully!');
+      })
+      console.log("SignIn response:", response.data)
+      message.success("Logged in successfully! Redirecting...")
+      window.location.reload()
     } catch (error) {
-      console.error('SignIn error:', error.response);
-      setError(error.response?.data?.message || 'Something went wrong!');
+      console.error("SignIn error:", error.response)
+      setError(error.response?.data?.message || "Something went wrong!")
     }
-  };
+  }
 
   return (
     <Form
@@ -30,13 +31,16 @@ const SignInForm = () => {
     >
       <Form.Item
         name="username"
-        rules={[{ required: true, message: 'Please input your Username!' }]}
+        rules={[{ required: true, message: "Please input your Username!" }]}
       >
-        <Input prefix={<UserOutlined className="site-form-item-icon" />} placeholder="Username" />
+        <Input
+          prefix={<UserOutlined className="site-form-item-icon" />}
+          placeholder="Username"
+        />
       </Form.Item>
       <Form.Item
         name="password"
-        rules={[{ required: true, message: 'Please input your Password!' }]}
+        rules={[{ required: true, message: "Please input your Password!" }]}
       >
         <Input
           prefix={<LockOutlined className="site-form-item-icon" />}
@@ -47,7 +51,7 @@ const SignInForm = () => {
 
       {error && (
         <Form.Item>
-          <span style={{ color: 'red' }}>{error}</span>
+          <span style={{ color: "red" }}>{error}</span>
         </Form.Item>
       )}
 
@@ -61,7 +65,7 @@ const SignInForm = () => {
         <Link to="/forgot-password">Forgot password</Link>
       </Form.Item>
     </Form>
-  );
-};
+  )
+}
 
-export default SignInForm;
+export default SignInForm
