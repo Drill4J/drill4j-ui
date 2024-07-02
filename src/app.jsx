@@ -11,6 +11,7 @@ import {
   Route,
   Routes,
   Link,
+  Navigate,
   useLocation,
 } from "react-router-dom"
 
@@ -23,6 +24,7 @@ import MyApiKeys from "./pages/account/my-api-keys"
 import { PrivateRoute } from "./modules/auth/private-route"
 import SubMenu from "antd/es/menu/SubMenu"
 import AuthLayout from "./layouts/auth" // Import the new AuthLayout
+import useAuth from "./modules/auth/use-auth-hook"
 
 const { Sider, Content } = Layout
 
@@ -36,19 +38,21 @@ const App = () => {
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
-
+  const { isAuthorized } = useAuth()
   const toggleCollapsed = () => {
     setCollapsed(!collapsed)
   }
 
-  const location = useLocation() // Get the current location
-
-  // Check if the current path is an authentication route
+  const location = useLocation()
   const isAuthRoute = ["/sign-in", "/sign-up", "/forgot-password"].includes(
     location.pathname
   )
 
-  if (isAuthRoute) {
+  if (!isAuthorized && !isAuthRoute) {
+    return <Navigate to="/sign-in" />;
+  }
+  
+  if (!isAuthorized && isAuthRoute) {
     return (
       <AuthLayout>
         <Routes>
@@ -57,9 +61,13 @@ const AppContent = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </AuthLayout>
-    )
+    );
   }
-
+  
+  if (isAuthorized && isAuthRoute) {
+    return <Navigate to="/" />;
+  }
+  
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
@@ -85,9 +93,6 @@ const AppContent = () => {
         <Content style={{ margin: "16px" }}>
           <div style={{ padding: 24, minHeight: 360, background: "#fff" }}>
             <Routes>
-              <Route path="/sign-in" element={<SignIn />} />
-              <Route path="/sign-up" element={<SignUp />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/admin/*" element={<PrivateRoute role="admin" />}>
                 <Route path="manage-users" element={<AdminManageUsers />} />
                 <Route
@@ -95,6 +100,9 @@ const AppContent = () => {
                   element={<AdminManageApiKeys />}
                 />
               </Route>
+
+              <Route path="/" element={<Navigate to="/my-api-keys" />} />
+
               <Route
                 path="/my-api-keys/*"
                 element={<PrivateRoute role="user" />}

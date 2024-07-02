@@ -1,13 +1,13 @@
 import React from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-import useAuth from "./use-auth-hook";
+import useCheckRole from "./use-check-role-hook";
 
 export const PrivateRoute = ({ role }) => {
-  const { isAuthorized, error, retry } = useAuth(role);
+  const { isAuthorized, error, retry } = useCheckRole(role);
   const navigate = useNavigate();
 
   return (
-    <div style={{ textAlign: "center", marginTop: "20%" }}>
+    <div style={{ textAlign: "center" }}>
       {error ? (
         <>
           <h1>Authentication request failed.</h1>
