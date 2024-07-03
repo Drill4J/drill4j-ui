@@ -6,7 +6,7 @@ const { Content } = Layout;
 const ErrorLayout = ({ errorTitle, errorText }) => (
   <Layout style={{ minHeight: '100vh' }}>
     <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Card title={errorTitle} style={{ width: 300 }}>
+      <Card title={errorTitle} style={{ width: 500 }}>
         <p>{errorText}</p>
       </Card>
     </Content>

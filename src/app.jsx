@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Layout, Menu, message } from "antd"
+import { Layout, Menu, Spin, message } from "antd"
 import {
   TeamOutlined,
   SettingOutlined,
@@ -67,11 +67,11 @@ const AppContent = () => {
   }
 
   if (!isAuthDataFetched) {
-    return <div>Authenticating...</div>
+    return <AuthLayout><Spin tip="Authenticating... ">&nbsp;</Spin></AuthLayout>
   }
 
   if (authError) {
-    return <div>Connection to API service failed: {authError}</div>
+    return <ErrorLayout errorTitle={"Server is unavailable or responded with an error"} errorText={`Reason: ${authError}`} />
   }
 
   if (!isSignedIn && !isAuthRoute) {
