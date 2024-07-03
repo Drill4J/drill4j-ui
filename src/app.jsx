@@ -25,21 +25,23 @@ import MyApiKeys from "./pages/account/my-api-keys"
 import { PrivateRoute } from "./modules/auth/private-route"
 import SubMenu from "antd/es/menu/SubMenu"
 import AuthLayout from "./layouts/auth"
-import useAuth from "./modules/auth/use-auth-hook"
+import useAuth, { AuthProvider } from "./modules/auth/use-auth-hook"
 
 const { Sider, Content } = Layout
 
 const App = () => {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   )
 }
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const { isAuthorized } = useAuth()
+  const { isSignedIn } = useAuth()
   const toggleCollapsed = () => {
     setCollapsed(!collapsed)
   }
@@ -56,15 +58,14 @@ const AppContent = () => {
       window.location.reload()
     } catch (error) {
       message.error("Failed to sign out. Please try again later.")
-      console.error("Sign out failed:", error)
     }
   }
 
-  if (!isAuthorized && !isAuthRoute) {
+  if (!isSignedIn && !isAuthRoute) {
     return <Navigate to="/sign-in" />
   }
 
-  if (!isAuthorized && isAuthRoute) {
+  if (!isSignedIn && isAuthRoute) {
     return (
       <AuthLayout>
         <Routes>
@@ -76,7 +77,7 @@ const AppContent = () => {
     )
   }
 
-  if (isAuthorized && isAuthRoute) {
+  if (isSignedIn && isAuthRoute) {
     return <Navigate to="/" />
   }
 
@@ -105,7 +106,10 @@ const AppContent = () => {
         <Content style={{ margin: "16px" }}>
           <div style={{ padding: 24, minHeight: 360, background: "#fff" }}>
             <Routes>
-              <Route path="/admin/*" element={<PrivateRoute role="admin" />}>
+              <Route
+                path="/admin/*"
+                element={<PrivateRoute roles={["admin"]} />}
+              >
                 <Route path="manage-users" element={<AdminManageUsers />} />
                 <Route
                   path="manage-api-keys"
@@ -117,7 +121,7 @@ const AppContent = () => {
 
               <Route
                 path="/my-api-keys/*"
-                element={<PrivateRoute role="user" />}
+                element={<PrivateRoute roles={["user", "admin"]} />}
               >
                 <Route index element={<MyApiKeys />} />
               </Route>

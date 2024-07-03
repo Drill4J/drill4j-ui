@@ -13,11 +13,9 @@ const SignInForm = () => {
         username: values.username,
         password: values.password,
       })
-      console.log("SignIn response:", response.data)
       message.success("Logged in successfully! Redirecting...")
       window.location.reload()
     } catch (error) {
-      console.error("SignIn error:", error.response)
       setError(error.response?.data?.message || "Something went wrong!")
     }
   }

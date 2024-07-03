@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, createContext, useContext } from "react"
 import axios from "axios"
 
-const useAuth = () => {
-  const [isAuthorized, setIsAuthorized] = useState(false)
+const AuthContext = createContext()
+
+export const AuthProvider = ({ children }) => {
+  const [isSignedIn, setIsSignedIn] = useState(false)
   const [error, setError] = useState(null)
   const [userInfo, setUserInfo] = useState(null)
 
@@ -10,7 +12,7 @@ const useAuth = () => {
     try {
       const response = await axios.get("/api/user-info")
       setUserInfo(response.data)
-      setIsAuthorized(true)
+      setIsSignedIn(true)
     } catch (error) {
       handleAuthError(error)
     }
@@ -20,35 +22,26 @@ const useAuth = () => {
     if (error.response) {
       const status = error.response.status
       if (status >= 500) {
-        setError({
-          type: "server-error",
-          message: `Internal server error (${status})`,
-        })
+        setError(`Internal server error (${status})`)
       } else if (status === 404) {
-        setError({ type: "not-found", message: "Resource not found (404)" })
+        setError("Resource not found (404)")
       } else if (status === 401) {
-        const errorMessage =
+        setError(
           error.response.data.errorMessage ||
-          "You don't have the necessary permissions to access this page"
-        setError({
-          type: "client-error",
-          message: `${errorMessage} (${status})`,
-        })
+            "You don't have the necessary permissions to access this page"
+        )
       } else if (status >= 400) {
-        const errorMessage =
-          error.response.data.errorMessage || `Bad request or validation error`
-        setError({
-          type: "client-error",
-          message: `${errorMessage} (${status})`,
-        })
+        setError(
+          `${
+            error.response.data.errorMessage ||
+            `Bad request or validation error`
+          } (${status})`
+        )
       }
     } else if (error.request) {
-      setError({
-        type: "network-error",
-        message: "Network error, API is unavailable",
-      })
+      setError("Network error, API is unavailable")
     } else {
-      setError({ type: "unknown-error", message: "Unknown error occurred" })
+      setError("Unknown error occurred")
     }
   }
 
@@ -56,7 +49,14 @@ const useAuth = () => {
     checkAuth()
   }, [])
 
-  return { isAuthorized, error, userInfo, retryAuth: checkAuth }
+  return (
+    <AuthContext.Provider
+      value={{ isSignedIn: isSignedIn, error, userInfo }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
+const useAuth = () => useContext(AuthContext)
 export default useAuth
