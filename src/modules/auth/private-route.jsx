@@ -15,7 +15,6 @@ export const PrivateRoute = ({ roles }) => {
           <h1>Authentication request failed.</h1>
           <p>{authError || missingRoleError}</p>
           <button onClick={() => navigate(-1)}>Go Back</button>
-          <button onClick={() => navigate('/sign-in')}>Go to Sign In</button>
         </>
       ) : (
         isSignedIn && <Outlet />

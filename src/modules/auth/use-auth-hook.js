@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [error, setError] = useState(null)
   const [userInfo, setUserInfo] = useState(null)
+  const [isFetched, setIsFetched] = useState(false)
 
   const checkAuth = async () => {
     try {
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       handleAuthError(error)
     }
+    setIsFetched(true)
   }
 
   const handleAuthError = (error) => {
@@ -26,10 +28,7 @@ export const AuthProvider = ({ children }) => {
       } else if (status === 404) {
         setError("Resource not found (404)")
       } else if (status === 401) {
-        setError(
-          error.response.data.errorMessage ||
-            "You don't have the necessary permissions to access this page"
-        )
+        setIsSignedIn(false)
       } else if (status >= 400) {
         setError(
           `${
@@ -51,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isSignedIn: isSignedIn, error, userInfo }}
+      value={{ isFetched, isSignedIn, error, userInfo }}
     >
       {children}
     </AuthContext.Provider>

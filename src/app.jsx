@@ -26,6 +26,7 @@ import { PrivateRoute } from "./modules/auth/private-route"
 import SubMenu from "antd/es/menu/SubMenu"
 import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/use-auth-hook"
+import ErrorLayout from "./layouts/error"
 
 const { Sider, Content } = Layout
 
@@ -33,7 +34,10 @@ const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <AppContent />
+        <Routes>
+          <Route path="/not-found" element={<ErrorLayout errorTitle={"Not Found"} errorText={"The requested resource was not found"} />} />
+          <Route path="/*" element={<AppContent />} />
+        </Routes>
       </Router>
     </AuthProvider>
   )
@@ -41,7 +45,8 @@ const App = () => {
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const { isSignedIn } = useAuth()
+  const { isFetched: isAuthDataFetched, error: authError, isSignedIn } = useAuth()
+
   const toggleCollapsed = () => {
     setCollapsed(!collapsed)
   }
@@ -51,7 +56,7 @@ const AppContent = () => {
     location.pathname
   )
 
-  const handleSignOut = async () => {
+  const signOut = async () => {
     try {
       await axios.post("/api/sign-out")
       message.success("Signed out successfully! Redirecting...")
@@ -59,6 +64,14 @@ const AppContent = () => {
     } catch (error) {
       message.error("Failed to sign out. Please try again later.")
     }
+  }
+
+  if (!isAuthDataFetched) {
+    return <div>Authenticating...</div>
+  }
+
+  if (authError) {
+    return <div>Connection to API service failed: {authError}</div>
   }
 
   if (!isSignedIn && !isAuthRoute) {
@@ -85,7 +98,7 @@ const AppContent = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={["3"]} mode="inline">
+        <Menu theme="dark" mode="inline">
           <SubMenu key="sub1" icon={<SettingOutlined />} title="Administrate">
             <Menu.Item key="1" icon={<TeamOutlined />}>
               <Link to="/admin/manage-users">Users</Link>
@@ -97,7 +110,7 @@ const AppContent = () => {
           <Menu.Item key="3" icon={<ApiOutlined />}>
             <Link to="/my-api-keys">My API Keys</Link>
           </Menu.Item>
-          <Menu.Item key="4" icon={<LogoutOutlined />} onClick={handleSignOut}>
+          <Menu.Item key="4" icon={<LogoutOutlined />} onClick={signOut}>
             Sign Out
           </Menu.Item>
         </Menu>
@@ -125,6 +138,9 @@ const AppContent = () => {
               >
                 <Route index element={<MyApiKeys />} />
               </Route>
+
+              <Route path="*" element={<Navigate to="/not-found" />} />
+
             </Routes>
           </div>
         </Content>
