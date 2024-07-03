@@ -57,7 +57,9 @@ const SignInForm = () => {
         <Button type="primary" htmlType="submit" className="login-form-button">
           Log in
         </Button>
-        Or <Link to="/sign-up">register now!</Link>
+        <span style={{marginLeft: "0.5em"}}>
+          Or <Link to="/sign-up"> register now!</Link>
+        </span>
       </Form.Item>
       <Form.Item>
         <Link to="/forgot-password">Forgot password</Link>
