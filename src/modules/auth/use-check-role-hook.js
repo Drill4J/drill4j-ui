@@ -8,20 +8,18 @@ const useCheckRole = (allowedRoles) => {
   const [ hasRole, setHasRole ] = useState(null)
 
   useEffect(() => {
-    if (isSignedIn && userInfo) {
-      checkRole(userInfo, allowedRoles)
+    if (!(isSignedIn && userInfo)) return
+
+    setHasRole(
+      allowedRoles
+        .map((role) => role.toLowerCase())
+        .some((role) => role === userInfo?.data.role.toLowerCase())
+    )
+
+    if (!hasRole) {
+      setError("You don't have necessary role to access this resource")
     }
   }, [isSignedIn, userInfo, allowedRoles])
-
-  const checkRole = (userInfo, allowedRoles) => {
-    const userRole = userInfo?.data.role
-    if (allowedRoles.some(role => role.toLowerCase() === userRole.toLowerCase())) {
-      setHasRole(true)
-    } else {
-      setHasRole(false)
-      setError(`You don't have necessary role to access this resource`)
-    }
-  }
 
   return { hasRole, error }
 }
