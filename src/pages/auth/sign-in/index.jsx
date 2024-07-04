@@ -9,7 +9,7 @@ const SignInForm = () => {
 
   const onFinish = async (values) => {
     try {
-      const response = await axios.post("/api/sign-in", {
+      await axios.post("/api/sign-in", {
         username: values.username,
         password: values.password,
       })
@@ -55,10 +55,10 @@ const SignInForm = () => {
 
       <Form.Item>
         <Button type="primary" htmlType="submit" className="login-form-button">
-          Log in
+          Sign in
         </Button>
         <span style={{marginLeft: "0.5em"}}>
-          Or <Link to="/sign-up"> register now!</Link>
+          Or <Link to="/sign-up"> create new account!</Link>
         </span>
       </Form.Item>
       <Form.Item>
