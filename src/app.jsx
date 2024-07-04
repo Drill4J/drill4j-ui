@@ -99,7 +99,7 @@ const AppContent = () => {
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
         <Menu theme="dark" mode="inline">
-          <SubMenu key="sub1" icon={<SettingOutlined />} title="Administrate">
+          <SubMenu key="sub1" icon={<SettingOutlined />} title="Manage">
             <Menu.Item key="1" icon={<TeamOutlined />}>
               <Link to="/admin/manage-users">Users</Link>
             </Menu.Item>
