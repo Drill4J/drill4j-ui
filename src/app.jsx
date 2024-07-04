@@ -14,7 +14,6 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom"
-import axios from "axios"
 
 import SignIn from "./pages/auth/sign-in"
 import SignUp from "./pages/auth/sign-up"
@@ -27,6 +26,7 @@ import SubMenu from "antd/es/menu/SubMenu"
 import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/use-auth-hook"
 import ErrorLayout from "./layouts/error"
+import { signOut } from "./modules/auth/api-auth"
 
 const { Sider, Content } = Layout
 
@@ -56,13 +56,13 @@ const AppContent = () => {
     location.pathname
   )
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     try {
-      await axios.post("/api/sign-out")
+      await signOut()
       message.success("Signed out successfully! Redirecting...")
       window.location.reload()
     } catch (error) {
-      message.error("Failed to sign out. Please try again later.")
+      message.error(`Failed to sign out. ${error.message}`)
     }
   }
 
@@ -110,7 +110,7 @@ const AppContent = () => {
           <Menu.Item key="3" icon={<ApiOutlined />}>
             <Link to="/my-api-keys">My API Keys</Link>
           </Menu.Item>
-          <Menu.Item key="4" icon={<LogoutOutlined />} onClick={signOut}>
+          <Menu.Item key="4" icon={<LogoutOutlined />} onClick={handleSignOut}>
             Sign Out
           </Menu.Item>
         </Menu>

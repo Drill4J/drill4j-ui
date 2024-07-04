@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import axios from "axios";
-import { runCatching } from "../util";
+import axios from "axios"
+import { runCatching } from "../util"
 
 /**
  * @typedef {Object} OAuth2ConfigView
@@ -48,8 +48,8 @@ import { runCatching } from "../util";
  * @returns {Promise<string>} The message from the server.
  */
 export async function signIn(loginPayload) {
-  const response = await runCatching(axios.post("/sign-in", loginPayload));
-  return response.data.message;
+  const response = await runCatching(axios.post("/api/sign-in", loginPayload))
+  return response.data.message
 }
 
 /**
@@ -60,8 +60,10 @@ export async function signIn(loginPayload) {
  * @returns {Promise<string>} The message from the server.
  */
 export async function signUp(registrationPayload) {
-  const response = await runCatching(axios.post("/sign-up", registrationPayload));
-  return response.data.message;
+  const response = await runCatching(
+    axios.post("/api/sign-up", registrationPayload)
+  )
+  return response.data.message
 }
 
 /**
@@ -69,8 +71,8 @@ export async function signUp(registrationPayload) {
  * @returns {Promise<string>} The message from the server.
  */
 export async function signOut() {
-  const response = await runCatching(axios.post("/sign-out"));
-  return response.data.message;
+  const response = await runCatching(axios.post("/api/sign-out"))
+  return response.data.message
 }
 
 /**
@@ -81,8 +83,10 @@ export async function signOut() {
  * @returns {Promise<string>} The message from the server.
  */
 export async function updatePassword(changePasswordPayload) {
-  const response = await runCatching(axios.post("/update-password", changePasswordPayload));
-  return response.data.message;
+  const response = await runCatching(
+    axios.post("/api/update-password", changePasswordPayload)
+  )
+  return response.data.message
 }
 
 /**
@@ -90,8 +94,8 @@ export async function updatePassword(changePasswordPayload) {
  * @returns {Promise<UserInfo|null>} The user information or null if not authenticated.
  */
 export async function getUserInfo() {
-  const response = await runCatching(axios.get("/user-info"));
-  return response.data.data ? new UserInfo(response.data.data.role, response.data.data.username) : null;
+  const response = await runCatching(axios.get("/api/user-info"))
+  return response.data.data
 }
 
 /**
@@ -99,6 +103,6 @@ export async function getUserInfo() {
  * @returns {Promise<UiConfig|null>} The UI configuration or null if not available.
  */
 export async function getUiConfig() {
-  const response = await runCatching(axios.get("/ui-config"));
-  return response.data.data?.auth ? new UiConfig(response.data.data.auth) : null;
+  const response = await runCatching(axios.get("/api/ui-config"))
+  return response.data.data?.auth
 }

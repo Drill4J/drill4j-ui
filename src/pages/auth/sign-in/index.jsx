@@ -1,22 +1,22 @@
 import React, { useState } from "react"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { Button, Form, Input, message } from "antd"
-import axios from "axios"
 import { Link } from "react-router-dom"
+import { signIn } from "../../../modules/auth/api-auth"
 
 const SignInForm = () => {
   const [error, setError] = useState(null)
 
   const onFinish = async (values) => {
     try {
-      await axios.post("/api/sign-in", {
+      await signIn({
         username: values.username,
         password: values.password,
       })
       message.success("Logged in successfully! Redirecting...")
       window.location.reload()
     } catch (error) {
-      setError(error.response?.data?.message || "Something went wrong!")
+      setError(error.message || "Unknown error")
     }
   }
 
