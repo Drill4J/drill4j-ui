@@ -1,7 +1,7 @@
 /*
  * Copyright 2020 EPAM Systems
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
+import dayjs from "dayjs"
+
+/**
+ * Executes the provided promise in try...catch.
+ * Catches errors of all shapes, rethrows "new Error(message)" to ensure "message" field is present
+ * @param {Promise<any>} promise The promise to execute.
+ * @returns {Promise<any>} The result of the promise.
+ */
 export async function runCatching(promise) {
   try {
     return await promise
   } catch (e) {
     const message = e?.response?.data?.message || e?.message || "Unknown error"
-    throw new Error(message)
+    const originalError = e instanceof Error ? e : new Error(e)
+    originalError.message = message
+    throw originalError
   }
 }
 

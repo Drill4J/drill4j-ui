@@ -27,9 +27,7 @@ export const UserManagementTable = () => {
         const data = await API.getUsers();
         setUsers(data);
       } catch (error) {
-        message.error(
-          "Failed to fetch users list. Make sure Drill4J Admin API service is running and available."
-        );
+        message.error(`Failed to fetch users list. ${error?.message}`);
       }
     };
 
