@@ -41,6 +41,7 @@ export const UserManagementTable = () => {
       key: "id",
       width: "10%",
       align: "left",
+      sorter: (a, b) => a.id > b.id,
     },
     {
       title: "Username",
@@ -57,6 +58,7 @@ export const UserManagementTable = () => {
       width: "20%",
       align: "left",
       render: (value) => <>{value.toUpperCase()}</>,
+      sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
       title: "Blocked",
@@ -65,6 +67,7 @@ export const UserManagementTable = () => {
       width: "10%",
       align: "left",
       render: (value) => <>{value ? "blocked" : "-"}</>,
+      sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
       title: "Actions",
