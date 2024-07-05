@@ -1,5 +1,3 @@
-import React from 'react';
-
 const MyApiKeys = () => {
   return (
     <div>
