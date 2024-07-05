@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Table, message, Button, Popconfirm } from "antd";
+import React, { useEffect, useState, useRef } from "react";
+import { Table, message, Button, Popconfirm, Input, Space } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { Role } from "../../../modules/auth/models/role";
 import * as API from "../../../modules/user-management/api-user-management";
 
 export const UserManagementTable = () => {
   const [users, setUsers] = useState([]);
   const [refreshFlag, refreshData] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
 
   const setSuccess = (data) => {
     message.success(data);
@@ -32,6 +36,80 @@ export const UserManagementTable = () => {
     fetchData();
   }, [refreshFlag]);
 
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ width: 188, marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => {
+              clearFilters()
+              setSearchText("")
+              setSearchedColumn("")
+              handleSearch("", confirm, dataIndex)
+            }}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]
+        ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+        : "",
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current.select(), 100);
+      }
+    },
+    render: (text) => {
+      const renderText = searchedColumn === dataIndex && searchText
+        ? (
+          <>
+            {text
+              .toString()
+              .split(new RegExp(`(${searchText})`, 'gi'))
+              .map((fragment, i) =>
+                fragment.toLowerCase() === searchText.toLowerCase() ? (
+                  <span key={i} style={{ backgroundColor: "#ffc069" }}>{fragment}</span>
+                ) : (
+                  fragment
+                )
+              )}
+          </>
+        ) : text;
+      return renderText;
+    },
+  });
+
   if (!users.length) return <UsersStub />;
 
   const columns = [
@@ -41,7 +119,7 @@ export const UserManagementTable = () => {
       key: "id",
       width: "10%",
       align: "left",
-      sorter: (a, b) => a.id > b.id,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: "Username",
@@ -50,6 +128,7 @@ export const UserManagementTable = () => {
       width: "30%",
       align: "left",
       sorter: (a, b) => a.username.localeCompare(b.username),
+      ...getColumnSearchProps("username"),
     },
     {
       title: "Role",
