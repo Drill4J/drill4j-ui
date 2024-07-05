@@ -91,22 +91,21 @@ export const UserManagementTable = () => {
       }
     },
     render: (text) => {
-      const renderText = searchedColumn === dataIndex && searchText
-        ? (
-          <>
-            {text
-              .toString()
-              .split(new RegExp(`(${searchText})`, 'gi'))
-              .map((fragment, i) =>
-                fragment.toLowerCase() === searchText.toLowerCase() ? (
-                  <span key={i} style={{ backgroundColor: "#ffc069" }}>{fragment}</span>
-                ) : (
-                  fragment
-                )
-              )}
-          </>
-        ) : text;
-      return renderText;
+      if (!(searchedColumn === dataIndex && searchText)) {
+        return text
+      }
+      return <>{
+        text
+          .toString()
+          .split(new RegExp(`(${searchText})`, 'gi'))
+          .map((fragment, i) =>
+            fragment.toLowerCase() === searchText.toLowerCase() ? (
+              <span key={i} style={{ backgroundColor: "#ffc069" }}>{fragment}</span>
+            ) : (
+              fragment
+            )
+          )
+      }</>
     },
   });
 
