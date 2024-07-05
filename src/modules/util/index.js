@@ -22,3 +22,7 @@ export async function runCatching(promise) {
     throw new Error(message)
   }
 }
+
+export function formatHumanReadableDate(date) {
+  return dayjs(date).format("YYYY-MM-DD HH:mm:ss")
+}
