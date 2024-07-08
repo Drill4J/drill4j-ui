@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from "react"
-import { Table, Popconfirm, message } from "antd"
+import { Table, Popconfirm, message, Button } from "antd"
 import * as API from "../../../modules/manage-api-keys/api-keys-management"
 import { formatHumanReadableDate } from "../../../modules/util"
 
@@ -110,7 +110,7 @@ export const ApiKeysManagementTable = () => {
           okText="Yes"
           cancelText="No"
         >
-          <button>Delete</button>
+          <Button primary danger>Delete</Button>
         </Popconfirm>
       ),
     },

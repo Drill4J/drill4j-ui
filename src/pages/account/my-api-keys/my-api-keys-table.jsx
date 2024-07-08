@@ -78,7 +78,7 @@ export const UserApiKeysTable = ({ refreshData, refreshFlag }) => {
       render: (_, userKeyData) => (
         <div>
           <Popconfirm
-            title={`Are you sure you want to delete the API key with id "${userKeyData.id}"?`}
+            title={`Are you sure you want to delete the API key # ${userKeyData.id} - ${userKeyData.description}?`}
             onConfirm={async () => {
               try {
                 const data = await API.deleteKey(userKeyData.id)
@@ -90,7 +90,7 @@ export const UserApiKeysTable = ({ refreshData, refreshFlag }) => {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="secondary" size="small">
+            <Button primary danger>
               Delete
             </Button>
           </Popconfirm>
