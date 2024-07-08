@@ -5,6 +5,7 @@ import {
   SettingOutlined,
   ApiOutlined,
   LogoutOutlined,
+  UserOutlined
 } from "@ant-design/icons"
 import {
   BrowserRouter as Router,
@@ -27,6 +28,7 @@ import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { signOut } from "./modules/auth/api-auth"
+import { MyAccount } from "./pages/account/my-account"
 
 const { Sider, Content } = Layout
 
@@ -110,7 +112,10 @@ const AppContent = () => {
           <Menu.Item key="3" icon={<ApiOutlined />}>
             <Link to="/my-api-keys">My API Keys</Link>
           </Menu.Item>
-          <Menu.Item key="4" icon={<LogoutOutlined />} onClick={handleSignOut}>
+          <Menu.Item key="4" icon={<UserOutlined />}>
+            <Link to="/my-account">My Account</Link>
+          </Menu.Item>
+          <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
             Sign Out
           </Menu.Item>
         </Menu>
@@ -137,6 +142,13 @@ const AppContent = () => {
                 element={<PrivateRoute roles={["user", "admin"]} />}
               >
                 <Route index element={<MyApiKeys />} />
+              </Route>
+    
+              <Route
+                path="/my-account/*"
+                element={<PrivateRoute roles={["user", "admin"]} />}
+              >
+                <Route index element={<MyAccount />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/not-found" />} />

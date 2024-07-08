@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // It's not worth using getUserInfo() wrapper, since we need axios response/status/request objects 
       const response = await axios.get("/api/user-info")
-      setUserInfo(response.data)
+      setUserInfo(response.data.data)
       setIsSignedIn(true)
     } catch (error) {
       handleAuthError(error)

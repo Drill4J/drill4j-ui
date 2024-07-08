@@ -13,7 +13,7 @@ const useCheckRole = (allowedRoles) => {
     setHasRole(
       allowedRoles
         .map((role) => role.toLowerCase())
-        .some((role) => role === userInfo?.data.role.toLowerCase())
+        .some((role) => role === userInfo?.role.toLowerCase())
     )
 
     if (!hasRole) {
