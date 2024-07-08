@@ -1,6 +1,6 @@
 import React from "react"
 import { Alert, Avatar, Skeleton, Typography } from "antd"
-import useAuth from "../../../modules/auth/use-auth-hook"
+import useAuth from "../../../modules/auth/hooks/use-auth-hook"
 
 const { Title, Text } = Typography
 

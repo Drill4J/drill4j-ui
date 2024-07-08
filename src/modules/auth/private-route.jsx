@@ -1,7 +1,7 @@
 import React from "react"
 import { useNavigate, Outlet } from "react-router-dom"
-import useCheckRole from "./use-check-role-hook"
-import useAuth from "./use-auth-hook"
+import useCheckRole from "./hooks/use-check-role-hook"
+import useAuth from "./hooks/use-auth-hook"
 import { Button } from "antd"
 
 export const PrivateRoute = ({ roles }) => {
