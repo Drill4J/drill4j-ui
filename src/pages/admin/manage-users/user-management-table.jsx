@@ -168,7 +168,7 @@ export const UsersStub = () => <div>No users</div>;
 
 function renderUserManagementActions(userData, setSuccess, setError) {
   return (
-    <div>
+    <Space>
       {userData.role === Role.UNDEFINED && (
         <Popconfirm
           title={`Are you sure you want to approve user "${userData.username}" registration?`}
@@ -213,7 +213,7 @@ function renderUserManagementActions(userData, setSuccess, setError) {
               }
             }}
           >
-            <Button type="danger">Block</Button>
+            <Button ghost danger>Block</Button>
           </Popconfirm>
           <Popconfirm
             title={`Are you sure you want to reset the password for user "${userData.username}"?`}
@@ -229,7 +229,7 @@ function renderUserManagementActions(userData, setSuccess, setError) {
               }
             }}
           >
-            <Button type="default">Reset Password</Button>
+            <Button ghost type="primary">Reset Password</Button>
           </Popconfirm>
           <Popconfirm
             title={`Are you sure you want to change role for user "${userData.username}" to ${userData.role === Role.USER ? Role.ADMIN : Role.USER}?`}
@@ -252,6 +252,6 @@ function renderUserManagementActions(userData, setSuccess, setError) {
           </Popconfirm>
         </>
       )}
-    </div>
+    </Space>
   );
 }
