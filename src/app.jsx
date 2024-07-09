@@ -28,6 +28,7 @@ import {
   ApiOutlined,
   LogoutOutlined,
   UserOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons"
 import {
   BrowserRouter as Router,
@@ -90,6 +91,7 @@ const App = () => {
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
   const {
     isFetched: isAuthConfigFetched,
     authConfig,
@@ -158,7 +160,7 @@ const AppContent = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
-        {renderMenu(location)}
+        {renderMenu(location, isSignOutInProgress, setIsSignOutInProgress)}
       </Sider>
       <Layout>
         <Content style={{ margin: "16px" }}>
@@ -200,8 +202,9 @@ const AppContent = () => {
   )
 }
 
-function renderMenu(location) {
+function renderMenu(location, isSignOutInProgress, setIsSignOutInProgress) {
   const handleSignOut = async () => {
+    setIsSignOutInProgress(true)
     try {
       await signOut()
       message.success("Signed out successfully! Redirecting...")
@@ -209,6 +212,7 @@ function renderMenu(location) {
     } catch (error) {
       message.error(`Failed to sign out. ${error.message}`)
     }
+    setIsSignOutInProgress(false)
   }
 
   const defaultOpenKeys = [
@@ -240,7 +244,15 @@ function renderMenu(location) {
         <Link to="/my-account">My Account</Link>
       </Menu.Item>
       <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
-        Sign Out
+        Sign Out{" "}
+        {isSignOutInProgress && (
+          <Spin
+            size="small"
+            indicator={
+              <LoadingOutlined style={{ fontSize: '16px', color: "white", marginLeft: '8px' }} spin />
+            }
+          />
+        )}
       </Menu.Item>
     </Menu>
   )
