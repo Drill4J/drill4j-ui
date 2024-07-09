@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Alert, Layout, Menu, Spin, message } from "antd"
+import { Alert, ConfigProvider as ThemeProvider, Layout, Menu, Spin, message, theme } from "antd"
 import {
   TeamOutlined,
   SettingOutlined,
@@ -37,24 +37,32 @@ const { Sider, Content } = Layout
 
 const App = () => {
   return (
-    <AuthConfigProvider>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            <Route
-              path="/not-found"
-              element={
-                <ErrorLayout
-                  errorTitle={"Not Found"}
-                  errorText={"The requested resource was not found"}
-                />
-              }
-            />
-            <Route path="/*" element={<AppContent />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
-    </AuthConfigProvider>
+    <ThemeProvider
+      theme = {{
+        token: {
+          colorPrimary: '#007fff'
+        }
+      }}
+    >
+      <AuthConfigProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route
+                path="/not-found"
+                element={
+                  <ErrorLayout
+                    errorTitle={"Not Found"}
+                    errorText={"The requested resource was not found"}
+                  />
+                }
+              />
+              <Route path="/*" element={<AppContent />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </AuthConfigProvider>
+    </ThemeProvider>
   )
 }
 
