@@ -91,18 +91,18 @@ const AppContent = () => {
     }
   }
 
-  if (!isAuthConfigFetched) {
-    return (
-      <AuthLayout>
-        <Spin tip="Fetching auth configuration... ">&nbsp;</Spin>
-      </AuthLayout>
-    )
-  }
-
   if (!isAuthDataFetched) {
     return (
       <AuthLayout>
         <Spin tip="Checking authentication... ">&nbsp;</Spin>
+      </AuthLayout>
+    )
+  }
+
+  if (!isAuthConfigFetched) {
+    return (
+      <AuthLayout>
+        <Spin tip="Fetching auth configuration... ">&nbsp;</Spin>
       </AuthLayout>
     )
   }
