@@ -76,20 +76,7 @@ const AppContent = () => {
   }
 
   const location = useLocation()
-  const isAuthRoute = [
-    "/sign-in",
-    "/sign-up"
-  ].includes(location.pathname)
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      message.success("Signed out successfully! Redirecting...")
-      window.location.reload()
-    } catch (error) {
-      message.error(`Failed to sign out. ${error.message}`)
-    }
-  }
+  const isAuthRoute = ["/sign-in", "/sign-up"].includes(location.pathname)
 
   if (!isAuthDataFetched) {
     return (
@@ -141,25 +128,7 @@ const AppContent = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" mode="inline">
-          <SubMenu key="sub1" icon={<SettingOutlined />} title="Manage">
-            <Menu.Item key="1" icon={<TeamOutlined />}>
-              <Link to="/admin/manage-users">Users</Link>
-            </Menu.Item>
-            <Menu.Item key="2" icon={<ApiOutlined />}>
-              <Link to="/admin/manage-api-keys">API Keys</Link>
-            </Menu.Item>
-          </SubMenu>
-          <Menu.Item key="3" icon={<ApiOutlined />}>
-            <Link to="/my-api-keys">My API Keys</Link>
-          </Menu.Item>
-          <Menu.Item key="4" icon={<UserOutlined />}>
-            <Link to="/my-account">My Account</Link>
-          </Menu.Item>
-          <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
-            Sign Out
-          </Menu.Item>
-        </Menu>
+        {renderMenu()}
       </Sider>
       <Layout>
         <Content style={{ margin: "16px" }}>
@@ -198,6 +167,40 @@ const AppContent = () => {
         </Content>
       </Layout>
     </Layout>
+  )
+}
+
+function renderMenu() {
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      message.success("Signed out successfully! Redirecting...")
+      window.location.reload()
+    } catch (error) {
+      message.error(`Failed to sign out. ${error.message}`)
+    }
+  }
+
+  return (
+    <Menu theme="dark" mode="inline">
+      <SubMenu key="sub1" icon={<SettingOutlined />} title="Manage">
+        <Menu.Item key="1" icon={<TeamOutlined />}>
+          <Link to="/admin/manage-users">Users</Link>
+        </Menu.Item>
+        <Menu.Item key="2" icon={<ApiOutlined />}>
+          <Link to="/admin/manage-api-keys">API Keys</Link>
+        </Menu.Item>
+      </SubMenu>
+      <Menu.Item key="3" icon={<ApiOutlined />}>
+        <Link to="/my-api-keys">My API Keys</Link>
+      </Menu.Item>
+      <Menu.Item key="4" icon={<UserOutlined />}>
+        <Link to="/my-account">My Account</Link>
+      </Menu.Item>
+      <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
+        Sign Out
+      </Menu.Item>
+    </Menu>
   )
 }
 
