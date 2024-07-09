@@ -1,11 +1,7 @@
-import { ApiKeysManagementTable } from "./manage-api-keys-table";
+import { ApiKeysManagementTable } from "./manage-api-keys-table"
 
 const AdminManageApiKeys = () => {
-  return (
-    <div>
-      <ApiKeysManagementTable/>
-    </div>
-  );
-};
+  return <ApiKeysManagementTable />
+}
 
-export default AdminManageApiKeys;
+export default AdminManageApiKeys
