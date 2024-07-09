@@ -1,11 +1,7 @@
-import { UserManagementTable } from './user-management-table';
+import { UserManagementTable } from "./user-management-table"
 
 const AdminManageUsers = () => {
-  return (
-    <div>
-      <UserManagementTable/>
-    </div>
-  );
-};
+  return <UserManagementTable />
+}
 
-export default AdminManageUsers;
+export default AdminManageUsers
