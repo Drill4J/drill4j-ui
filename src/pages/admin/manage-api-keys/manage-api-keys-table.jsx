@@ -45,8 +45,6 @@ export const ApiKeysManagementTable = () => {
     fetchData()
   }, [refreshFlag])
 
-  if (!keys.length) return <KeysStub />
-
   const columns = [
     {
       title: "Id",
@@ -119,4 +117,3 @@ export const ApiKeysManagementTable = () => {
   return <Table dataSource={keys} columns={columns} />
 }
 
-const KeysStub = () => <div>"No keys"</div>

@@ -107,8 +107,6 @@ export const UserManagementTable = () => {
     },
   });
 
-  if (!users.length) return <UsersStub />;
-
   const columns = [
     {
       title: "Id",
@@ -163,8 +161,6 @@ export const UserManagementTable = () => {
     />
   );
 };
-
-export const UsersStub = () => <div>No users</div>;
 
 function renderUserManagementActions(userData, setSuccess, setError) {
   return (

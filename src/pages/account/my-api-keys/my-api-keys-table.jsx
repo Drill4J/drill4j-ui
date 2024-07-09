@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Table, message, Button, Popconfirm } from "antd"
+import { Table, message, Button, Popconfirm, Empty } from "antd"
 import * as API from "../../../modules/my-api-keys/api-my-api-keys"
 import { formatHumanReadableDate } from "../../../modules/util"
 
@@ -108,5 +108,3 @@ export const UserApiKeysTable = ({ refreshData, refreshFlag }) => {
     />
   )
 }
-
-export const KeysStub = () => <div>No API keys</div>
