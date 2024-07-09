@@ -6,9 +6,6 @@ export const MyAccount = () => (
   <>
     <Row>
       <Col span={24}>
-        <Divider orientation="left" orientationMargin={0}>
-          Logged in as
-        </Divider>
         <MyAccountCard />
       </Col>
     </Row>
