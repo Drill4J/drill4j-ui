@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import React, { useEffect, useState, useRef } from "react";
-import { Table, message, Button, Popconfirm, Input, Space } from "antd";
+import { Table, message, Button, Popconfirm, Input, Space, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { Role } from "../../../modules/auth/models/role";
 import * as API from "../../../modules/user-management/api-user-management";
@@ -24,6 +24,7 @@ export const UserManagementTable = () => {
   const [refreshFlag, refreshData] = useState("");
   const [searchText, setSearchText] = useState("");
   const [searchedColumn, setSearchedColumn] = useState("");
+  const [isFetched, setIsFetched] = useState(false)
   const searchInput = useRef(null);
 
   const setSuccess = (data) => {
@@ -44,6 +45,7 @@ export const UserManagementTable = () => {
       } catch (error) {
         message.error(`Failed to fetch users list. ${error?.message}`);
       }
+      setIsFetched(true)
     };
 
     fetchData();
@@ -168,12 +170,14 @@ export const UserManagementTable = () => {
   ];
 
   return (
-    <Table
-      dataSource={users}
-      columns={columns}
-      rowKey="id"
-      pagination={{ pageSize: 10 }}
-    />
+    <Spin spinning={!isFetched}>
+      <Table
+        dataSource={users}
+        columns={columns}
+        rowKey="id"
+        pagination={{ pageSize: 10 }}
+      />
+    </Spin>
   );
 };
 

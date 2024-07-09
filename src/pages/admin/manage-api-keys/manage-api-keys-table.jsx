@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 import React, { useEffect, useState } from "react"
-import { Table, Popconfirm, message, Button } from "antd"
+import { Table, Popconfirm, message, Button, Spin } from "antd"
 import * as API from "../../../modules/manage-api-keys/api-keys-management"
 import { formatHumanReadableDate } from "../../../modules/util"
 
 export const ApiKeysManagementTable = () => {
   const [keys, setKeys] = useState([])
   const [refreshFlag, refreshData] = useState("")
+  const [isFetched, setIsFetched] = useState(false)
 
   const setSuccess = (data) => {
     refreshData(Date.now().toString())
@@ -40,6 +41,7 @@ export const ApiKeysManagementTable = () => {
       } catch (error) {
         message.error(`Failed to fetch API keys list. ${error?.message}`)
       }
+      setIsFetched(true)
     }
 
     fetchData()
@@ -114,6 +116,10 @@ export const ApiKeysManagementTable = () => {
     },
   ]
 
-  return <Table dataSource={keys} columns={columns} />
+  return (
+    <Spin spinning={!isFetched}>
+      <Table dataSource={keys} columns={columns} />
+    </Spin>
+  )
 }
 
