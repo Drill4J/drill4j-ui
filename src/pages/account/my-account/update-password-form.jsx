@@ -16,23 +16,26 @@
 import { Form, Input, Button, message } from "antd"
 import * as API from "../../../modules/auth/api-auth"
 import "./update-password-form.css"
+import { useState } from "react"
 
 export const UpdatePasswordForm = () => {
   const [form] = Form.useForm()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onFinish = async (values) => {
-    const { oldPassword, newPassword, confirmPassword } = values
-    if (newPassword !== confirmPassword) {
-      message.error("Failed to update password. New passwords do not match!")
-      return
-    }
+    setIsSubmitting(true)
     try {
+      const { oldPassword, newPassword, confirmPassword } = values
+      if (newPassword !== confirmPassword) {
+        throw new Error("New passwords do not match!")
+      }
       await API.updatePassword({ oldPassword, newPassword })
       message.success("Password updated successfully!")
       form.resetFields()
     } catch (error) {
-      message.error(`Failed to update password. ${error.message}`)
+      message.error(`${error.message}`)
     }
+    setIsSubmitting(false)
   }
 
   return (
@@ -74,7 +77,7 @@ export const UpdatePasswordForm = () => {
         </Form.Item>
 
         <Form.Item style={{ textAlign: "left" }}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
             Update Password
           </Button>
         </Form.Item>
