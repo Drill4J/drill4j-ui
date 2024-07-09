@@ -1,10 +1,58 @@
 import React, { useState } from "react"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
-import { Button, Form, Input, message } from "antd"
+import {
+  Button,
+  Divider,
+  Form,
+  Input,
+  message,
+  Popconfirm,
+  Typography,
+} from "antd"
 import { Link } from "react-router-dom"
 import { signIn } from "../../../modules/auth/api-auth"
 
-const SignInForm = () => {
+const SignIn = ({
+  isSimpleAuthEnabled,
+  isSignUpEnabled,
+  isOAuth2Enabled,
+  oAuth2ButtonText,
+  oAuthPath,
+}) => {
+  console.log("oAuthPath", oAuthPath)
+  return (
+    <>
+      {isSimpleAuthEnabled && (
+        <SignInForm
+          isSignUpEnabled={isSignUpEnabled}
+          isOAuth2Enabled={isOAuth2Enabled}
+        />
+      )}
+
+      {isOAuth2Enabled && (
+        <>
+          <Divider style={{ marginTop: "-20px" }}>
+            <Typography.Text>or</Typography.Text>
+          </Divider>
+
+          <Form.Item>
+            <Button
+              style={{ width: "100%" }}
+              type="primary"
+              htmlType="submit"
+              className="login-form-button"
+              onClick={() => window.location.pathname = oAuthPath}
+            >
+              {oAuth2ButtonText || "Sign in with Auth Provider"}
+            </Button>
+          </Form.Item>
+        </>
+      )}
+    </>
+  )
+}
+
+const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
   const [error, setError] = useState(null)
 
   const onFinish = async (values) => {
@@ -54,18 +102,52 @@ const SignInForm = () => {
       )}
 
       <Form.Item>
-        <Button type="primary" htmlType="submit" className="login-form-button">
+        <Button
+          style={{ width: "100%" }}
+          type="primary"
+          htmlType="submit"
+          className="login-form-button"
+        >
           Sign in
         </Button>
-        <span style={{marginLeft: "0.5em"}}>
-          Or <Link to="/sign-up"> create new account!</Link>
-        </span>
       </Form.Item>
-      <Form.Item>
-        <Link to="/forgot-password">Forgot password</Link>
+
+      <Form.Item style={{ marginTop: "-10px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <Popconfirm
+            title={
+              "Please contact Drill4J instance administrator to request password reset"
+            }
+            showCancel={false}
+          >
+            <Link to="#">Forgot password</Link>
+          </Popconfirm>
+
+          {isSignUpEnabled ? (
+            <Link to="/sign-up">Sign up</Link>
+          ) : (
+            <Popconfirm
+              title={
+                "Sign Up is disabled. " +
+                (isOAuth2Enabled
+                  ? "Please use an alternative authentication method."
+                  : "If you don't have an account, contact your Drill4J instance administrator.")
+              }
+              showCancel={false}
+            >
+              <Link to="#">Sign up</Link>
+            </Popconfirm>
+          )}
+        </div>
       </Form.Item>
     </Form>
   )
 }
 
-export default SignInForm
+export default SignIn

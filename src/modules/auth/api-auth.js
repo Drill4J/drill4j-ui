@@ -36,7 +36,7 @@ import { runCatching } from "../util"
  */
 
 /**
- * @typedef {Object} UiConfig
+ * @typedef {Object} AuthConfig
  * @property {AuthConfigView} auth
  */
 
@@ -100,9 +100,9 @@ export async function getUserInfo() {
 
 /**
  * Retrieves the UI configuration related to authentication.
- * @returns {Promise<UiConfig|null>} The UI configuration or null if not available.
+ * @returns {Promise<AuthConfig>} The UI configuration or null if not available.
  */
-export async function getUiConfig() {
+export async function getAuthConfig() {
   const response = await runCatching(axios.get("/api/ui-config"))
-  return response.data.data?.auth
+  return response.data.data.auth
 }

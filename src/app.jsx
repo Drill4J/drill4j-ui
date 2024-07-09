@@ -1,11 +1,11 @@
 import React, { useState } from "react"
-import { Layout, Menu, Spin, message } from "antd"
+import { Alert, Layout, Menu, Spin, message } from "antd"
 import {
   TeamOutlined,
   SettingOutlined,
   ApiOutlined,
   LogoutOutlined,
-  UserOutlined
+  UserOutlined,
 } from "@ant-design/icons"
 import {
   BrowserRouter as Router,
@@ -18,7 +18,6 @@ import {
 
 import SignIn from "./pages/auth/sign-in"
 import SignUp from "./pages/auth/sign-up"
-import ForgotPassword from "./pages/auth/forgot-password"
 import AdminManageUsers from "./pages/admin/manage-users"
 import AdminManageApiKeys from "./pages/admin/manage-api-keys"
 import MyApiKeys from "./pages/account/my-api-keys"
@@ -29,34 +28,58 @@ import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { signOut } from "./modules/auth/api-auth"
 import { MyAccount } from "./pages/account/my-account"
+import {
+  AuthConfigProvider,
+  useAuthConfig,
+} from "./modules/auth/hooks/use-ui-config-hook"
 
 const { Sider, Content } = Layout
 
 const App = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/not-found" element={<ErrorLayout errorTitle={"Not Found"} errorText={"The requested resource was not found"} />} />
-          <Route path="/*" element={<AppContent />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <AuthConfigProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route
+              path="/not-found"
+              element={
+                <ErrorLayout
+                  errorTitle={"Not Found"}
+                  errorText={"The requested resource was not found"}
+                />
+              }
+            />
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </AuthConfigProvider>
   )
 }
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const { isFetched: isAuthDataFetched, error: authError, isSignedIn } = useAuth()
+  const {
+    isFetched: isAuthConfigFetched,
+    authConfig,
+    error: authConfigFetchError,
+  } = useAuthConfig()
+  const {
+    isFetched: isAuthDataFetched,
+    error: authError,
+    isSignedIn,
+  } = useAuth()
 
   const toggleCollapsed = () => {
     setCollapsed(!collapsed)
   }
 
   const location = useLocation()
-  const isAuthRoute = ["/sign-in", "/sign-up", "/forgot-password"].includes(
-    location.pathname
-  )
+  const isAuthRoute = [
+    "/sign-in",
+    "/sign-up"
+  ].includes(location.pathname)
 
   const handleSignOut = async () => {
     try {
@@ -68,12 +91,38 @@ const AppContent = () => {
     }
   }
 
+  if (!isAuthConfigFetched) {
+    return (
+      <AuthLayout>
+        <Spin tip="Fetching auth configuration... ">&nbsp;</Spin>
+      </AuthLayout>
+    )
+  }
+
   if (!isAuthDataFetched) {
-    return <AuthLayout><Spin tip="Authenticating... ">&nbsp;</Spin></AuthLayout>
+    return (
+      <AuthLayout>
+        <Spin tip="Checking authentication... ">&nbsp;</Spin>
+      </AuthLayout>
+    )
+  }
+
+  if (authConfigFetchError) {
+    return (
+      <ErrorLayout
+        errorTitle={"Server is unavailable or responded with an error"}
+        errorText={`Reason: ${authConfigFetchError}`}
+      />
+    )
   }
 
   if (authError) {
-    return <ErrorLayout errorTitle={"Server is unavailable or responded with an error"} errorText={`Reason: ${authError}`} />
+    return (
+      <ErrorLayout
+        errorTitle={"Server is unavailable or responded with an error"}
+        errorText={`Reason: ${authError}`}
+      />
+    )
   }
 
   if (!isSignedIn && !isAuthRoute) {
@@ -81,15 +130,7 @@ const AppContent = () => {
   }
 
   if (!isSignedIn && isAuthRoute) {
-    return (
-      <AuthLayout>
-        <Routes>
-          <Route path="/sign-in" element={<SignIn />} />
-          <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-        </Routes>
-      </AuthLayout>
-    )
+    return <AuthLayout>{renderAuthRoutes(authConfig)}</AuthLayout>
   }
 
   if (isSignedIn && isAuthRoute) {
@@ -143,7 +184,7 @@ const AppContent = () => {
               >
                 <Route index element={<MyApiKeys />} />
               </Route>
-    
+
               <Route
                 path="/my-account/*"
                 element={<PrivateRoute roles={["user", "admin"]} />}
@@ -152,12 +193,51 @@ const AppContent = () => {
               </Route>
 
               <Route path="*" element={<Navigate to="/not-found" />} />
-
             </Routes>
           </div>
         </Content>
       </Layout>
     </Layout>
+  )
+}
+
+/**
+ * Renders authentication routes according to configured auth options
+ * @param {import("./modules/auth/api-auth").AuthConfigView} authConfig
+ */
+function renderAuthRoutes(authConfig) {
+  const { oauth2, simpleAuth } = authConfig
+
+  if (!simpleAuth?.enabled && !oauth2?.enabled) {
+    const msg =
+      "Server responded with the invalid auth config. No authentication methods configured"
+    console.log(new Error(msg))
+    return <Alert type="error" message={msg} />
+  }
+
+  const oAuthPath = "/oauth/login"
+  if (!simpleAuth?.enabled && oauth2?.enabled && oauth2?.automaticSignIn) {
+    return <Navigate to={oAuthPath} />
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/sign-in"
+        element={
+          <SignIn
+            isSimpleAuthEnabled={simpleAuth?.enabled}
+            isSignUpEnabled={simpleAuth?.signUpEnabled}
+            isOAuth2Enabled={oauth2?.enabled}
+            oAuth2ButtonText={oauth2?.buttonTitle}
+            oAuthPath={oAuthPath}
+          />
+        }
+      />
+      {simpleAuth?.signUpEnabled && (
+        <Route path="/sign-up" element={<SignUp />} />
+      )}
+    </Routes>
   )
 }
 
