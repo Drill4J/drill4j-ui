@@ -92,7 +92,7 @@ export const UserApiKeysTable = ({ refreshData, refreshFlag }) => {
             okText="Yes"
             cancelText="No"
           >
-            <Button primary danger>
+            <Button type="primary" danger>
               Delete
             </Button>
           </Popconfirm>
