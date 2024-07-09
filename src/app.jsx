@@ -1,5 +1,12 @@
 import React, { useState } from "react"
-import { Alert, ConfigProvider as ThemeProvider, Layout, Menu, Spin, message, theme } from "antd"
+import {
+  Alert,
+  ConfigProvider as ThemeProvider,
+  Layout,
+  Menu,
+  Spin,
+  message,
+} from "antd"
 import {
   TeamOutlined,
   SettingOutlined,
@@ -38,10 +45,10 @@ const { Sider, Content } = Layout
 const App = () => {
   return (
     <ThemeProvider
-      theme = {{
+      theme={{
         token: {
-          colorPrimary: '#007fff'
-        }
+          colorPrimary: "#007fff",
+        },
       }}
     >
       <AuthConfigProvider>
@@ -136,7 +143,7 @@ const AppContent = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
-        {renderMenu()}
+        {renderMenu(location)}
       </Sider>
       <Layout>
         <Content style={{ margin: "16px" }}>
@@ -178,7 +185,7 @@ const AppContent = () => {
   )
 }
 
-function renderMenu() {
+function renderMenu(location) {
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -189,20 +196,32 @@ function renderMenu() {
     }
   }
 
+  const defaultOpenKeys = [
+    "/admin/manage-users",
+    "/admin/manage-api-keys",
+  ].includes(location.pathname)
+    ? "admin-submenu"
+    : ""
+
   return (
-    <Menu theme="dark" mode="inline">
-      <SubMenu key="sub1" icon={<SettingOutlined />} title="Manage">
-        <Menu.Item key="1" icon={<TeamOutlined />}>
+    <Menu
+      theme="dark"
+      mode="inline"
+      defaultSelectedKeys={[location.pathname]}
+      defaultOpenKeys={defaultOpenKeys}
+    >
+      <SubMenu key="admin-submenu" icon={<SettingOutlined />} title="Manage">
+        <Menu.Item key="/admin/manage-users" icon={<TeamOutlined />}>
           <Link to="/admin/manage-users">Users</Link>
         </Menu.Item>
-        <Menu.Item key="2" icon={<ApiOutlined />}>
+        <Menu.Item key="/admin/manage-api-keys" icon={<ApiOutlined />}>
           <Link to="/admin/manage-api-keys">API Keys</Link>
         </Menu.Item>
       </SubMenu>
-      <Menu.Item key="3" icon={<ApiOutlined />}>
+      <Menu.Item key="/my-api-keys" icon={<ApiOutlined />}>
         <Link to="/my-api-keys">My API Keys</Link>
       </Menu.Item>
-      <Menu.Item key="4" icon={<UserOutlined />}>
+      <Menu.Item key="/my-account" icon={<UserOutlined />}>
         <Link to="/my-account">My Account</Link>
       </Menu.Item>
       <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
