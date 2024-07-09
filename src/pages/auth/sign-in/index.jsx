@@ -69,8 +69,10 @@ const SignIn = ({
 
 const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
   const [error, setError] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onFinish = async (values) => {
+    setIsSubmitting(true)
     try {
       await signIn({
         username: values.username,
@@ -81,6 +83,7 @@ const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
     } catch (error) {
       setError(error.message || "Unknown error")
     }
+    setIsSubmitting(false)
   }
 
   return (
@@ -122,6 +125,7 @@ const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
           type="primary"
           htmlType="submit"
           className="login-form-button"
+          loading={isSubmitting}
         >
           Sign in
         </Button>
