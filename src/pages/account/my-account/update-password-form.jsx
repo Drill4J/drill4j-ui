@@ -33,7 +33,7 @@ export const UpdatePasswordForm = () => {
       message.success("Password updated successfully!")
       form.resetFields()
     } catch (error) {
-      message.error(`${error.message}`)
+      message.error(`${error?.message}`)
     }
     setIsSubmitting(false)
   }

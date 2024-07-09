@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useState } from "react"
 import { Form, Input, Select, Button, message } from "antd"
 import * as API from "../../../modules/my-api-keys/api-my-api-keys"
 
 const { Option } = Select
 
 export const GenerateApiKeyForm = ({ refreshData }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
   async function handleGenerateApiKey(values) {
     try {
+      setIsSubmitting(true)
       const result = await API.generateKey({
         description: values.description,
         expiryPeriod: values.expiryPeriod,
@@ -31,6 +35,7 @@ export const GenerateApiKeyForm = ({ refreshData }) => {
     } catch (e) {
       message.error(`Failed to generate API key. ${e?.message || "Unknown error"}`)
     }
+    setIsSubmitting(false)
   }
 
   return (
@@ -61,7 +66,7 @@ export const GenerateApiKeyForm = ({ refreshData }) => {
         </Select>
       </Form.Item>
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button type="primary" htmlType="submit" loading={isSubmitting}>
           Generate
         </Button>
       </Form.Item>
