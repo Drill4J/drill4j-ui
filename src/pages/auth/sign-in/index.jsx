@@ -155,8 +155,8 @@ const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
               title={
                 "Sign Up is disabled. " +
                 (isOAuth2Enabled
-                  ? "Please use an alternative authentication method."
-                  : "If you don't have an account, contact your Drill4J instance administrator.")
+                  ? "Please use an alternative authentication method"
+                  : "If you don't have an account, contact your Drill4J instance administrator")
               }
               showCancel={false}
             >
