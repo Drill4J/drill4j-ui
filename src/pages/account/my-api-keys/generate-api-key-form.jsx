@@ -20,6 +20,7 @@ import * as API from "../../../modules/my-api-keys/api-my-api-keys"
 const { Option } = Select
 
 export const GenerateApiKeyForm = ({ refreshData }) => {
+  const [form] = Form.useForm()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   async function handleGenerateApiKey(values) {
@@ -32,14 +33,18 @@ export const GenerateApiKeyForm = ({ refreshData }) => {
       refreshData()
       await navigator.clipboard.writeText(result.data.apiKey)
       message.success("API key is copied to clipboard.")
+      form.resetFields()
     } catch (e) {
-      message.error(`Failed to generate API key. ${e?.message || "Unknown error"}`)
+      message.error(
+        `Failed to generate API key. ${e?.message || "Unknown error"}`
+      )
     }
     setIsSubmitting(false)
   }
 
   return (
     <Form
+      form={form}
       onFinish={(values) => {
         handleGenerateApiKey(values)
       }}
