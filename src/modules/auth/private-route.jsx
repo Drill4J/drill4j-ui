@@ -16,25 +16,27 @@
 import React from "react"
 import { useNavigate, Outlet } from "react-router-dom"
 import useCheckRole from "./hooks/use-check-role-hook"
-import useAuth from "./hooks/use-auth-hook"
-import { Button } from "antd"
+import { Button, Spin } from "antd"
 
 export const PrivateRoute = ({ roles }) => {
-  const { isSignedIn, error: authError } = useAuth()
-  const { hasRole, error: missingRoleError } = useCheckRole(roles)
+  const { hasRole, error, isFetched } = useCheckRole(roles)
   const navigate = useNavigate()
 
-  return (
-    <div style={{ textAlign: "center" }}>
-      {!isSignedIn || !hasRole ? (
-        <>
-          <h1>Authentication request failed.</h1>
-          <p>{authError || missingRoleError}</p>
-          <Button type="primary" onClick={() => navigate(-1)}>Go Back</Button>
-        </>
-      ) : (
-        isSignedIn && <Outlet />
-      )}
-    </div>
-  )
+  if (!isFetched) {
+    return <Spin tip="Checking role... ">&nbsp;</Spin>
+  }
+
+  if (!hasRole) {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <h1>Authentication request failed.</h1>
+        <p>{error}</p>
+        <Button onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
+      </div>
+    )
+  }
+
+  return <Outlet />
 }

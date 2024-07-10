@@ -18,25 +18,26 @@ import useAuth from "./use-auth-hook"
 
 const useCheckRole = (allowedRoles) => {
   const { isSignedIn, userInfo } = useAuth()
-  
-  const [ error, setError] = useState(null)
-  const [ hasRole, setHasRole ] = useState(null)
+
+  const [error, setError] = useState(null)
+  const [hasRole, setHasRole] = useState(null)
+  const [isFetched, setIsFetched] = useState(false)
 
   useEffect(() => {
     if (!(isSignedIn && userInfo)) return
 
-    setHasRole(
-      allowedRoles
-        .map((role) => role.toLowerCase())
-        .some((role) => role === userInfo?.role.toLowerCase())
-    )
+    const roleCheck = allowedRoles
+      .map((role) => role.toLowerCase())
+      .some((role) => role === userInfo?.role.toLowerCase())
 
-    if (!hasRole) {
+    setHasRole(roleCheck)
+    if (!roleCheck) {
       setError("You don't have necessary role to access this resource")
     }
+    setIsFetched(true)
   }, [isSignedIn, userInfo, allowedRoles])
 
-  return { hasRole, error }
+  return { hasRole, error, isFetched }
 }
 
 export default useCheckRole
