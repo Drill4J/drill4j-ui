@@ -20,7 +20,7 @@ import {
   Layout,
   Menu,
   Spin,
-  message,
+  message
 } from "antd"
 import {
   TeamOutlined,
@@ -45,7 +45,6 @@ import AdminManageUsers from "./pages/admin/manage-users"
 import AdminManageApiKeys from "./pages/admin/manage-api-keys"
 import MyApiKeys from "./pages/account/my-api-keys"
 import { PrivateRoute } from "./modules/auth/private-route"
-import SubMenu from "antd/es/menu/SubMenu"
 import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
@@ -56,6 +55,7 @@ import {
   useAuthConfig,
 } from "./modules/auth/hooks/use-ui-config-hook"
 
+const { SubMenu } = Menu
 const { Sider, Content } = Layout
 
 const App = () => {
