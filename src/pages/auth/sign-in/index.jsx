@@ -34,7 +34,6 @@ const SignIn = ({
   oAuth2ButtonText,
   oAuthPath,
 }) => {
-  console.log("oAuthPath", oAuthPath)
   return (
     <>
       {isSimpleAuthEnabled && (
