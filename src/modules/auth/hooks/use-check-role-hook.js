@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 EPAM Systems
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
+import { useImmer } from "use-immer"
 import useAuth from "./use-auth-hook"
 
 const useCheckRole = (allowedRoles) => {
   const { isSignedIn, userInfo } = useAuth()
 
-  const [error, setError] = useState(null)
-  const [hasRole, setHasRole] = useState(null)
-  const [isFetched, setIsFetched] = useState(false)
+  const [state, setState] = useImmer({
+    hasRole: null,
+    error: null,
+    isFetched: false,
+  })
 
   useEffect(() => {
     if (!(isSignedIn && userInfo)) return
@@ -30,14 +33,16 @@ const useCheckRole = (allowedRoles) => {
       .map((role) => role.toLowerCase())
       .some((role) => role === userInfo?.role.toLowerCase())
 
-    setHasRole(roleCheck)
-    if (!roleCheck) {
-      setError("You don't have necessary role to access this resource")
-    }
-    setIsFetched(true)
-  }, [isSignedIn, userInfo, allowedRoles])
+    setState((draft) => {
+      draft.hasRole = roleCheck
+      if (!roleCheck) {
+        draft.error = "You don't have necessary role to access this resource"
+      }
+      draft.isFetched = true
+    })
+  }, [isSignedIn, userInfo, allowedRoles, setState])
 
-  return { hasRole, error, isFetched }
+  return state
 }
 
 export default useCheckRole

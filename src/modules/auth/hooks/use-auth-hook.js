@@ -15,49 +15,55 @@
  */
 import { useState, useEffect, createContext, useContext } from "react"
 import axios from "axios"
+import { useImmer } from "use-immer"
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const [isSignedIn, setIsSignedIn] = useState(false)
-  const [error, setError] = useState(null)
-  const [userInfo, setUserInfo] = useState(null)
-  const [isFetched, setIsFetched] = useState(false)
+  const [state, updateState] = useImmer({
+    isSignedIn: false,
+    error: null,
+    userInfo: null,
+    isFetched: false
+  })
 
   const checkAuth = async () => {
     try {
       // It's not worth using getUserInfo() wrapper, since we need axios response/status/request objects 
+      debugger
       const response = await axios.get("/api/user-info")
-      setUserInfo(response.data.data)
-      setIsSignedIn(true)
+      updateState((draft) => {
+        draft.userInfo = response.data.data
+        draft.isSignedIn = true,
+        draft.isFetched = true
+      })
     } catch (error) {
       handleAuthError(error)
     }
-    setIsFetched(true)
   }
 
   const handleAuthError = (error) => {
-    if (error.response) {
-      const status = error.response.status
-      if (status >= 500) {
-        setError(`Internal server error (${status})`)
-      } else if (status === 404) {
-        setError("Resource not found (404)")
-      } else if (status === 401) {
-        setIsSignedIn(false)
-      } else if (status >= 400) {
-        setError(
-          `${
+    updateState((draft) => {
+      draft.isFetched = true
+      if (error.response) {
+        const status = error.response.status
+        if (status >= 500) {
+          draft.error = `Internal server error (${status})`
+        } else if (status === 404) {
+          draft.error = "Resource not found (404)"
+        } else if (status === 401) {
+          draft.isSignedIn = false
+        } else if (status >= 400) {
+          draft.error =
             error.response.data.errorMessage ||
-            `Bad request or validation error`
-          } (${status})`
-        )
+            `Bad request or validation error (${status})`
+        }
+      } else if (error.request) {
+        draft.error = "Network error, API is unavailable"
+      } else {
+        draft.error = "Unknown error occurred"
       }
-    } else if (error.request) {
-      setError("Network error, API is unavailable")
-    } else {
-      setError("Unknown error occurred")
-    }
+    })
   }
 
   useEffect(() => {
@@ -65,9 +71,7 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   return (
-    <AuthContext.Provider
-      value={{ isFetched, isSignedIn, error, userInfo }}
-    >
+    <AuthContext.Provider value={state}>
       {children}
     </AuthContext.Provider>
   )
