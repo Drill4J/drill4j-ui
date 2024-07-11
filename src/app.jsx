@@ -113,7 +113,7 @@ const AppContent = () => {
   if (!isAuthDataFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Checking authentication... ">&nbsp;</Spin>
+        <Spin tip="Checking authentication... ">{" "}</Spin>
       </AuthLayout>
     )
   }
@@ -121,7 +121,7 @@ const AppContent = () => {
   if (!isAuthConfigFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Fetching auth configuration... ">&nbsp;</Spin>
+        <Spin tip="Fetching auth configuration... ">{" "}</Spin>
       </AuthLayout>
     )
   }
