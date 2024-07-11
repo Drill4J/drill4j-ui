@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../build:/usr/share/nginx/html:ro
+      # ../build points to Drill4J UI build folder, containing index.html, /static (which in turn has /js and /css) folder
+      # Refer to the Drill4J UI GitHub repository README https://github.com/Drill4J/drill4j-ui/blob/main/README.md for information on where to obtain it

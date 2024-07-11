@@ -1,10 +1,42 @@
 # Drill4J UI
 
+Web frontend to manage user accounts and API keys for Drill4J instance.  
+
 > This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Production deployment
+
+Drill4J UI is a simple React frontend using HTML, CSS, and JavaScript. It can be hosted in various ways.
+
+The only requirement at the moment is that requests made by Drill4J UI to `/api/` and `/oauth/login` must be proxied to [Drill4J Backend](https://github.com/Drill4J/admin) instance.
+
+The easiest method is using Nginx or equivalent reverse proxy.
+
+- Refer to the [./deployment/](./deployment/) directory for the [Nginx configuration](./deployment/nginx.conf)
+- Nginx can be deployed using
+    - the [`docker run`](./deployment/docker-run.sh) command
+    - or [Docker Compose](./deployment/docker-compose.yml) file
+
+### Where do I get Drill4J UI application build?
+
+You can download Drill4J UI at https://github.com/Drill4J/drill4j-ui/releases 
+
+__Alternatively__  clone this repository and build it yourself following [./Development](#development) instructions below.
 
 ## Development
 
-### Launch application
+### Install dependencies
+
+- Install Node.js `v20.15.0` (npm `10.7.0` at the time of writing)
+- Clone this repository, navigate to repository folder
+- Execute `npm install`
+
+### Build application
+
+- Execute `npm build`
+- After the build process is finished `build` folder should appear, containing `index.html`, `static` folder and other relevant build files
+
+### Launch application for local development
 
 Execute `npm start` to launch the app in the development mode.
 
@@ -26,10 +58,12 @@ target: "http://localhost:8090",
 > 
 > A: When signing in with Auth Provider user is redirected to `/oauth/login` via browser. By default, proxy ignores all requests marked with `text/html` - hence, with default setup, proxy won't cath this request and redirect won't work 
 
-## Available Scripts
+## Create React App reference - Available Scripts
 
 In the project directory, you can run:
 ### `npm start`
+
+Launches app for local development
 
 ### `npm test`
 
