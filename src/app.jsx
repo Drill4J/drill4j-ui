@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 EPAM Systems
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState } from "react"
+import React, { useState, useCallback, useMemo } from "react"
 import {
   Alert,
   ConfigProvider as ThemeProvider,
   Layout,
   Menu,
   Spin,
-  message
+  message,
 } from "antd"
 import {
   TeamOutlined,
@@ -91,7 +91,6 @@ const App = () => {
 
 const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
   const {
     isFetched: isAuthConfigFetched,
     authConfig,
@@ -103,12 +102,18 @@ const AppContent = () => {
     isSignedIn,
   } = useAuth()
 
-  const toggleCollapsed = () => {
-    setCollapsed(!collapsed)
-  }
-
   const location = useLocation()
-  const isAuthRoute = ["/sign-in", "/sign-up"].includes(location.pathname)
+  const isAuthRoute = useMemo(
+    () => ["/sign-in", "/sign-up"].includes(location.pathname),
+    [location.pathname]
+  )
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => !prev)
+  }, [])
+
+  const userRoles = useMemo(() => ["user", "admin"], [])
+  const adminRoles = useMemo(() => ["admin"], [])
 
   if (!isAuthDataFetched) {
     return (
@@ -160,7 +165,7 @@ const AppContent = () => {
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
         <div className="demo-logo-vertical" />
-        {renderMenu(location, isSignOutInProgress, setIsSignOutInProgress)}
+        <SiderMenu location={location} />
       </Sider>
       <Layout>
         <Content style={{ margin: "16px" }}>
@@ -168,7 +173,7 @@ const AppContent = () => {
             <Routes>
               <Route
                 path="/admin/*"
-                element={<PrivateRoute roles={["admin"]} />}
+                element={<PrivateRoute roles={adminRoles} />}
               >
                 <Route path="manage-users" element={<AdminManageUsers />} />
                 <Route
@@ -176,23 +181,19 @@ const AppContent = () => {
                   element={<AdminManageApiKeys />}
                 />
               </Route>
-
               <Route path="/" element={<Navigate to="/my-api-keys" />} />
-
               <Route
                 path="/my-api-keys/*"
-                element={<PrivateRoute roles={["user", "admin"]} />}
+                element={<PrivateRoute roles={userRoles} />}
               >
                 <Route index element={<MyApiKeys />} />
               </Route>
-
               <Route
                 path="/my-account/*"
-                element={<PrivateRoute roles={["user", "admin"]} />}
+                element={<PrivateRoute roles={userRoles} />}
               >
                 <Route index element={<MyAccount />} />
               </Route>
-
               <Route path="*" element={<Navigate to="/not-found" />} />
             </Routes>
           </div>
@@ -202,8 +203,10 @@ const AppContent = () => {
   )
 }
 
-function renderMenu(location, isSignOutInProgress, setIsSignOutInProgress) {
-  const handleSignOut = async () => {
+function SiderMenu({ location }) {
+  const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
+
+  const handleSignOut = useCallback(async () => {
     setIsSignOutInProgress(true)
     try {
       await signOut()
@@ -213,14 +216,17 @@ function renderMenu(location, isSignOutInProgress, setIsSignOutInProgress) {
       message.error(`Failed to sign out. ${error.message}`)
     }
     setIsSignOutInProgress(false)
-  }
+  }, [])
 
-  const defaultOpenKeys = [
-    "/admin/manage-users",
-    "/admin/manage-api-keys",
-  ].includes(location.pathname)
-    ? "admin-submenu"
-    : ""
+  const defaultOpenKeys = useMemo(
+    () =>
+      ["/admin/manage-users", "/admin/manage-api-keys"].includes(
+        location.pathname
+      )
+        ? "admin-submenu"
+        : "",
+    [location.pathname]
+  )
 
   return (
     <Menu
@@ -249,7 +255,10 @@ function renderMenu(location, isSignOutInProgress, setIsSignOutInProgress) {
           <Spin
             size="small"
             indicator={
-              <LoadingOutlined style={{ fontSize: '16px', color: "white", marginLeft: '8px' }} spin />
+              <LoadingOutlined
+                style={{ fontSize: "16px", color: "white", marginLeft: "8px" }}
+                spin
+              />
             }
           />
         )}
