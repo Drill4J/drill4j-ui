@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react"
 import { Table, Popconfirm, message, Button, Spin } from "antd"
 import * as API from "../../../modules/manage-api-keys/api-keys-management"
 import { formatHumanReadableDate } from "../../../modules/util"
+import { RoleTag } from "../../../components/role-tag"
 
 export const ApiKeysManagementTable = () => {
   const [keys, setKeys] = useState([])
@@ -91,6 +92,16 @@ export const ApiKeysManagementTable = () => {
       dataIndex: "role",
       width: "30%",
       align: "left",
+      render: (value, record) => <RoleTag role={value} isBlocked={record.userBlocked} />,
+    },
+    {
+      title: "Is User Blocked",
+      dataIndex: "userBlocked",
+      key: "userBlocked",
+      width: "10%",
+      align: "left",
+      render: (value) => <>{value ? "blocked" : "-"}</>,
+      sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
       title: "Actions",

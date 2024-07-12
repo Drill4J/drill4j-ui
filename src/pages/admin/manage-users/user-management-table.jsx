@@ -18,6 +18,7 @@ import { Table, message, Button, Popconfirm, Input, Space, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { Role } from "../../../modules/auth/models/role";
 import * as API from "../../../modules/user-management/api-user-management";
+import { RoleTag } from "../../../components/role-tag";
 
 export const UserManagementTable = () => {
   const [users, setUsers] = useState([]);
@@ -148,7 +149,7 @@ export const UserManagementTable = () => {
       key: "role",
       width: "20%",
       align: "left",
-      render: (value) => <>{value.toUpperCase()}</>,
+      render: (value, record) => <RoleTag role={value} isBlocked={record.blocked} />,
       sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
