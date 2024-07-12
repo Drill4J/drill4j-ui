@@ -23,6 +23,14 @@ You can download Drill4J UI at https://github.com/Drill4J/drill4j-ui/releases
 
 __Alternatively__  clone this repository and build it yourself following [./Development](#development) instructions below.
 
+## Release
+
+Use [release Github Action](https://github.com/Drill4J/drill4j-ui/actions/workflows/release.yml):
+- Leave Version field empty to bump patch version
+- Specify tag manually (`vX.Y.Z`) to bump minor or major versions
+
+Build assets will be uploaded to https://github.com/Drill4J/drill4j-ui/releases
+
 ## Development
 
 ### Install dependencies
