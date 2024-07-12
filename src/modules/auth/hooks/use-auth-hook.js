@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       // It's not worth using getUserInfo() wrapper, since we need axios response/status/request objects 
-      debugger
       const response = await axios.get("/api/user-info")
       updateState((draft) => {
         draft.userInfo = response.data.data
