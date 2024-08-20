@@ -59,7 +59,7 @@ jobs:
         name: Build & push Docker image
         with:
           registry: ghcr.io
-          image: drill4j-ui/image
+          image: drill4j-ui
           tags: ${{ steps.determine_version.outputs.new_version }}
           username: ${{ secrets.GH_CONTAINER_REGISTRY_USERNAME }}
           password: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
