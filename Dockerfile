@@ -13,6 +13,8 @@ RUN npm run build
 
 FROM nginx:latest
 
+LABEL org.opencontainers.image.source=https://github.com/drill4j/drill4j-ui
+
 COPY --from=build /app/build /usr/share/nginx/html
 COPY ./nginx.conf /etc/nginx/nginx.conf:ro
 
