@@ -62,7 +62,7 @@ jobs:
         name: Build & push Docker image
         with:
           registry: ghcr.io
-          image: drill4j-ui
+          image: ghcr.io/Drill4J/drill4j-ui
           tags: ${{ env.VERSION_WITHOUT_V }}
           username: ${{ secrets.GH_CONTAINER_REGISTRY_USERNAME }}
           password: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
