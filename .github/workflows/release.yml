@@ -55,12 +55,15 @@ jobs:
           git tag $new_version
           git push origin $new_version
 
+      - name: Remove leading 'v'
+        run: echo "VERSION_WITHOUT_V=$(echo '${{ steps.determine_version.outputs.new_version }}' | sed 's/^v//')" >> $GITHUB_ENV
+
       - uses: mr-smithers-excellent/docker-build-push@v6
         name: Build & push Docker image
         with:
           registry: ghcr.io
           image: drill4j-ui
-          tags: ${{ steps.determine_version.outputs.new_version }}
+          tags: ${{ env.VERSION_WITHOUT_V }}
           username: ${{ secrets.GH_CONTAINER_REGISTRY_USERNAME }}
           password: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
 
