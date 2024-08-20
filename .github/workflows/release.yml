@@ -55,6 +55,15 @@ jobs:
           git tag $new_version
           git push origin $new_version
 
+      - uses: mr-smithers-excellent/docker-build-push@v6
+        name: Build & push Docker image
+        with:
+          registry: ghcr.io
+          image: drill4j-ui/image
+          tags: ${{ steps.determine_version.outputs.new_version }}
+          username: ${{ secrets.GH_CONTAINER_REGISTRY_USERNAME }}
+          password: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
+
       - name: Archive build output
         run: |
           new_version=${{ steps.determine_version.outputs.new_version }}
