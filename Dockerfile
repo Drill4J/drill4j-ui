@@ -15,7 +15,13 @@ FROM nginx:latest
 
 LABEL org.opencontainers.image.source=https://github.com/drill4j/drill4j-ui
 
-COPY --from=build /app/build /usr/share/nginx/html
-COPY ./nginx.conf /etc/nginx/nginx.conf
+# Install envsubst
+RUN apt-get update && apt-get install -y gettext-base
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+COPY ./nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY --from=build /app/build /usr/share/nginx/html
+
+CMD ["/entrypoint.sh"]
