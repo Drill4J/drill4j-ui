@@ -48,7 +48,7 @@ import { runCatching } from "../util"
  * @returns {Promise<string>} The message from the server.
  */
 export async function signIn(loginPayload) {
-  const response = await runCatching(axios.post("/api/sign-in", loginPayload))
+  const response = await runCatching(axios.post("/sign-in", loginPayload))
   return response.data.message
 }
 
@@ -61,7 +61,7 @@ export async function signIn(loginPayload) {
  */
 export async function signUp(registrationPayload) {
   const response = await runCatching(
-    axios.post("/api/sign-up", registrationPayload)
+    axios.post("/sign-up", registrationPayload)
   )
   return response.data.message
 }
@@ -71,7 +71,7 @@ export async function signUp(registrationPayload) {
  * @returns {Promise<string>} The message from the server.
  */
 export async function signOut() {
-  const response = await runCatching(axios.post("/api/sign-out"))
+  const response = await runCatching(axios.post("/sign-out"))
   return response.data.message
 }
 
@@ -84,7 +84,7 @@ export async function signOut() {
  */
 export async function updatePassword(changePasswordPayload) {
   const response = await runCatching(
-    axios.post("/api/update-password", changePasswordPayload)
+    axios.post("/update-password", changePasswordPayload)
   )
   return response.data.message
 }
@@ -94,7 +94,7 @@ export async function updatePassword(changePasswordPayload) {
  * @returns {Promise<UserInfo|null>} The user information or null if not authenticated.
  */
 export async function getUserInfo() {
-  const response = await runCatching(axios.get("/api/user-info"))
+  const response = await runCatching(axios.get("/user-info"))
   return response.data.data
 }
 
@@ -103,6 +103,6 @@ export async function getUserInfo() {
  * @returns {Promise<AuthConfig>} The UI configuration or null if not available.
  */
 export async function getAuthConfig() {
-  const response = await runCatching(axios.get("/api/ui-config"))
+  const response = await runCatching(axios.get("/ui-config"))
   return response.data.data.auth
 }

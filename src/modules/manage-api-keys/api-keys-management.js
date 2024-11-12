@@ -22,7 +22,7 @@ import { runCatching } from "../util";
  * @returns {Promise<any>} A promise that resolves with the fetched keys.
  */
 export async function getKeys() {
-  const response = await runCatching(axios.get("/api/keys"));
+  const response = await runCatching(axios.get("/keys"));
   return response.data.data;
 }
 
@@ -32,6 +32,6 @@ export async function getKeys() {
  * @returns {Promise<string>} A promise that resolves with a message indicating the deletion status.
  */
 export async function deleteKey(id) {
-  const response = await runCatching(axios.delete(`/api/keys/${id}`));
+  const response = await runCatching(axios.delete(`/keys/${id}`));
   return response.data.message;
 }

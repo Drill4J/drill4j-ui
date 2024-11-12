@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       // It's not worth using getUserInfo() wrapper, since we need axios response/status/request objects 
-      const response = await axios.get("/api/user-info")
+      const response = await axios.get("/user-info")
       updateState((draft) => {
         draft.userInfo = response.data.data
         draft.isSignedIn = true,

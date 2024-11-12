@@ -69,7 +69,7 @@ const App = () => {
     >
       <AuthConfigProvider>
         <AuthProvider>
-          <Router>
+          <Router basename="">
             <Routes>
               <Route
                 path="/not-found"

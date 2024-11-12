@@ -24,7 +24,7 @@ const SignUp = () => {
       if (values.password != values.passwordRepeat) {
         throw new Error("Passwords do not match")
       }
-      const response = await axios.post("/api/sign-up", {
+      const response = await axios.post("/sign-up", {
         username: values.username,
         password: values.password
       })

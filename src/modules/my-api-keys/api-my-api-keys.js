@@ -22,7 +22,7 @@ import { runCatching } from "../util"
  * @returns {Promise<Array<any>>} The list of user keys.
  */
 export async function getKeys() {
-  const response = await runCatching(axios.get("/api/user-keys"))
+  const response = await runCatching(axios.get("/user-keys"))
   return response.data.data
 }
 
@@ -32,7 +32,7 @@ export async function getKeys() {
  * @returns {Promise<string>} A message indicating the success or failure of the operation.
  */
 export async function deleteKey(id) {
-  const response = await runCatching(axios.delete(`/api/user-keys/${id}`))
+  const response = await runCatching(axios.delete(`/user-keys/${id}`))
   return response.data.message
 }
 
@@ -42,7 +42,7 @@ export async function deleteKey(id) {
  * @returns {Promise<any>} The response data from the server.
  */
 export async function generateKey(payload) {
-  const response = await runCatching(axios.post("/api/user-keys", payload))
+  const response = await runCatching(axios.post("/user-keys", payload))
   return response.data
 }
 

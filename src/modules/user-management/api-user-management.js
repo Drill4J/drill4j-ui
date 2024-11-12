@@ -26,7 +26,7 @@ import { runCatching } from "../util"
  * @returns {Promise<any[]>} A promise that resolves to an array of users.
  */
 export async function getUsers() {
-  const response = await runCatching(axios.get("/api/users"))
+  const response = await runCatching(axios.get("/users"))
   return response.data.data
 }
 
@@ -37,7 +37,7 @@ export async function getUsers() {
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
 export async function editUser(id, editUserPayload) {
-  const response = await runCatching(axios.put(`/api/users/${id}`, editUserPayload))
+  const response = await runCatching(axios.put(`/users/${id}`, editUserPayload))
   return response.data.message
 }
 
@@ -47,7 +47,7 @@ export async function editUser(id, editUserPayload) {
  * @returns {Promise<any>} A promise that resolves to the user data.
  */
 export async function getUserById(id) {
-  const response = await runCatching(axios.get(`/api/users/${id}`))
+  const response = await runCatching(axios.get(`/users/${id}`))
   return response.data
 }
 
@@ -57,7 +57,7 @@ export async function getUserById(id) {
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
 export async function deleteUser(id) {
-  const response = await runCatching(axios.delete(`/api/users/${id}`))
+  const response = await runCatching(axios.delete(`/users/${id}`))
   return response.data.message
 }
 
@@ -67,7 +67,7 @@ export async function deleteUser(id) {
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
 export async function blockUser(id) {
-  const response = await runCatching(axios.patch(`/api/users/${id}/block`))
+  const response = await runCatching(axios.patch(`/users/${id}/block`))
   return response.data.message
 }
 
@@ -77,7 +77,7 @@ export async function blockUser(id) {
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
 export async function unblockUser(id) {
-  const response = await runCatching(axios.patch(`/api/users/${id}/unblock`))
+  const response = await runCatching(axios.patch(`/users/${id}/unblock`))
   return response.data.message
 }
 
@@ -87,7 +87,7 @@ export async function unblockUser(id) {
  * @returns {Promise<PasswordResetResponse>} A promise that resolves to the password reset response.
  */
 export async function resetPassword(id) {
-  const response = await runCatching(axios.patch(`/api/users/${id}/reset-password`))
+  const response = await runCatching(axios.patch(`/users/${id}/reset-password`))
   return response.data
 }
 
