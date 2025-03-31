@@ -63,9 +63,16 @@ const CoverageTreemap = () => {
                         cmin: 0,
                         cmax: 1,
                         colorbar: {
-                            title: "Coverage Ratio",
                             tickvals: [0, 0.25, 0.5, 0.75, 1],
-                            ticktext: ["0", "0.25", "0.5", "0.75", "1"]
+                            ticktext: ["0%", "25%", "50%", "75%", "100%"],
+                            orientation: 'h', // Make colorbar horizontal
+                            x: 0.5, // Center it horizontally
+                            y: 0, // Move it below the plot
+                            xanchor: 'center',
+                            yanchor: 'top',
+                            thickness: 5,
+                            tickfont: { size: 10 },
+                            len: 0.98
                         }
                     },
                     textinfo: "label+value+percent parent",
@@ -85,9 +92,16 @@ const CoverageTreemap = () => {
             ) : (
                 <Plot 
                     data={data} 
-                    layout={{ margin: { l: 0, r: 0, t: 0, b: 0 } }}
-                    config={{ displayModeBar: false, responsive: true, useResizeHandler: true }}
-                    // style={{ width: "600px", height: "400px" }}
+                    layout={{
+                        margin: { l: 0, r: 0, t: 0, b: 0 },
+                        autosize: true,
+                        showlegend: false,
+                    }}
+                    config={{
+                        displayModeBar: false,
+                    }}
+                    useResizeHandler={true}
+                    style={{width: "100%", height: "100%"}}
                 />
             )}
         </div>
