@@ -50,7 +50,7 @@ import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { signOut } from "./modules/auth/api-auth"
 import { MyAccount } from "./pages/account/my-account"
-import { CoverageTreemap } from "./pages/iframes/coverage-treemap"
+import { CoverageTreemapPage } from "./pages/iframes/coverage-treemap"
 import {
   AuthConfigProvider,
   useAuthConfig,
@@ -167,7 +167,7 @@ const IframeRouter = () => {
         path="/coverage-treemap/*"
         element={<PrivateRoute roles={userRoles} />}
       >
-        <Route index element={<CoverageTreemap />} />
+        <Route index element={<CoverageTreemapPage />} />
       </Route>
     </Routes>
   );

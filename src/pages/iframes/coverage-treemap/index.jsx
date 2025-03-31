@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import { Col, Divider, Row } from "antd"
-import CoverageTreemapComponent from "../../../components/charts/coverage-treemap"
+import CoverageTreemap from "../../../components/charts/coverage-treemap"
 
-export const CoverageTreemap = () => (
+export const CoverageTreemapPage = () => (
   <>
     <Row>
       <Col span={24}>
-        <CoverageTreemapComponent />
+        <CoverageTreemap />
       </Col>
     </Row>
   </>

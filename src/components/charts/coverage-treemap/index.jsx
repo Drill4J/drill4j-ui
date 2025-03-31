@@ -19,7 +19,7 @@ import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Typography } from "antd"
 
-const TreemapPlotly = () => {
+const CoverageTreemap = () => {
     const [data, setData] = useState([]);
     const [error, setError] = useState("");
     const [searchParams] = useSearchParams();
@@ -94,4 +94,4 @@ const TreemapPlotly = () => {
     );
 };
 
-export default TreemapPlotly;
+export default CoverageTreemap;
