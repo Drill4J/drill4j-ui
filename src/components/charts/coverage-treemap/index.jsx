@@ -24,19 +24,17 @@ const CoverageTreemap = () => {
     const [error, setError] = useState("");
     const [searchParams] = useSearchParams();
     
-    const groupId = searchParams.get("groupId");
-    const appId = searchParams.get("appId");
     const buildId = searchParams.get("buildId");
 
     useEffect(() => {
-        if (!groupId || !appId || !buildId) {
-            setError("Missing required parameters: groupId, appId, buildId");
+        if (!buildId) {
+            setError("Missing a required parameter: buildId");
             setData([]);
             return;
         }
 
         setError("");
-        const url = `/metrics/coverage-treemap?groupId=${groupId}&appId=${appId}&buildId=${buildId}`;
+        const url = `/metrics/coverage-treemap?buildId=${buildId}`;
         
         axios.get(url)
             .then(response => {
@@ -83,7 +81,7 @@ const CoverageTreemap = () => {
             .catch(error => {
                 setError(`Failed to load data: ${error.message}`);
             });
-    }, [groupId, appId, buildId]);
+    }, [buildId]);
 
     return (
         <div>
