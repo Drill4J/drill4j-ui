@@ -92,7 +92,8 @@ const CoverageTreemap = () => {
   const chartData = useMemo(() => {
     if (!data.length) return []
 
-    const labels = data.map((item) => item.full_name)
+    const labels = data.map((item) => item.name)
+    const ids = data.map((item) => item.full_name)
     const parents = data.map((item) => item.parent || "")
     const values = data.map((item) => item.probes_count)
     const colors = data.map((item) => item.covered_probes / item.probes_count)
@@ -103,6 +104,7 @@ const CoverageTreemap = () => {
         labels,
         parents,
         values,
+        ids,
         marker: {
           colors,
           colorscale: colorblindMode ? COLORSCALES.COLORBLIND : COLORSCALES.DEFAULT,
