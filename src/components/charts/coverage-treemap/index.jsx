@@ -50,9 +50,28 @@ const COLORSCALES = {
 
 const CoverageTreemap = () => {
   const [data, setData] = useState([])
+  const [rootId, setRootId] = useState()
   const [error, setError] = useState("")
   const [colorblindMode, setColorblindMode] = useState(false)
   const [searchParams] = useSearchParams()
+
+  const [stack, setStack] = useState([]);
+
+  // Push
+  const push = item => setStack(prev => [...prev, item]);
+
+  // Pop
+  const pop = () => {
+    let item;
+    setStack(prev => {
+      item = prev[prev.length - 1];
+      return prev.slice(0, -1);
+    });
+    return item;
+  };
+
+  // Peek
+  const peek = () => stack[stack.length - 1];
 
   const params = useMemo(
     () =>
@@ -92,12 +111,35 @@ const CoverageTreemap = () => {
   const chartData = useMemo(() => {
     if (!data.length) return []
 
-    const labels = data.map((item) => item.name)
-    const ids = data.map((item) => item.full_name)
-    const parents = data.map((item) => item.parent || "")
-    const values = data.map((item) => item.probes_count)
-    const colors = data.map((item) => item.covered_probes / item.probes_count)
+    var ids, labels, parents, values, colors
 
+    if (!rootId) {
+      labels = data.map((item) => item.name)
+      ids = data.map((item) => item.full_name)
+      parents = data.map((item) => item.parent || "")
+      values = data.map((item) => item.probes_count)
+colors = data.map((item) => item.covered_probes / item.probes_count)
+    } else {
+      const indexes = []
+      ids = data.map((item) => item.full_name).reduce((a, c, i) => {
+        if (c.startsWith(rootId)) {
+          a.push(c)
+          indexes.push(i)
+        }
+        return a
+      }, [])
+      
+      const rootIdx = ids.indexOf(rootId)
+  
+      const filteredData = data.filter((_,i) => indexes.includes(i))
+      labels = filteredData.map((item) => item.name)
+      parents = filteredData.map((item) => item.parent || "")
+      values = filteredData.map((item) => item.probes_count)
+      colors = filteredData.map((item) => item.covered_probes / item.probes_count)
+      
+      parents[rootIdx] = ""
+    }
+    
     return [
       {
         type: "treemap",
@@ -105,6 +147,7 @@ const CoverageTreemap = () => {
         parents,
         values,
         ids,
+        maxdepth: 3,
         marker: {
           colors,
           colorscale: colorblindMode ? COLORSCALES.COLORBLIND : COLORSCALES.DEFAULT,
@@ -128,7 +171,7 @@ const CoverageTreemap = () => {
         branchvalues: "total",
       },
     ]
-  }, [data, colorblindMode])
+  }, [data, colorblindMode, history])
 
   return (
     <div>
@@ -148,6 +191,15 @@ const CoverageTreemap = () => {
             }}
             useResizeHandler={true}
             style={{ width: "100%", height: "100%" }}
+            onClick={(e) => {
+              console.log(e)
+              const newRootId = e.points[0].id
+              if (peek() === newRootId) {
+                pop()
+              } else {
+                push(newRootId)
+              }
+            }}
           />
           <label style={{ display: "block", marginTop: 8 }}>
             <input
