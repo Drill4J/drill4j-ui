@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 EPAM Systems
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react"
 import Plot from "react-plotly.js"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography, Checkbox, Space } from "antd"
+import { Typography, Space, InputNumber, Tooltip, Select } from "antd"
+import { InfoCircleOutlined } from "@ant-design/icons"
+
+const { Option } = Select
 
 const COLORSCALES = {
   DEFAULT: [
@@ -33,25 +36,39 @@ const COLORSCALES = {
     [0.9, "#91D1BA"],
     [1.0, "#78C8C4"]
   ],
-  COLORBLIND: [   
-    [0.0, "#D73027"],
-    [0.1, "#F07C4A"],
-    [0.2, "#FDAE61"],
-    [0.3, "#FDCE79"],
-    [0.4, "#FEE08B"],
-    [0.5, "#D9EF8B"],
-    [0.6, "#A6D96A"],
-    [0.7, "#66BD63"],
-    [0.8, "#1A9850"],
-    [0.9, "#1C7C5F"],
-    [1.0, "#216869"]
+  COLORBLIND_DEUTAN: [   
+    [0.0, "#D55E00"],
+    [0.1, "#E58606"],
+    [0.2, "#F2B701"],
+    [0.3, "#EEC300"],
+    [0.4, "#D0E17D"],
+    [0.5, "#A6CF60"],
+    [0.6, "#66A61E"],
+    [0.7, "#1B9E77"],
+    [0.8, "#1E91B6"],
+    [0.9, "#1170AA"],
+    [1.0, "#084081"]
   ],
+  COLORBLIND_TRITAN: [   
+    [0.0, "#D73027"],
+    [0.1, "#E44C2A"],
+    [0.2, "#F07C4A"],
+    [0.3, "#FDAE61"],
+    [0.4, "#DD8DAA"],
+    [0.5, "#C37EB4"],
+    [0.6, "#9C7CD4"],
+    [0.7, "#6C8EC1"],
+    [0.8, "#4C9F70"],
+    [0.9, "#1A9850"],
+    [1.0, "#006837"]
+  ]
 }
 
 const CoverageTreemap = () => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
-  const [colorblindMode, setColorblindMode] = useState(false)
+  const [colorblindMode, setColorblindMode] = useState("DEFAULT")
+  const [maxDepth, setMaxDepth] = useState(3)
   const [searchParams] = useSearchParams()
 
   const params = useMemo(
@@ -91,7 +108,6 @@ const CoverageTreemap = () => {
 
   const chartData = useMemo(() => {
     if (!data.length) return []
-
     const labels = data.map((item) => item.name)
     const ids = data.map((item) => item.full_name)
     const parents = data.map((item) => item.parent || "")
@@ -105,17 +121,18 @@ const CoverageTreemap = () => {
         parents,
         values,
         ids,
+        maxdepth: maxDepth,
         marker: {
           colors,
-          colorscale: colorblindMode ? COLORSCALES.COLORBLIND : COLORSCALES.DEFAULT,
+          colorscale: COLORSCALES[colorblindMode],
           cmin: 0,
           cmax: 1,
           colorbar: {
             tickvals: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
             ticktext: ["0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"],
-            orientation: "h", // Make colorbar horizontal
-            x: 0.5, // Center it horizontally
-            y: 0, // Move it below the plot
+            orientation: "h",
+            x: 0.5,
+            y: 0,
             xanchor: "center",
             yanchor: "top",
             thickness: 5,
@@ -128,7 +145,7 @@ const CoverageTreemap = () => {
         branchvalues: "total",
       },
     ]
-  }, [data, colorblindMode])
+  }, [data, colorblindMode, maxDepth])
 
   return (
     <div>
@@ -149,17 +166,45 @@ const CoverageTreemap = () => {
             useResizeHandler={true}
             style={{ width: "100%", height: "100%" }}
           />
-          <Space
-            style={{padding: "0 1em"}}
+          <div
+            style={{
+              padding: "0 1em",
+              display: "flex",
+              alignItems: "baseline",
+              flexWrap: "wrap",
+              gap: "1em"
+            }}
           >
-            <Checkbox
-              checked={colorblindMode}
-              onChange={(e) => setColorblindMode(e.target.checked)}
-              style={{ marginTop: 8 }}
+            <InputNumber
+              min={2}
+              max={10}
+              value={maxDepth}
+              onChange={setMaxDepth}
+              style={{ width: 60 }}
+              controls
+            />
+            <Typography.Text>
+              Max Depth
+              <Tooltip title="Controls how deep the packages tree is rendered from the current root node. Min value - 2. Max value - 10">
+                <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
+              </Tooltip>
+            </Typography.Text>
+            <Select
+              value={colorblindMode}
+              onChange={setColorblindMode}
+              style={{ marginLeft: "1em", width: 160 }}
             >
-              Colorblind Mode
-            </Checkbox>
-          </Space>
+              <Option value="DEFAULT">None (default)</Option>
+              <Option value="COLORBLIND_DEUTAN">Green-Red</Option>
+              <Option value="COLORBLIND_TRITAN">Blue-Yellow</Option>
+            </Select>
+            <Typography.Text>
+              Colorblind Palette
+              <Tooltip title="Select a colorblind-friendly palette for better accessibility.">
+                <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
+              </Tooltip>
+            </Typography.Text>
+          </div>
         </>
       )}
     </div>
