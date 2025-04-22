@@ -17,7 +17,7 @@ import { useEffect, useState, useMemo } from "react";
 import Plot from "react-plotly.js"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography } from "antd"
+import { Typography, Checkbox, Space } from "antd"
 
 const COLORSCALES = {
   DEFAULT: [
@@ -149,15 +149,17 @@ const CoverageTreemap = () => {
             useResizeHandler={true}
             style={{ width: "100%", height: "100%" }}
           />
-          <label style={{ display: "block", marginTop: 8 }}>
-            <input
-              type="checkbox"
+          <Space
+            style={{padding: "0 1em"}}
+          >
+            <Checkbox
               checked={colorblindMode}
               onChange={(e) => setColorblindMode(e.target.checked)}
-              style={{ marginRight: 8 }}
-            />
-            colorblind mode
-          </label>
+              style={{ marginTop: 8 }}
+            >
+              Colorblind Mode
+            </Checkbox>
+          </Space>
         </>
       )}
     </div>
