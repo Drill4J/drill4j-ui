@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 import React, { useState } from "react"
-import { Form, Input, Button, message } from "antd"
+import { Form, Input, Button, message, Divider, Typography } from "antd"
 import axios from "axios"
+import { useNavigate } from "react-router-dom"
 
 const SignUp = () => {
+  const navigate = useNavigate()
   const [error, setError] = useState(null)
+
   const onFinish = async (values) => {
     try {
       if (values.password != values.passwordRepeat) {
@@ -61,8 +64,23 @@ const SignUp = () => {
         </Form.Item>
       )}
       <Form.Item>
-        <Button type="primary" htmlType="submit">
+        <Button
+          type="primary"
+          htmlType="submit"
+          style={{ width: "100%" }}
+          >
           Sign up
+        </Button>
+      </Form.Item>
+      <Divider style={{ marginTop: "-10px" }}>
+        <Typography.Text>or</Typography.Text>
+      </Divider>
+      <Form.Item>
+        <Button
+          onClick={() => navigate(-1)}
+          style={{ width: "100%" }}
+        >
+          Go back
         </Button>
       </Form.Item>
     </Form>

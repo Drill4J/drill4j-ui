@@ -36,6 +36,15 @@ const SignIn = ({
 }) => {
   return (
     <>
+      <Typography.Text
+        style={{
+          display: "block",
+          marginBottom: "1em"
+        }}
+        type="secondary">
+        Please sign in to access Drill4J UI
+      </Typography.Text>
+
       {isSimpleAuthEnabled && (
         <SignInForm
           isSignUpEnabled={isSignUpEnabled}
