@@ -113,6 +113,31 @@ const CoverageTreemap = () => {
     const parents = data.map((item) => item.parent || "")
     const values = data.map((item) => item.probes_count)
     const colors = data.map((item) => item.covered_probes / item.probes_count)
+    const texts = data.map((item) => {
+      const nameWrapped = wrapText(item.name)
+      const ratio = item.covered_probes / item.probes_count
+      return (
+        `${nameWrapped}`+
+        `<br>`+
+        `${Math.round(ratio * 100)}%`
+      ) 
+    })
+    const hovers = data.map((item) => {
+      const ratio = item.covered_probes / item.probes_count
+      return (
+        `<b>Name:</b> `+
+        `${item.name}`+
+        `<br>`+
+        `<b>Coverage:</b> `+
+        `${Math.round(ratio * 100)}%`+
+        `<br>`+
+        `<b>Total probes:</b> `+
+        `${item.probes_count}`+
+        `<br>`+
+        `<b>Covered probes:</b> `+
+        `${item.covered_probes}`
+      ) 
+    })
 
     return [
       {
@@ -140,8 +165,10 @@ const CoverageTreemap = () => {
             len: 0.98,
           },
         },
-        textinfo: "label+value+percent parent",
-        hoverinfo: "label+value+percent parent+percent entry",
+        textinfo: "text",
+        text: texts,
+        hoverinfo: "text",
+        hovertext: hovers,
         branchvalues: "total",
       },
     ]
@@ -218,5 +245,44 @@ function getNamedParams(params, names) {
     return result
   }, {})
 }
+
+function wrapText(text, maxChars = 30, maxLines = 3) {
+  const splitTokens = {
+    whitespace: '(?<=\\s)',
+    underscore: '(?<=_)',
+    dot: '(?=\\.)',
+    comma: '(?=,)',
+    paren: '(?=\\()',
+    arrow: '(?=->)'
+  }
+
+  const combinedRegex = new RegExp(Object.values(splitTokens).join('|'))
+  const segments = text.split(combinedRegex)
+
+  const lines = []
+  let currentLine = ""
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i]
+
+    if ((currentLine + segment).length > maxChars) {
+      lines.push(currentLine)
+      currentLine = segment
+      if (lines.length === maxLines - 1) {
+        // early quit: gather remainder, slice, add ellipsis
+        const rest = [currentLine, ...segments.slice(i + 1)].join("")
+        lines.push(rest.slice(0, maxChars - 1) + "…")
+        return lines.join("<br>")
+      }
+    } else {
+      currentLine += segment
+    }
+  }
+
+  if (currentLine) lines.push(currentLine)
+  return lines.join("<br>")
+}
+
+
 
 export default CoverageTreemap
