@@ -17,7 +17,7 @@ import { useEffect, useState, useMemo } from "react"
 import Plot from "react-plotly.js"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography, Space, InputNumber, Tooltip, Select, Checkbox, Divider } from "antd"
+import { Typography, InputNumber, Tooltip, Select, Checkbox, Divider, Spin } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
 const { Option } = Select
@@ -80,6 +80,7 @@ const CoverageTreemap = () => {
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
   const [highlightEnabled, setHighlightEnabled] = useState(false)
   const [highlightThreshold, setHighlightThreshold] = useState(DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE)
+  const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
 
   const params = useMemo(
@@ -99,11 +100,14 @@ const CoverageTreemap = () => {
     if (!params.buildId) {
       setError("Missing a required parameter: buildId")
       setData([])
+      setLoading(false)
       return
     }
 
     setError("")
     const url = "/metrics/coverage-treemap"
+
+    setLoading(true)
 
     axios
       .get(url, { params })
@@ -114,6 +118,9 @@ const CoverageTreemap = () => {
       })
       .catch((error) => {
         setError(`Failed to load data: ${error.message}`)
+      })
+      .finally(() => {
+        setLoading(false)
       })
   }, [params])
 
@@ -203,19 +210,21 @@ const CoverageTreemap = () => {
         <Typography.Text>{error}</Typography.Text>
       ) : (
         <>
-          <Plot
-            data={chartData}
-            layout={{
-              margin: { l: 0, r: 0, t: 0, b: 0 },
-              autosize: true,
-              showlegend: false,
-            }}
-            config={{
-              displayModeBar: false,
-            }}
-            useResizeHandler={true}
-            style={{ width: "100%", height: "100%" }}
-          />
+          <Spin spinning={loading}>
+            <Plot
+              data={chartData}
+              layout={{
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+                autosize: true,
+                showlegend: false,
+              }}
+              config={{
+                displayModeBar: false,
+              }}
+              useResizeHandler={true}
+              style={{ width: "100%", height: "100%" }}
+            />
+          </Spin>
           <div
             style={{
               padding: "0 1em",
