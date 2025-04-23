@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y gettext-base
 COPY ./nginx.conf /etc/nginx/templates/nginx.conf.template
 COPY --from=build /app/build /usr/share/nginx/html
 
+WORKDIR /
 # The basepath is the URL path where the UI will be served.
 # Empty string corresponds to "/"
 # Change it from "" to "/my-path" if the UI is not served from the root.
