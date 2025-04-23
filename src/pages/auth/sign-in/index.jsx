@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import {
   Button,
@@ -24,7 +24,7 @@ import {
   Popconfirm,
   Typography,
 } from "antd"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { signIn } from "../../../modules/auth/api-auth"
 
 const SignIn = ({
@@ -78,6 +78,12 @@ const SignIn = ({
 const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const navigate = useNavigate()
+
+  const redirectPath = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return params.get("redirect") || "/"
+  }, [location.search])
 
   const onFinish = async (values) => {
     setIsSubmitting(true)
@@ -87,6 +93,7 @@ const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
         password: values.password,
       })
       message.success("Logged in successfully! Redirecting...")
+      navigate(redirectPath)
       window.location.reload()
     } catch (error) {
       setError(error.message || "Unknown error")

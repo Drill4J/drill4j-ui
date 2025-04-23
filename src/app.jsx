@@ -130,9 +130,14 @@ const BaseRouter = () => {
   }
 
   if (!isSignedIn && !isAuthRoute) {
-    return <Navigate to="/sign-in" />
+    const currentUrl = new URL(window.location.href)
+    const existingRedirect = currentUrl.searchParams.get('redirect')
+    const redirectPath = existingRedirect && existingRedirect.trim() !== ''
+      ? existingRedirect
+      : window.location.pathname + window.location.search
+    return <Navigate to={`/sign-in?redirect=${encodeURIComponent(redirectPath)}`} />
   }
-
+  
   if (!isSignedIn && isAuthRoute) {
     return <AuthLayout>{renderAuthRoutes(authConfig)}</AuthLayout>
   }
