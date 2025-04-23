@@ -50,6 +50,7 @@ import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { signOut } from "./modules/auth/api-auth"
 import { MyAccount } from "./pages/account/my-account"
+import { CoverageTreemapPage } from "./pages/iframes/coverage-treemap"
 import {
   AuthConfigProvider,
   useAuthConfig,
@@ -58,39 +59,25 @@ import {
 const { SubMenu } = Menu
 const { Sider, Content } = Layout
 
-const App = () => {
-  return (
-    <ThemeProvider
-      theme={{
-        token: {
-          colorPrimary: "#007fff",
-        },
-      }}
-    >
-      <AuthConfigProvider>
-        <AuthProvider>
-          <Router basename="">
-            <Routes>
-              <Route
-                path="/not-found"
-                element={
-                  <ErrorLayout
-                    errorTitle={"Not Found"}
-                    errorText={"The requested resource was not found"}
-                  />
-                }
-              />
-              <Route path="/*" element={<AppContent />} />
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </AuthConfigProvider>
-    </ThemeProvider>
-  )
-}
+const App = () =>  (
+  <ThemeProvider
+    theme={{
+      token: {
+        colorPrimary: "#007fff",
+      },
+    }}
+  >
+    <AuthConfigProvider>
+      <AuthProvider>
+        <Router basename="">
+          <BaseRouter/>
+        </Router>
+      </AuthProvider>
+    </AuthConfigProvider>
+  </ThemeProvider>
+)
 
-const AppContent = () => {
-  const [collapsed, setCollapsed] = useState(false)
+const BaseRouter = () => {
   const {
     isFetched: isAuthConfigFetched,
     authConfig,
@@ -107,13 +94,6 @@ const AppContent = () => {
     () => ["/sign-in", "/sign-up"].includes(location.pathname),
     [location.pathname]
   )
-
-  const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => !prev)
-  }, [])
-
-  const userRoles = useMemo(() => ["user", "admin"], [])
-  const adminRoles = useMemo(() => ["admin"], [])
 
   if (!isAuthDataFetched) {
     return (
@@ -150,9 +130,14 @@ const AppContent = () => {
   }
 
   if (!isSignedIn && !isAuthRoute) {
-    return <Navigate to="/sign-in" />
+    const currentUrl = new URL(window.location.href)
+    const existingRedirect = currentUrl.searchParams.get('redirect')
+    const redirectPath = existingRedirect && existingRedirect.trim() !== ''
+      ? existingRedirect
+      : window.location.pathname + window.location.search
+    return <Navigate to={`/sign-in?redirect=${encodeURIComponent(redirectPath)}`} />
   }
-
+  
   if (!isSignedIn && isAuthRoute) {
     return <AuthLayout>{renderAuthRoutes(authConfig)}</AuthLayout>
   }
@@ -160,6 +145,48 @@ const AppContent = () => {
   if (isSignedIn && isAuthRoute) {
     return <Navigate to="/" />
   }
+
+  return (
+    <Routes>
+      <Route
+        path="/not-found"
+        element={
+          <ErrorLayout
+            errorTitle={"Not Found"}
+            errorText={"The requested resource was not found"}
+          />
+        }
+      />
+      <Route path="/iframe/*" element={<IframeRouter />} />
+      <Route path="/*" element={<AppContent location={location} />} />
+    </Routes>
+  )
+}
+
+const IframeRouter = () => {
+  const userRoles = useMemo(() => ["user", "admin"], [])
+
+  return (
+    <Routes>
+      <Route
+        path="/coverage-treemap/*"
+        element={<PrivateRoute roles={userRoles} />}
+      >
+        <Route index element={<CoverageTreemapPage />} />
+      </Route>
+    </Routes>
+  );
+};
+
+const AppContent = ({location}) => {
+  const [collapsed, setCollapsed] = useState(false)
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => !prev)
+  }, [])
+
+  const userRoles = useMemo(() => ["user", "admin"], [])
+  const adminRoles = useMemo(() => ["admin"], [])
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
