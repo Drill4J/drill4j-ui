@@ -64,8 +64,8 @@ jobs:
           registry: ghcr.io
           image: drill4j-ui
           tags: ${{ env.VERSION_WITHOUT_V }}
-          username: ${{ secrets.GH_CONTAINER_REGISTRY_USERNAME }}
-          password: ${{ secrets.GH_CONTAINER_REGISTRY_TOKEN }}
+          username: ${{ secrets.GH_PACKAGE_USERNAME }}
+          password: ${{ secrets.GH_PACKAGE_TOKEN }}
 
       - name: Archive build output
         run: |
