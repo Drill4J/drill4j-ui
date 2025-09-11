@@ -11,12 +11,12 @@ COPY ./src ./src
 COPY ./public ./public
 RUN npm run build
 
-FROM nginx:latest
+FROM nginx:alpine3.22
 
 LABEL org.opencontainers.image.source=https://github.com/drill4j/drill4j-ui
 
 # Install envsubst
-RUN apt-get update && apt-get install -y gettext-base
+RUN apk add --no-cache gettext findutils
 
 COPY ./nginx.conf /etc/nginx/templates/nginx.conf.template
 COPY --from=build /app/build /usr/share/nginx/html
