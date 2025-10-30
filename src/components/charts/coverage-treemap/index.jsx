@@ -73,7 +73,7 @@ const DEFAULT_MAX_DEPTH = 3
 
 const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
 
-const CoverageTreemap = () => {
+export const CoverageTreemap = ({apiEndpoint, queryParams}) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
   const [colorblindMode, setColorblindMode] = useState("DEFAULT")
@@ -82,17 +82,10 @@ const CoverageTreemap = () => {
   const [highlightThreshold, setHighlightThreshold] = useState(DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE)
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
-
+  
   const params = useMemo(
     () =>
-      getNamedParams(searchParams, [
-        "buildId",
-        "testTag",
-        "envId",
-        "branch",
-        "packageNamePattern",
-        "classNamePattern",
-      ]),
+      getNamedParams(searchParams, queryParams),
     [searchParams]
   )
 
@@ -105,7 +98,7 @@ const CoverageTreemap = () => {
     }
 
     setError("")
-    const url = "/metrics/coverage-treemap"
+    const url = apiEndpoint
 
     setLoading(true)
 
@@ -333,5 +326,3 @@ function wrapText(text, maxChars = 30, maxLines = 3) {
   if (currentLine) lines.push(currentLine)
   return lines.join("<br>")
 }
-
-export default CoverageTreemap

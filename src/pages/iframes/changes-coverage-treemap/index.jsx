@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 import { Col, Divider, Row } from "antd"
-import { CoverageTreemap } from "../../../components/charts/coverage-treemap"
+import { CoverageTreemap  } from "../../../components/charts/coverage-treemap"
 
-export const CoverageTreemapPage = () => (
+export const ChangesCoverageTreemapPage = () => (
   <>
     <Row>
       <Col span={24}>
         <CoverageTreemap
-          apiEndpoint={"/metrics/coverage-treemap"}
+          apiEndpoint={"/metrics/changes-coverage-treemap"}
           queryParams={[
-              "buildId",
-              "testTag",
-              "envId",
-              "branch",
-              "packageNamePattern",
-              "classNamePattern",
+            "buildId",
+            "baselineBuildId",
+            "testTag",
+            "envId",
+            "branch",
+            "packageNamePattern",
+            "classNamePattern",
+            "includeDeleted",
+            "includeEqual",
           ]}
         />
       </Col>
