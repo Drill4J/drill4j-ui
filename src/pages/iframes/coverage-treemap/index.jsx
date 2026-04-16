@@ -29,6 +29,8 @@ export const CoverageTreemapPage = () => (
               "branch",
               "packageNamePattern",
               "classNamePattern",
+              "testSessionId",
+              "testDefinitionId",
           ]}
         />
       </Col>
