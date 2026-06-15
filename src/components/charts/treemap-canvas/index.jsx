@@ -24,6 +24,7 @@ import { drawTreemap } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
 import { TreemapTooltip } from "./tooltip"
+import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
 
 const { Option } = Select
 
@@ -99,6 +100,11 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
 
     return nodeMap.get(drillRootId) ?? fullTree
   }, [fullTree, drillRootId, nodeMap])
+
+  const breadcrumbPath = useMemo(
+    () => buildBreadcrumbPath(activeRoot, fullTree, nodeMap),
+    [activeRoot, fullTree, nodeMap]
+  )
 
   const positionedNodes = useMemo(() => {
     if (!activeRoot || size.width <= 0 || size.height <= 0) {
@@ -191,6 +197,12 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
     [positionedNodes, activeRoot]
   )
 
+  const handleBreadcrumbNavigate = useCallback((crumb) => {
+    setDrillRootId(crumb.isTopRoot ? null : crumb.fullName)
+    setHoveredNodeId(null)
+    setTooltip(null)
+  }, [])
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) {
@@ -217,6 +229,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
         <Typography.Text>{error}</Typography.Text>
       ) : (
         <Spin spinning={loading}>
+          <TreemapBreadcrumbs items={breadcrumbPath} onNavigate={handleBreadcrumbNavigate} />
           <div
             ref={containerRef}
             style={{
