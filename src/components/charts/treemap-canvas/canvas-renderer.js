@@ -1,37 +1,26 @@
 /**
  * Canvas drawing utilities for treemap visualization.
  */
-
-const DEPTH_FILLS = [
-  "#f5f5f5",
-  "#ececec",
-  "#e3e3e3",
-  "#dadada",
-  "#d1d1d1",
-  "#c8c8c8",
-  "#bfbfbf",
-  "#b6b6b6",
-  "#adadad",
-  "#a4a4a4",
-]
+import { getCoverageColor } from "./colors"
 
 const BORDER_COLOR = "#ffffff"
 const TEXT_COLOR = "#333333"
 const MIN_LABEL_WIDTH = 36
 const MIN_LABEL_HEIGHT = 20
+const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
 
-export function drawTreemap(ctx, positionedNodes, dpr) {
+export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT") {
   ctx.save()
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
 
-  positionedNodes.forEach(({ node, x, y, width, height, depth, isLeaf, coverageRatio }) => {
+  positionedNodes.forEach(({ node, x, y, width, height, isLeaf, coverageRatio }) => {
     if (width < 1 || height < 1) {
       return
     }
 
-    const fill = DEPTH_FILLS[Math.min(depth - 1, DEPTH_FILLS.length - 1)]
+    const fill = getCoverageColor(coverageRatio, colorblindMode)
 
     ctx.fillStyle = fill
     ctx.fillRect(x, y, width, height)
@@ -52,8 +41,6 @@ export function drawTreemap(ctx, positionedNodes, dpr) {
 
   ctx.restore()
 }
-
-const HEADER_HEIGHT = 18
 
 function drawParentLabel(ctx, name, x, y, width) {
   const padding = 4

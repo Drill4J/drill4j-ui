@@ -16,11 +16,14 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography, Spin, InputNumber, Tooltip } from "antd"
+import { Typography, Spin, InputNumber, Tooltip, Select, Divider } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
 import { buildTree, layoutTreemap } from "./layout"
 import { drawTreemap } from "./canvas-renderer"
+import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
+
+const { Option } = Select
 
 const DEFAULT_MAX_DEPTH = 3
 
@@ -28,6 +31,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
   const [data, setData] = useState(staticData ?? [])
   const [error, setError] = useState("")
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
+  const [colorblindMode, setColorblindMode] = useState("DEFAULT")
   const [loading, setLoading] = useState(!staticData)
   const [searchParams] = useSearchParams()
   const containerRef = useRef(null)
@@ -93,8 +97,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
     canvas.style.height = `${size.height}px`
 
     const ctx = canvas.getContext("2d")
-    drawTreemap(ctx, positionedNodes, dpr)
-  }, [positionedNodes, size.width, size.height])
+    drawTreemap(ctx, positionedNodes, dpr, colorblindMode)
+  }, [positionedNodes, size.width, size.height, colorblindMode])
 
   useEffect(() => {
     renderCanvas()
@@ -140,6 +144,28 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
               style={{ display: "block", width: "100%", height: "100%" }}
             />
           </div>
+          <div style={{ padding: "0 1em 0.5em" }}>
+            <div
+              style={{
+                height: 5,
+                borderRadius: 2,
+                background: getColorscaleGradient(colorblindMode),
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 4,
+                fontSize: 10,
+                color: "#666",
+              }}
+            >
+              {COLORBAR_TICKS.map((tick) => (
+                <span key={tick}>{Math.round(tick * 100)}%</span>
+              ))}
+            </div>
+          </div>
           <div
             style={{
               padding: "0 1em",
@@ -160,6 +186,22 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
             <Typography.Text>
               Max Depth
               <Tooltip title="Controls how deep the packages tree is rendered from the current root node. Min value - 2. Max value - 10">
+                <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
+              </Tooltip>
+            </Typography.Text>
+            <Divider type="vertical" style={{ borderColor: "#999" }} />
+            <Select
+              value={colorblindMode}
+              onChange={setColorblindMode}
+              style={{ width: 160 }}
+            >
+              <Option value="DEFAULT">None (default)</Option>
+              <Option value="COLORBLIND_DEUTAN">Green-Red</Option>
+              <Option value="COLORBLIND_TRITAN">Blue-Yellow</Option>
+            </Select>
+            <Typography.Text>
+              Colorblind Palette
+              <Tooltip title="Select a colorblind-friendly palette for better accessibility.">
                 <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
               </Tooltip>
             </Typography.Text>
