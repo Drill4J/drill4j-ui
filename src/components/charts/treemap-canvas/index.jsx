@@ -267,30 +267,28 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
             <TreemapTooltip tooltip={tooltip} />
           </div>
           <div style={{ padding: "0 1em 0.5em" }}>
-            {!highlightEnabled && (
-              <>
-                <div
-                  style={{
-                    height: 5,
-                    borderRadius: 2,
-                    background: getColorscaleGradient(colorblindMode),
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: 4,
-                    fontSize: 10,
-                    color: "#666",
-                  }}
-                >
-                  {COLORBAR_TICKS.map((tick) => (
-                    <span key={tick}>{Math.round(tick * 100)}%</span>
-                  ))}
-                </div>
-              </>
-            )}
+            <div
+              style={{
+                height: 5,
+                borderRadius: 2,
+                background: getColorscaleGradient(colorblindMode),
+                visibility: highlightEnabled ? "hidden" : "visible",
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 4,
+                fontSize: 10,
+                color: "#666",
+                visibility: highlightEnabled ? "hidden" : "visible",
+              }}
+            >
+              {COLORBAR_TICKS.map((tick) => (
+                <span key={tick}>{Math.round(tick * 100)}%</span>
+              ))}
+            </div>
           </div>
           <div
             style={{
