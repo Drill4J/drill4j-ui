@@ -31,6 +31,22 @@ export function buildTree(data) {
   return root
 }
 
+export function buildNodeMap(root) {
+  const map = new Map()
+
+  if (!root) {
+    return map
+  }
+
+  const walk = (node) => {
+    map.set(node.full_name, node)
+    node.children.forEach(walk)
+  }
+
+  walk(root)
+  return map
+}
+
 export function layoutTreemap(root, width, height, maxDepth) {
   if (!root || width <= 0 || height <= 0) {
     return []

@@ -19,7 +19,7 @@ import axios from "axios"
 import { Typography, Spin, InputNumber, Tooltip, Select, Divider } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
-import { buildTree, layoutTreemap } from "./layout"
+import { buildTree, buildNodeMap, layoutTreemap } from "./layout"
 import { drawTreemap } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
@@ -41,6 +41,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [tooltip, setTooltip] = useState(null)
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
+  const [drillRootId, setDrillRootId] = useState(null)
 
   const params = useMemo(
     () => getNamedParams(searchParams, queryParams),
@@ -79,14 +80,33 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
       })
   }, [apiEndpoint, params, staticData])
 
+  useEffect(() => {
+    setDrillRootId(null)
+  }, [data])
+
+  const fullTree = useMemo(() => buildTree(data), [data])
+
+  const nodeMap = useMemo(() => buildNodeMap(fullTree), [fullTree])
+
+  const activeRoot = useMemo(() => {
+    if (!fullTree) {
+      return null
+    }
+
+    if (!drillRootId) {
+      return fullTree
+    }
+
+    return nodeMap.get(drillRootId) ?? fullTree
+  }, [fullTree, drillRootId, nodeMap])
+
   const positionedNodes = useMemo(() => {
-    if (!data.length || size.width <= 0 || size.height <= 0) {
+    if (!activeRoot || size.width <= 0 || size.height <= 0) {
       return []
     }
 
-    const root = buildTree(data)
-    return layoutTreemap(root, size.width, size.height, maxDepth)
-  }, [data, size.width, size.height, maxDepth])
+    return layoutTreemap(activeRoot, size.width, size.height, maxDepth)
+  }, [activeRoot, size.width, size.height, maxDepth])
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -143,6 +163,34 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
     setTooltip(null)
   }, [])
 
+  const handleClick = useCallback(
+    (event) => {
+      const canvas = canvasRef.current
+      if (!canvas || !positionedNodes.length || !activeRoot) {
+        return
+      }
+
+      const rect = canvas.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      const hit = findNodeAtPoint(positionedNodes, x, y)
+
+      if (!hit) {
+        return
+      }
+
+      if (hit.node.full_name === activeRoot.full_name) {
+        setDrillRootId(activeRoot.parent ?? null)
+      } else {
+        setDrillRootId(hit.node.full_name)
+      }
+
+      setHoveredNodeId(null)
+      setTooltip(null)
+    },
+    [positionedNodes, activeRoot]
+  )
+
   useEffect(() => {
     const container = containerRef.current
     if (!container) {
@@ -182,6 +230,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
               ref={canvasRef}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
+              onClick={handleClick}
               style={{
                 display: "block",
                 width: "100%",
