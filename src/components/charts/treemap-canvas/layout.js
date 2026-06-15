@@ -6,7 +6,13 @@
 const PADDING = 2
 const HEADER_HEIGHT = 18
 
+export const SYNTHETIC_ROOT_FULL_NAME = "/"
+
 export function buildTree(data) {
+  if (!data.length) {
+    return null
+  }
+
   const nodes = new Map()
 
   data.forEach((item) => {
@@ -16,19 +22,47 @@ export function buildTree(data) {
     })
   })
 
-  let root = null
+  const topLevel = []
+
   nodes.forEach((node) => {
     if (!node.parent) {
-      root = node
+      topLevel.push(node)
+      return
+    }
+
+    const parent = nodes.get(node.parent)
+    if (parent) {
+      parent.children.push(node)
     } else {
-      const parent = nodes.get(node.parent)
-      if (parent) {
-        parent.children.push(node)
-      }
+      topLevel.push(node)
     }
   })
 
-  return root
+  if (!topLevel.length) {
+    return null
+  }
+
+  if (topLevel.length === 1) {
+    return topLevel[0]
+  }
+
+  const probes_count = topLevel.reduce((sum, node) => sum + node.probes_count, 0)
+  const covered_probes = topLevel.reduce((sum, node) => sum + node.covered_probes, 0)
+
+  topLevel.forEach((node) => {
+    node.parent = SYNTHETIC_ROOT_FULL_NAME
+  })
+
+  return {
+    name: "root",
+    full_name: SYNTHETIC_ROOT_FULL_NAME,
+    parent: null,
+    probes_count,
+    covered_probes,
+    params: null,
+    return_type: null,
+    children: topLevel,
+  }
 }
 
 export function buildNodeMap(root) {

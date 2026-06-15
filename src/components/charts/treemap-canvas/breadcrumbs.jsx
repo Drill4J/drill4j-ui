@@ -38,7 +38,7 @@ export function TreemapBreadcrumbs({ items, onNavigate }) {
           title: isLast ? (
             item.name
           ) : (
-            <Link onClick={() => onNavigate(item)}>{item.name}</Link>
+            <Link onClick={() => onNavigate(item.fullName, item.isTopRoot)}>{item.name}</Link>
           ),
         }
       })}

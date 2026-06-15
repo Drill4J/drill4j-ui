@@ -210,8 +210,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
     [positionedNodes, activeRoot]
   )
 
-  const handleBreadcrumbNavigate = useCallback((crumb) => {
-    setDrillRootId(crumb.isTopRoot ? null : crumb.fullName)
+  const handleBreadcrumbNavigate = useCallback((fullName, isTopRoot) => {
+    setDrillRootId(isTopRoot ? null : fullName)
     setHoveredNodeId(null)
     setTooltip(null)
   }, [])
@@ -240,6 +240,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
     <div>
       {error ? (
         <Typography.Text>{error}</Typography.Text>
+      ) : !loading && data.length === 0 ? (
+        <Typography.Text>No data available</Typography.Text>
       ) : (
         <Spin spinning={loading}>
           <TreemapBreadcrumbs items={breadcrumbPath} onNavigate={handleBreadcrumbNavigate} />
