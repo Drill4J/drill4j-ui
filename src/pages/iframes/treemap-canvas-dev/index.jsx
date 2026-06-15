@@ -15,15 +15,22 @@
  */
 import { Col, Row } from "antd"
 import { CoverageTreemapCanvas } from "../../../components/charts/treemap-canvas"
-import treemapFixture from "../../../fixtures/treemap-json.json"
 
 export const TreemapCanvasDevPage = () => (
   <Row>
     <Col span={24}>
       <CoverageTreemapCanvas
         apiEndpoint="/metrics/coverage-treemap"
-        queryParams={["buildId"]}
-        staticData={treemapFixture.data}
+        queryParams={[
+          "buildId",
+          "testTag",
+          "envId",
+          "branch",
+          "packageNamePattern",
+          "classNamePattern",
+          "testSessionId",
+          "testDefinitionId",
+        ]}
       />
     </Col>
   </Row>

@@ -11,7 +11,15 @@ const MIN_LABEL_HEIGHT = 20
 const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
 
-export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT", hoveredNodeId = null) {
+export function drawTreemap(
+  ctx,
+  positionedNodes,
+  dpr,
+  colorblindMode = "DEFAULT",
+  hoveredNodeId = null,
+  highlightEnabled = false,
+  highlightThreshold = 50
+) {
   ctx.save()
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
@@ -21,7 +29,7 @@ export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT
       return
     }
 
-    const fill = getCoverageColor(coverageRatio, colorblindMode)
+    const fill = getCoverageColor(coverageRatio, colorblindMode, highlightEnabled, highlightThreshold)
 
     ctx.fillStyle = fill
     ctx.fillRect(x, y, width, height)

@@ -42,7 +42,23 @@ export const COLORSCALES = {
 
 export const COLORBAR_TICKS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
-export function getCoverageColor(coverageRatio, colorblindMode = "DEFAULT") {
+export const THRESHOLD_COLORS = {
+  MUTE: "#D3D3D3",
+  HIGHLIGHT: "#FF9900",
+}
+
+export function getCoverageColor(
+  coverageRatio,
+  colorblindMode = "DEFAULT",
+  highlightEnabled = false,
+  highlightThreshold = 50
+) {
+  if (highlightEnabled) {
+    return coverageRatio * 100 < highlightThreshold
+      ? THRESHOLD_COLORS.HIGHLIGHT
+      : THRESHOLD_COLORS.MUTE
+  }
+
   const colorscale = COLORSCALES[colorblindMode] ?? COLORSCALES.DEFAULT
   const value = Math.max(0, Math.min(1, coverageRatio))
 

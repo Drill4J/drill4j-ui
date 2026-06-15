@@ -16,7 +16,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography, Spin, InputNumber, Tooltip, Select, Divider } from "antd"
+import { Typography, Spin, InputNumber, Tooltip, Select, Checkbox, Divider } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
 import { buildTree, buildNodeMap, layoutTreemap } from "./layout"
@@ -29,13 +29,16 @@ import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
 const { Option } = Select
 
 const DEFAULT_MAX_DEPTH = 3
+const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
 
-export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) => {
-  const [data, setData] = useState(staticData ?? [])
+export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
+  const [data, setData] = useState([])
   const [error, setError] = useState("")
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
   const [colorblindMode, setColorblindMode] = useState("DEFAULT")
-  const [loading, setLoading] = useState(!staticData)
+  const [highlightEnabled, setHighlightEnabled] = useState(false)
+  const [highlightThreshold, setHighlightThreshold] = useState(DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE)
+  const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
@@ -50,12 +53,6 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
   )
 
   useEffect(() => {
-    if (staticData) {
-      setData(staticData)
-      setLoading(false)
-      return
-    }
-
     if (!params.buildId) {
       setError("Missing a required parameter: buildId")
       setData([])
@@ -79,7 +76,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
       .finally(() => {
         setLoading(false)
       })
-  }, [apiEndpoint, params, staticData])
+  }, [apiEndpoint, params])
 
   useEffect(() => {
     setDrillRootId(null)
@@ -127,8 +124,24 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
     canvas.style.height = `${size.height}px`
 
     const ctx = canvas.getContext("2d")
-    drawTreemap(ctx, positionedNodes, dpr, colorblindMode, hoveredNodeId)
-  }, [positionedNodes, size.width, size.height, colorblindMode, hoveredNodeId])
+    drawTreemap(
+      ctx,
+      positionedNodes,
+      dpr,
+      colorblindMode,
+      hoveredNodeId,
+      highlightEnabled,
+      highlightThreshold
+    )
+  }, [
+    positionedNodes,
+    size.width,
+    size.height,
+    colorblindMode,
+    hoveredNodeId,
+    highlightEnabled,
+    highlightThreshold,
+  ])
 
   useEffect(() => {
     renderCanvas()
@@ -254,26 +267,30 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
             <TreemapTooltip tooltip={tooltip} />
           </div>
           <div style={{ padding: "0 1em 0.5em" }}>
-            <div
-              style={{
-                height: 5,
-                borderRadius: 2,
-                background: getColorscaleGradient(colorblindMode),
-              }}
-            />
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: 4,
-                fontSize: 10,
-                color: "#666",
-              }}
-            >
-              {COLORBAR_TICKS.map((tick) => (
-                <span key={tick}>{Math.round(tick * 100)}%</span>
-              ))}
-            </div>
+            {!highlightEnabled && (
+              <>
+                <div
+                  style={{
+                    height: 5,
+                    borderRadius: 2,
+                    background: getColorscaleGradient(colorblindMode),
+                  }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 4,
+                    fontSize: 10,
+                    color: "#666",
+                  }}
+                >
+                  {COLORBAR_TICKS.map((tick) => (
+                    <span key={tick}>{Math.round(tick * 100)}%</span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
           <div
             style={{
@@ -299,10 +316,29 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
               </Tooltip>
             </Typography.Text>
             <Divider type="vertical" style={{ borderColor: "#999" }} />
+            <Checkbox checked={highlightEnabled} onChange={(e) => setHighlightEnabled(e.target.checked)}>
+              Highlight Threshold
+              <Tooltip title="Elements with coverage percentage below set value will be highlighted.">
+                <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
+              </Tooltip>
+              <InputNumber
+                min={0.1}
+                max={100.0}
+                step={0.1}
+                value={highlightThreshold}
+                onChange={setHighlightThreshold}
+                disabled={!highlightEnabled}
+                style={{ width: 60, marginLeft: "0.5em" }}
+                formatter={(value) => `${value}%`}
+                parser={(value) => parseFloat(value.replace("%", ""))}
+              />
+            </Checkbox>
+            <Divider type="vertical" style={{ borderColor: "#999" }} />
             <Select
               value={colorblindMode}
               onChange={setColorblindMode}
               style={{ width: 160 }}
+              disabled={highlightEnabled}
             >
               <Option value="DEFAULT">None (default)</Option>
               <Option value="COLORBLIND_DEUTAN">Green-Red</Option>
