@@ -4,13 +4,14 @@
 import { getCoverageColor } from "./colors"
 
 const BORDER_COLOR = "#ffffff"
+const HOVER_OVERLAY = "rgba(0, 0, 0, 0.15)"
 const TEXT_COLOR = "#333333"
 const MIN_LABEL_WIDTH = 36
 const MIN_LABEL_HEIGHT = 20
 const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
 
-export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT") {
+export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT", hoveredNodeId = null) {
   ctx.save()
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
@@ -38,6 +39,14 @@ export function drawTreemap(ctx, positionedNodes, dpr, colorblindMode = "DEFAULT
       drawLabel(ctx, node.name, Math.round(coverageRatio * 100), x, y, width, height)
     }
   })
+
+  if (hoveredNodeId) {
+    const hovered = positionedNodes.find((positioned) => positioned.node.full_name === hoveredNodeId)
+    if (hovered && hovered.width >= 1 && hovered.height >= 1) {
+      ctx.fillStyle = HOVER_OVERLAY
+      ctx.fillRect(hovered.x, hovered.y, hovered.width, hovered.height)
+    }
+  }
 
   ctx.restore()
 }

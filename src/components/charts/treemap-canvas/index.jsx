@@ -22,6 +22,8 @@ import { InfoCircleOutlined } from "@ant-design/icons"
 import { buildTree, layoutTreemap } from "./layout"
 import { drawTreemap } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
+import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
+import { TreemapTooltip } from "./tooltip"
 
 const { Option } = Select
 
@@ -37,6 +39,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
+  const [tooltip, setTooltip] = useState(null)
+  const [hoveredNodeId, setHoveredNodeId] = useState(null)
 
   const params = useMemo(
     () => getNamedParams(searchParams, queryParams),
@@ -97,12 +101,47 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
     canvas.style.height = `${size.height}px`
 
     const ctx = canvas.getContext("2d")
-    drawTreemap(ctx, positionedNodes, dpr, colorblindMode)
-  }, [positionedNodes, size.width, size.height, colorblindMode])
+    drawTreemap(ctx, positionedNodes, dpr, colorblindMode, hoveredNodeId)
+  }, [positionedNodes, size.width, size.height, colorblindMode, hoveredNodeId])
 
   useEffect(() => {
     renderCanvas()
   }, [renderCanvas])
+
+  const handleMouseMove = useCallback(
+    (event) => {
+      const canvas = canvasRef.current
+      if (!canvas || !positionedNodes.length) {
+        setHoveredNodeId(null)
+        setTooltip(null)
+        return
+      }
+
+      const rect = canvas.getBoundingClientRect()
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      const hit = findNodeAtPoint(positionedNodes, x, y)
+
+      if (!hit) {
+        setHoveredNodeId(null)
+        setTooltip(null)
+        return
+      }
+
+      setHoveredNodeId((prev) => (prev === hit.node.full_name ? prev : hit.node.full_name))
+      setTooltip({
+        x: event.clientX,
+        y: event.clientY,
+        ...formatTooltipContent(hit.node, hit.coverageRatio),
+      })
+    },
+    [positionedNodes]
+  )
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredNodeId(null)
+    setTooltip(null)
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
@@ -141,8 +180,16 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, staticData }) 
           >
             <canvas
               ref={canvasRef}
-              style={{ display: "block", width: "100%", height: "100%" }}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                cursor: hoveredNodeId ? "pointer" : "default",
+              }}
             />
+            <TreemapTooltip tooltip={tooltip} />
           </div>
           <div style={{ padding: "0 1em 0.5em" }}>
             <div
