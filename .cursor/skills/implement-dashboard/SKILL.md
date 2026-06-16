@@ -5,25 +5,30 @@ description: >-
   start local dev servers for manual testing. Use when the user asks to implement,
   build, or migrate a named dashboard from requirements/dashboards.
 disable-model-invocation: true
+argument-hint: [dashboard-name]
+arguments: [dashboard]
 ---
 
 # Implement Dashboard (single page)
 
-## User prompt template
-
-Copy, fill `DASHBOARD`, send:
+## Invocation
 
 ```
-Implement dashboard: DASHBOARD
-
-Follow the implement-dashboard skill.
-Read requirements/dashboards/README.md and the matching requirement file.
-Implement backend (admin/admin-metrics) + frontend (drill4j-ui) for this dashboard only.
-Reuse shared components/endpoints from README if they already exist.
-Start admin API and drill4j-ui dev server when done so I can test locally.
+/implement-dashboard <dashboard-name>
 ```
 
-### Valid `DASHBOARD` values
+Example: `/implement-dashboard builds`
+
+Implement dashboard: **$dashboard**
+
+1. Read `requirements/dashboards/README.md` and the matching requirement file for `$dashboard`.
+2. Implement backend (`admin/admin-metrics`) + frontend (`drill4j-ui`) for this dashboard only.
+3. Reuse shared components/endpoints from README if they already exist.
+4. Start admin API and drill4j-ui dev server when done so the user can test locally.
+
+If `$dashboard` is empty or not in the table below, ask the user to pick a valid name before coding.
+
+### Valid `$dashboard` values
 
 | Value | Requirement file |
 |-------|------------------|
@@ -60,7 +65,7 @@ Template: `local-credentials.example.env`.
 ## Before coding
 
 1. Read `requirements/dashboards/README.md` (navigation, conventions, shared API gaps, shared components).
-2. Read the **target** requirement file for this dashboard.
+2. Read the **target** requirement file for `$dashboard`.
 3. Scan **other** requirement files only for:
    - shared endpoints/components you must reuse (not reimplement)
    - dependencies (e.g. `entry-points` adds routing shell used by later dashboards)
