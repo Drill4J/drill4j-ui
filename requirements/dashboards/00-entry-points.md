@@ -9,6 +9,21 @@ Two landing pages before any dashboard content. No Metabase equivalent (Metabase
 | `/dashboards/groups` | Groups list |
 | `/dashboards/groups/:groupId` | Apps list for group |
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Routes** | `/dashboards/groups`, `/dashboards/groups/:groupId` |
+| **PrivateRoute** | `roles={["user", "admin"]}` — wrap entire `/dashboards/*` branch |
+| **Sidebar** | **Add** `Dashboards` SubMenu + `Groups` in `dashboard-menu.jsx` |
+| **Sidebar refactor** | Move existing **My API Keys** / **My Account** into **`Account`** SubMenu (`account-menu.jsx`). Extract **Manage** into `admin-menu.jsx`. |
+| **SiderMenu open-keys** | `dashboards-submenu` for `/dashboards/*`; `account-submenu` for `/my-api-keys` / `/my-account`; `admin-submenu` for `/admin/*` |
+| **SiderMenu selected-keys** | `/dashboards/groups` for any `/dashboards/*` path; exact pathname for account/admin routes |
+
+**First dashboard to implement** — establishes `/dashboards/*` routes, `PrivateRoute`, sidebar reorganization (Dashboards + Account SubMenus), menu item modules. **One** `SiderMenu` in `app.jsx` — no second sidebar.
+
+---
+
 ## Groups list (`/dashboards/groups`)
 
 ### Purpose
@@ -44,6 +59,9 @@ GET /api/metrics/applications?groupId= // apps within one group
 
 - `pages/dashboards/groups/index.jsx`
 - `modules/dashboards/api-dashboards.js` → `getGroups()`
+- `modules/dashboards/dashboard-menu.jsx` → `renderDashboardSubMenu()`
+- `modules/account/account-menu.jsx` → `renderAccountSubMenu()` *(new — wraps existing user pages)*
+- `modules/admin/admin-menu.jsx` → `renderAdminSubMenu()` *(extract existing Manage submenu)*
 
 ---
 
@@ -81,10 +99,6 @@ Not a Metabase dashboard — navigation hub only:
 - `pages/dashboards/groups/[groupId]/index.jsx`
 - `pages/dashboards/groups/[groupId]/apps/[appId]/index.jsx` (hub)
 - `components/dashboards/dashboard-breadcrumb.jsx`
-
-### Sidebar
-
-Add **Dashboards** top-level menu item → `/dashboards/groups`.
 
 ## Metabase export
 

@@ -2,6 +2,12 @@
 
 Migration of Metabase dashboards into `drill4j-ui` as a **Dashboards** section (not "Metrics").
 
+## Implementation
+
+- **Agent skill:** `.cursor/skills/implement-dashboard/SKILL.md` — implement **one dashboard per run**
+- **Local credentials:** `local-credentials.env` (gitignored); copy from `local-credentials.example.env`
+- **Prompt:** `Implement dashboard: <name>` — see skill for valid names and full template
+
 ## Navigation model
 
 `groupId` and `appId` are **URL path segments**, not filter dropdowns. Users navigate top-down:
@@ -30,24 +36,171 @@ Optional contextual filters (`branch`, `envId`, `testTag`, `baselineBuildId`, et
 | Charts | [Recharts](https://recharts.org/) (`recharts` npm package) for pie/line/area; existing canvas treemap for hierarchy |
 | Iframes | Keep legacy `/iframe/*` routes; new dashboards use components directly |
 | API response shape | Existing `ApiResponse` / `PagedDataResponse` wrappers |
+| Auth | All dashboard routes require signed-in user with role `user` or `admin` |
+| Sidebar | Central menu config — see [Routing, auth & sidebar](#routing-auth--sidebar) |
+
+## Routing, auth & sidebar
+
+Every dashboard implementation **must** wire routes and auth. Update the sidebar when the requirement file says so.
+
+### Auth (mandatory for every dashboard)
+
+1. **App shell:** `BaseRouter` in `src/app.jsx` already redirects unsigned users to `/sign-in`.
+2. **Route guard:** Wrap every `/dashboards/*` route in `PrivateRoute` with `roles={["user", "admin"]}` (same as existing pages).
+3. **API:** Metrics endpoints use JWT/api-key auth on the backend — UI sends cookies/headers via axios automatically after sign-in.
+
+```jsx
+const userRoles = useMemo(() => ["user", "admin"], [])
+
+<Route path="/dashboards/*" element={<PrivateRoute roles={userRoles} />}>
+  {/* dashboard routes here */}
+</Route>
+```
+
+Do **not** add dashboard routes outside `PrivateRoute`. Do **not** add dev-only auth bypasses (unlike `/dev/treemap-canvas`).
+
+### Sidebar — single `SiderMenu` in `app.jsx`
+
+There is **one** sidebar: the existing `SiderMenu` component in `src/app.jsx`. Do **not** create a second sidebar or parallel menu component.
+
+Refactor menu **items** into small render helpers (one file per section), imported by `SiderMenu`:
+
+| File | Renders |
+|------|---------|
+| `src/modules/dashboards/dashboard-menu.jsx` | `Dashboards` SubMenu items |
+| `src/modules/account/account-menu.jsx` | `Account` SubMenu items (existing user pages) |
+| `src/modules/admin/admin-menu.jsx` | `Manage` SubMenu items (existing admin pages) |
+
+`SiderMenu` composes these SubMenus + Sign Out. Optionally extract `SiderMenu` itself to `src/components/sider-menu/index.jsx` — still a single entry point.
+
+### Target sidebar structure
+
+```
+Dashboards ▾          ← new (entry-points)
+  Groups
+
+Account ▾             ← new wrapper for existing user entries
+  My API Keys
+  My Account
+
+Manage ▾              ← existing admin submenu (unchanged items)
+  Users
+  API Keys
+
+Sign Out              ← top-level item (unchanged)
+```
+
+**`entry-points` implementation** must:
+1. Add `Dashboards` SubMenu via `dashboard-menu.jsx`
+2. Move **My API Keys** and **My Account** under new `Account` SubMenu via `account-menu.jsx`
+3. Keep **Manage** SubMenu as-is (extract to `admin-menu.jsx` if touching `SiderMenu`)
+4. Update `defaultOpenKeys` logic for all three submenu keys
+
+```jsx
+// SiderMenu in app.jsx — composition only
+<Menu theme="dark" mode="inline" selectedKeys={[...]} openKeys={[...]}>
+  {renderDashboardSubMenu()}
+  {renderAccountSubMenu()}
+  {renderAdminSubMenu()}
+  <Menu.Item key="sign-out" icon={<LogoutOutlined />} onClick={handleSignOut}>
+    Sign Out
+  </Menu.Item>
+</Menu>
+```
+
+```jsx
+// dashboard-menu.jsx
+export const DASHBOARD_SUBMENU_KEY = "dashboards-submenu"
+
+export function renderDashboardSubMenu() {
+  return (
+    <SubMenu key={DASHBOARD_SUBMENU_KEY} icon={<DashboardOutlined />} title="Dashboards">
+      <Menu.Item key="/dashboards/groups">
+        <Link to="/dashboards/groups">Groups</Link>
+      </Menu.Item>
+    </SubMenu>
+  )
+}
+```
+
+```jsx
+// account-menu.jsx
+export const ACCOUNT_SUBMENU_KEY = "account-submenu"
+
+export function renderAccountSubMenu() {
+  return (
+    <SubMenu key={ACCOUNT_SUBMENU_KEY} icon={<UserOutlined />} title="Account">
+      <Menu.Item key="/my-api-keys" icon={<ApiOutlined />}>
+        <Link to="/my-api-keys">My API Keys</Link>
+      </Menu.Item>
+      <Menu.Item key="/my-account" icon={<UserOutlined />}>
+        <Link to="/my-account">My Account</Link>
+      </Menu.Item>
+    </SubMenu>
+  )
+}
+```
+
+**Open/selected keys** — extend `SiderMenu` logic:
+
+| Path prefix | Open submenu | Selected key |
+|-------------|--------------|--------------|
+| `/dashboards` | `dashboards-submenu` | `/dashboards/groups` |
+| `/my-api-keys`, `/my-account` | `account-submenu` | exact pathname |
+| `/admin` | `admin-submenu` | exact pathname |
+
+Use controlled `openKeys` / `selectedKeys` (not only `default*`) if needed so submenu state updates on navigation.
+
+### Sidebar vs in-app navigation
+
+| Access pattern | Sidebar entry? | How users reach the page |
+|----------------|----------------|--------------------------|
+| Top-level entry (no path params) | **Yes** — add `Menu.Item` | Sidebar link |
+| Requires `groupId`, `appId`, `buildId`, etc. | **No** | Breadcrumbs, tables, tabs, hub links |
+
+Nested dashboards (build tabs, session tabs, builds list) are **not** separate sidebar items — they are reached via in-app navigation. The sidebar provides entry to **Groups**; everything else follows the URL tree.
+
+### Per-implementation checklist (frontend)
+
+Each dashboard requirement file includes a **Routing, auth & sidebar** section. On every implementation:
+
+- [ ] Route(s) registered in `src/app.jsx` under `PrivateRoute roles={["user","admin"]}`
+- [ ] Page import added at top of `app.jsx`
+- [ ] Sidebar updated per that file (`add` / `none` / `extend open-keys`)
+- [ ] `dashboard-menu.jsx` updated if `Sidebar: add` (items only — not a new sidebar)
+- [ ] Existing user menu entries remain under **`Account`** SubMenu (do not leave flat top-level duplicates)
+- [ ] Unsigned user cannot access the route (redirects to sign-in)
+- [ ] User without role sees `PrivateRoute` denial (not the page)
+
+### Sidebar visibility by dashboard
+
+| Dashboard | Sidebar |
+|-----------|---------|
+| entry-points | **Add** `Dashboards` SubMenu + `Groups`; **reorganize** existing My API Keys / My Account under `Account` SubMenu |
+| builds, build-*, apps-trends | None — from app hub / breadcrumbs |
+| tests, tests-* | None — from group apps page or build tests tab |
+| All build detail tabs | None — tab bar in `BuildDetailLayout` |
+| All session detail tabs | None — tab bar in `TestSessionLayout` |
 
 ## Dashboard inventory
 
-| File | Metabase ID | Name | Route |
-|------|-------------|------|-------|
-| [00-entry-points.md](./00-entry-points.md) | — | Groups & Apps entry pages | `/dashboards/groups`, `/dashboards/groups/:groupId` |
-| [01-builds.md](./01-builds.md) | 1 | Builds | `…/apps/:appId/builds` |
-| [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `…/builds/:buildId` |
-| [03-build-code-coverage.md](./03-build-code-coverage.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` |
-| [04-build-tests.md](./04-build-tests.md) | 4 | Build — Tests (sessions for build) | `…/builds/:buildId/tests` |
-| [05-build-changes-testing.md](./05-build-changes-testing.md) | 5 | Build — Changes Testing | `…/builds/:buildId/changes-testing` |
-| [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `…/apps/:appId/trends` |
-| [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `…/groups/:groupId/tests` |
-| [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `…/tests/:testSessionId` |
-| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/tests/:testSessionId/coverage` |
-| [13-build-impacted-tests.md](./13-build-impacted-tests.md) | 6, 13 | Build — Impacted Tests | `…/builds/:buildId/impacted-tests` |
-| [14-build-impacted-methods.md](./14-build-impacted-methods.md) | 14 | Build — Impacted Methods | `…/builds/:buildId/impacted-methods` |
-| [15-build-changes.md](./15-build-changes.md) | 15 | Build — Changes | `…/builds/:buildId/changes` |
+| File | Metabase ID | Name | Route | Sidebar |
+|------|-------------|------|-------|---------|
+| [00-entry-points.md](./00-entry-points.md) | — | Groups & Apps entry pages | `/dashboards/groups`, `/dashboards/groups/:groupId` | **Add** Dashboards; reorganize Account |
+| [01-builds.md](./01-builds.md) | 1 | Builds | `…/apps/:appId/builds` | None |
+| [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `…/builds/:buildId` | None (tab) |
+| [03-build-code-coverage.md](./03-build-code-coverage.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` | None (tab) |
+| [04-build-tests.md](./04-build-tests.md) | 4 | Build — Tests (sessions for build) | `…/builds/:buildId/tests` | None (tab) |
+| [05-build-changes-testing.md](./05-build-changes-testing.md) | 5 | Build — Changes Testing | `…/builds/:buildId/changes-testing` | None (tab) |
+| [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `…/apps/:appId/trends` | None |
+| [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `…/groups/:groupId/tests` | None |
+| [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `…/tests/:testSessionId` | None (tab) |
+| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/tests/:testSessionId/coverage` | None (tab) |
+| [13-build-impacted-tests.md](./13-build-impacted-tests.md) | 6, 13 | Build — Impacted Tests | `…/builds/:buildId/impacted-tests` | None (tab) |
+| [14-build-impacted-methods.md](./14-build-impacted-methods.md) | 14 | Build — Impacted Methods | `…/builds/:buildId/impacted-methods` | None (tab) |
+| [15-build-changes.md](./15-build-changes.md) | 15 | Build — Changes | `…/builds/:buildId/changes` | None (tab) |
+
+All routes require `PrivateRoute roles={["user", "admin"]}`. Details per file in **Routing, auth & sidebar** sections.
 
 ## Metabase export (all dashboards)
 
@@ -104,6 +257,9 @@ Do not add Ant Design Charts or ECharts — one chart stack only.
 - `CoveragePieChart` — Recharts wrapper (`components/charts/coverage-pie-chart.jsx`)
 - `TrendChart` — Recharts wrapper (`components/charts/trend-chart.jsx`)
 - `CoverageTreemapCanvas` — existing canvas component, embedded inline (not iframe)
+- `dashboard-menu.jsx` — Dashboards SubMenu items (`src/modules/dashboards/dashboard-menu.jsx`)
+- `account-menu.jsx` — Account SubMenu items (`src/modules/account/account-menu.jsx`)
+- `admin-menu.jsx` — Manage SubMenu items (`src/modules/admin/admin-menu.jsx`)
 
 ## Shared API gaps (cross-cutting)
 

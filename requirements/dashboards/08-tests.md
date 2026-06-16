@@ -7,6 +7,15 @@
 
 Group-scoped list of test sessions. Build-scoped variant lives at `…/builds/:buildId/tests` ([04-build-tests.md](./04-build-tests.md)).
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/tests` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via **Test Sessions** link on group apps page (`/dashboards/groups/:groupId`) |
+| **Register in app.jsx** | Add nested route under `/dashboards/groups/:groupId/tests` |
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

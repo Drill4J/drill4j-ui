@@ -10,6 +10,15 @@ Paginated table of tests impacted by code changes between the current build and 
 
 Do **not** use `GET /api/metrics/recommended-tests` or `metrics.get_recommended_tests_v2`.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/impacted-tests` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Impacted Tests tab in `BuildDetailLayout` |
+| **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
+
 ## Metabase source
 
 | Card ID | Metabase dashboard | Name | SQL source |

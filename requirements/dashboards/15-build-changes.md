@@ -8,6 +8,15 @@
 
 Overview of code changes vs baseline: scalar counts by change type and pie chart breakdown. Detailed changes table available via existing changes endpoint.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Changes tab in `BuildDetailLayout` |
+| **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

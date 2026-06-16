@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local dev secrets for dashboard implementation
+requirements/dashboards/local-credentials.env

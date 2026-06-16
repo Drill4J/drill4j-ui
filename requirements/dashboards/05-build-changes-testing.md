@@ -8,6 +8,15 @@
 
 Risk-focused view combining changed methods with low/no coverage and their impacted tests. Used for prioritizing what to test after a build.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes-testing` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Changes Testing tab in `BuildDetailLayout` |
+| **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

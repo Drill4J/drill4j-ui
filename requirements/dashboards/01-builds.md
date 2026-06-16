@@ -7,6 +7,15 @@
 
 Paginated table of builds for the current group/app. Replaces Metabase global group/app filters with path-based context. Optional branch/env filters via query params.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds` |
+| **PrivateRoute** | Under existing `/dashboards/*` branch — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via app hub (`/dashboards/groups/:groupId/apps/:appId`) |
+| **Register in app.jsx** | Add nested route; ensure app hub page links to `…/builds` |
+
 ## Metabase source
 
 | Card ID | Name | Type |

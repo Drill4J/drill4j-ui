@@ -8,6 +8,15 @@
 
 Coverage tables scoped to a test session (dashboard 12) with optional drill-down to a specific test definition (dashboard 10). Merged into one page with definition selector.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/tests/:testSessionId/coverage` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Coverage tab in `TestSessionLayout` |
+| **Register in app.jsx** | Sibling route under test session layout; add tab link in layout |
+
 ## Metabase source
 
 ### Session-level (ID 12)

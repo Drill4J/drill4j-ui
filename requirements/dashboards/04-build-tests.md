@@ -8,6 +8,15 @@
 
 Lists test sessions associated with the current build. Entry point from a build to its test-run history. Rows link to the group-scoped test session detail page.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/tests` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Tests tab in `BuildDetailLayout` |
+| **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
+
 ## Metabase source
 
 | Card ID | Name | Type | Notes |

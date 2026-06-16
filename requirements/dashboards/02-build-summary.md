@@ -8,6 +8,18 @@
 
 Overview of a single build: metadata, coverage pies, change breakdown, KPI scalars, and baseline build selector. Central hub with tab navigation to other build dashboards.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId` (index = Summary tab) |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — tab inside build detail; reach from builds table |
+| **Register in app.jsx** | Create `BuildDetailLayout` with `<Outlet />` and tab nav; add index route for summary |
+| **Layout shell** | Introduce shared `builds/[buildId]/layout.jsx` — later tabs add sibling routes under same layout |
+
+Tab bar links (add routes as each dashboard is implemented): Summary | Tests | Coverage | Changes | Changes Testing | Impacted Tests | Impacted Methods
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

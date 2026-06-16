@@ -8,6 +8,15 @@
 
 Hierarchical coverage tables: packages → classes → methods. Includes inline treemap visualization. Optional package/class filters via query params.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/coverage` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — Coverage tab in `BuildDetailLayout` |
+| **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

@@ -8,6 +8,17 @@
 
 Detailed test session results: session metadata, KPI scalars, coverage pie, per-test and per-file launch tables.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/tests/:testSessionId` (index = Results tab) |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach from test sessions list or build tests tab |
+| **Register in app.jsx** | Create `TestSessionLayout` with `<Outlet />` and tab nav; add index route for results |
+
+Tab bar: Results | Coverage (add coverage route when implementing `tests-code-coverage`)
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |

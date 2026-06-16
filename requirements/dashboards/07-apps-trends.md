@@ -7,6 +7,15 @@
 
 Time-series charts showing coverage and code-change trends across recent builds for an app. Replaces Metabase `group`/`app` filters with path context.
 
+## Routing, auth & sidebar
+
+| | |
+|--|--|
+| **Route** | `/dashboards/groups/:groupId/apps/:appId/trends` |
+| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via app hub link to Trends |
+| **Register in app.jsx** | Add nested route; ensure app hub links to `…/trends` |
+
 ## Metabase source
 
 | Card ID | Name | Type | SQL source |
