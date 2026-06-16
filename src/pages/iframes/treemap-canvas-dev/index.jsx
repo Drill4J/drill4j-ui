@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Col, Divider, Row } from "antd"
+import { Col, Row } from "antd"
 import { CoverageTreemapCanvas } from "../../../components/charts/treemap-canvas"
 
-export const CoverageTreemapPage = () => (
-  <>
-    <Row>
-      <Col span={24}>
-        <CoverageTreemapCanvas
-          apiEndpoint={"/metrics/coverage-treemap"}
-          queryParams={[
-              "buildId",
-              "testTag",
-              "envId",
-              "branch",
-              "packageNamePattern",
-              "classNamePattern",
-              "testSessionId",
-              "testDefinitionId",
-          ]}
-        />
-      </Col>
-    </Row>
-  </>
+export const TreemapCanvasDevPage = () => (
+  <Row>
+    <Col span={24}>
+      <CoverageTreemapCanvas
+        apiEndpoint="/metrics/coverage-treemap"
+        queryParams={[
+          "buildId",
+          "testTag",
+          "envId",
+          "branch",
+          "packageNamePattern",
+          "classNamePattern",
+          "testSessionId",
+          "testDefinitionId",
+        ]}
+      />
+    </Col>
+  </Row>
 )

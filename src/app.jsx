@@ -52,6 +52,7 @@ import { signOut } from "./modules/auth/api-auth"
 import { MyAccount } from "./pages/account/my-account"
 import { CoverageTreemapPage } from "./pages/iframes/coverage-treemap"
 import { ChangesCoverageTreemapPage } from "./pages/iframes/changes-coverage-treemap"
+import { TreemapCanvasDevPage } from "./pages/iframes/treemap-canvas-dev"
 import {
   AuthConfigProvider,
   useAuthConfig,
@@ -95,6 +96,14 @@ const BaseRouter = () => {
     () => ["/sign-in", "/sign-up"].includes(location.pathname),
     [location.pathname]
   )
+
+  if (process.env.NODE_ENV === "development" && location.pathname === "/dev/treemap-canvas") {
+    return (
+      <div style={{ padding: 16, background: "#fff", minHeight: "100vh" }}>
+        <TreemapCanvasDevPage />
+      </div>
+    )
+  }
 
   if (!isAuthDataFetched) {
     return (
