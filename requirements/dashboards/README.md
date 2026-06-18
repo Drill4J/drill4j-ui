@@ -10,17 +10,19 @@ Migration of Metabase dashboards into `drill4j-ui` as a **Dashboards** section (
 
 ## Navigation model
 
+**Group slug:** the selected group maps to the **first path segment after `/metrics`** — e.g. `/metrics/:groupId`, `/metrics/:groupId/apps/:appId/builds`. There is no `/metrics/groups/:groupId` prefix; `/metrics` alone is the group picker.
+
 `groupId` and `appId` are **URL path segments**, not filter dropdowns. Users navigate top-down:
 
 ```
-/dashboards/groups
-  → /dashboards/groups/:groupId                          (apps list + link to tests)
-    → /dashboards/groups/:groupId/tests                  (test sessions)
-      → /dashboards/groups/:groupId/tests/:testSessionId (session detail tabs)
-    → /dashboards/groups/:groupId/apps/:appId            (app hub — links to builds, trends)
-      → /dashboards/groups/:groupId/apps/:appId/builds
-        → /dashboards/groups/:groupId/apps/:appId/builds/:buildId  (build detail tabs)
-      → /dashboards/groups/:groupId/apps/:appId/trends
+/metrics
+  → /metrics/:groupId                                    (apps list + link to tests)
+    → /metrics/:groupId/test-sessions                    (test sessions)
+      → /metrics/:groupId/test-sessions/:testSessionId   (session detail tabs)
+    → /metrics/:groupId/apps/:appId                      (app hub — links to builds, trends)
+      → /metrics/:groupId/apps/:appId/builds
+        → /metrics/:groupId/apps/:appId/builds/:buildId  (build detail tabs)
+      → /metrics/:groupId/apps/:appId/trends
 ```
 
 Optional contextual filters (`branch`, `envId`, `testTag`, `baselineBuildId`, etc.) use **URL query params** in camelCase. Selectors that remain (e.g. baseline build picker) must be scoped to `groupId`/`appId` from the current path.
@@ -29,6 +31,7 @@ Optional contextual filters (`branch`, `envId`, `testTag`, `baselineBuildId`, et
 
 | Topic | Decision |
 |-------|----------|
+| Route prefix | `/metrics` — `groupId` is the slug after `/metrics` (e.g. `/metrics/my-group/...`) |
 | UI section name | Dashboards (sidebar menu label) |
 | API module | Extend `admin-metrics` (no separate BFF) |
 | Query param naming | camelCase (`baselineBuildId`, `testTag`, `envId`) |
