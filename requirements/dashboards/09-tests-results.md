@@ -1,7 +1,7 @@
 # Dashboard 9 — Tests Results
 
 **Metabase ID:** 9  
-**Route:** `/dashboards/groups/:groupId/tests/:testSessionId`  
+**Route:** `/metrics/:groupId/test-sessions/:testSessionId`  
 **Tab:** Results (default tab on test session detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Detailed test session results: session metadata, KPI scalars, coverage pie, per-
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/tests/:testSessionId` (index = Results tab) |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/test-sessions/:testSessionId` (index = Results tab) |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — reach from test sessions list or build tests tab |
 | **Register in app.jsx** | Create `TestSessionLayout` with `<Outlet />` and tab nav; add index route for results |
 
@@ -76,8 +76,8 @@ Validate `testSessionId` belongs to `groupId` from route (return 404 if mismatch
 
 ### Components
 
-- `pages/dashboards/groups/[groupId]/tests/[testSessionId]/index.jsx`
-- `pages/dashboards/groups/[groupId]/tests/[testSessionId]/layout.jsx` (shared tabs)
+- `pages/metrics/[groupId]/test-sessions/[testSessionId]/index.jsx`
+- `pages/metrics/[groupId]/test-sessions/[testSessionId]/layout.jsx` (shared tabs)
 - `components/dashboards/test-session-context-bar.jsx`
 
 ## Metabase export

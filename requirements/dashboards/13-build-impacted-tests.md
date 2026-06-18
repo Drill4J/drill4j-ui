@@ -1,7 +1,7 @@
 # Dashboard 6 & 13 — Build Impacted Tests
 
 **Metabase IDs:** 6 *(labeled "Recommended Tests" in Metabase — maps to Impacted Tests in UI)*, 13  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/impacted-tests`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/impacted-tests`  
 **Tab:** Impacted Tests (on build detail page)
 
 ## Summary
@@ -14,8 +14,8 @@ Do **not** use `GET /api/metrics/recommended-tests` or `metrics.get_recommended_
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/impacted-tests` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/impacted-tests` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Impacted Tests tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -88,7 +88,7 @@ GET /api/metrics/impacted-tests      — prefer POST; GET acceptable only for tr
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/impacted-tests.jsx`
+- `pages/metrics/.../builds/[buildId]/impacted-tests.jsx`
 - `modules/dashboards/api-dashboards.js` → `postImpactedTests(payload)`
 
 ## Metabase export

@@ -1,7 +1,7 @@
 # Dashboard 7 — Apps Summary & Trends
 
 **Metabase ID:** 7  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/trends`
+**Route:** `/metrics/:groupId/apps/:appId/trends`
 
 ## Summary
 
@@ -11,10 +11,10 @@ Time-series charts showing coverage and code-change trends across recent builds 
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/trends` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
-| **Sidebar** | **None** — reach via app hub link to Trends |
-| **Register in app.jsx** | Add nested route; ensure app hub links to `…/trends` |
+| **Route** | `/metrics/:groupId/apps/:appId/trends` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via app dashboard link to Trends |
+| **Register in app.jsx** | Add nested route; ensure app dashboard links to `…/trends` |
 
 ## Metabase source
 
@@ -59,7 +59,7 @@ Implementation: port SQL from Metabase cards 71, 136, 72 into repository methods
 
 ### Components
 
-- `pages/dashboards/groups/[groupId]/apps/[appId]/trends/index.jsx`
+- `pages/metrics/[groupId]/apps/[appId]/trends/index.jsx`
 - `components/charts/trend-chart.jsx` (Recharts `AreaChart` / `LineChart` — shared wrapper; see README chart section)
 
 ## Metabase export

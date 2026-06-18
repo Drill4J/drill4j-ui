@@ -1,7 +1,7 @@
 # Dashboard 2 — Build Summary
 
 **Metabase ID:** 2  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId`  
 **Tab:** Summary (default tab on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Overview of a single build: metadata, coverage pies, change breakdown, KPI scala
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId` (index = Summary tab) |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId` (index = Summary tab) |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — tab inside build detail; reach from builds table |
 | **Register in app.jsx** | Create `BuildDetailLayout` with `<Outlet />` and tab nav; add index route for summary |
 | **Layout shell** | Introduce shared `builds/[buildId]/layout.jsx` — later tabs add sibling routes under same layout |
@@ -98,8 +98,8 @@ GET /api/metrics/builds/:buildId/test-session-stats
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/index.jsx` (summary tab)
-- `pages/dashboards/.../builds/[buildId]/layout.jsx` (shared tabs + context bar)
+- `pages/metrics/.../builds/[buildId]/index.jsx` (summary tab)
+- `pages/metrics/.../builds/[buildId]/layout.jsx` (shared tabs + context bar)
 - `components/dashboards/baseline-build-select.jsx`
 - `components/charts/coverage-pie-chart.jsx` (Recharts — shared wrapper)
 

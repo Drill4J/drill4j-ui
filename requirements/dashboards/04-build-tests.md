@@ -1,7 +1,7 @@
 # Dashboard 4 — Build Tests
 
 **Metabase ID:** 4  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/tests`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/tests`  
 **Tab:** Tests (on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Lists test sessions associated with the current build. Entry point from a build 
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/tests` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/tests` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Tests tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -59,12 +59,12 @@ GET /api/metrics/builds/:buildId
 
 - Shared build detail layout (tabs + `BuildContextBar`)
 - Paginated table of test sessions for this build
-- Row click → `/dashboards/groups/:groupId/tests/:testSessionId`
+- Row click → `/metrics/:groupId/test-sessions/:testSessionId`
 - No group/app filters (from path); optional `testTaskId`, `createdBy` as query-param filters if needed
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/tests.jsx`
+- `pages/metrics/.../builds/[buildId]/tests.jsx`
 - `MetricsDataTable`
 
 ## Metabase export

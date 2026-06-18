@@ -19,7 +19,7 @@ Migration of Metabase dashboards into `drill4j-ui` as a **Dashboards** section (
   → /metrics/:groupId                                    (apps list + link to tests)
     → /metrics/:groupId/test-sessions                    (test sessions)
       → /metrics/:groupId/test-sessions/:testSessionId   (session detail tabs)
-    → /metrics/:groupId/apps/:appId                      (app hub — links to builds, trends)
+    → /metrics/:groupId/apps/:appId                     (app dashboard — builds table)
       → /metrics/:groupId/apps/:appId/builds
         → /metrics/:groupId/apps/:appId/builds/:buildId  (build detail tabs)
       → /metrics/:groupId/apps/:appId/trends
@@ -32,6 +32,7 @@ Optional contextual filters (`branch`, `envId`, `testTag`, `baselineBuildId`, et
 | Topic | Decision |
 |-------|----------|
 | Route prefix | `/metrics` — `groupId` is the slug after `/metrics` (e.g. `/metrics/my-group/...`) |
+| Page files | `src/pages/metrics/...` — mirror URL segments (`test-sessions`, not `tests`) |
 | UI section name | Dashboards (sidebar menu label) |
 | API module | Extend `admin-metrics` (no separate BFF) |
 | Query param naming | camelCase (`baselineBuildId`, `testTag`, `envId`) |
@@ -49,13 +50,13 @@ Every dashboard implementation **must** wire routes and auth. Update the sidebar
 ### Auth (mandatory for every dashboard)
 
 1. **App shell:** `BaseRouter` in `src/app.jsx` already redirects unsigned users to `/sign-in`.
-2. **Route guard:** Wrap every `/dashboards/*` route in `PrivateRoute` with `roles={["user", "admin"]}` (same as existing pages).
+2. **Route guard:** Wrap every `/metrics/*` route in `PrivateRoute` with `roles={["user", "admin"]}` (same as existing pages).
 3. **API:** Metrics endpoints use JWT/api-key auth on the backend — UI sends cookies/headers via axios automatically after sign-in.
 
 ```jsx
 const userRoles = useMemo(() => ["user", "admin"], [])
 
-<Route path="/dashboards/*" element={<PrivateRoute roles={userRoles} />}>
+<Route path="/metrics/*" element={<PrivateRoute roles={userRoles} />}>
   {/* dashboard routes here */}
 </Route>
 ```
@@ -118,8 +119,8 @@ export const DASHBOARD_SUBMENU_KEY = "dashboards-submenu"
 export function renderDashboardSubMenu() {
   return (
     <SubMenu key={DASHBOARD_SUBMENU_KEY} icon={<DashboardOutlined />} title="Dashboards">
-      <Menu.Item key="/dashboards/groups">
-        <Link to="/dashboards/groups">Groups</Link>
+      <Menu.Item key="/metrics">
+        <Link to="/metrics">Groups</Link>
       </Menu.Item>
     </SubMenu>
   )
@@ -148,7 +149,7 @@ export function renderAccountSubMenu() {
 
 | Path prefix | Open submenu | Selected key |
 |-------------|--------------|--------------|
-| `/dashboards` | `dashboards-submenu` | `/dashboards/groups` |
+| `/metrics` | `dashboards-submenu` | `/metrics` |
 | `/my-api-keys`, `/my-account` | `account-submenu` | exact pathname |
 | `/admin` | `admin-submenu` | exact pathname |
 
@@ -161,7 +162,7 @@ Use controlled `openKeys` / `selectedKeys` (not only `default*`) if needed so su
 | Top-level entry (no path params) | **Yes** — add `Menu.Item` | Sidebar link |
 | Requires `groupId`, `appId`, `buildId`, etc. | **No** | Breadcrumbs, tables, tabs, hub links |
 
-Nested dashboards (build tabs, session tabs, builds list) are **not** separate sidebar items — they are reached via in-app navigation. The sidebar provides entry to **Groups**; everything else follows the URL tree.
+Nested dashboards (build tabs, session tabs, app dashboard) are **not** separate sidebar items — they are reached via in-app navigation. The sidebar provides entry to **Groups**; everything else follows the URL tree.
 
 ### Per-implementation checklist (frontend)
 
@@ -180,7 +181,7 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | Dashboard | Sidebar |
 |-----------|---------|
 | entry-points | **Add** `Dashboards` SubMenu + `Groups`; **reorganize** existing My API Keys / My Account under `Account` SubMenu |
-| builds, build-*, apps-trends | None — from app hub / breadcrumbs |
+| app, build-*, apps-trends | None — from apps list / breadcrumbs |
 | tests, tests-* | None — from group apps page or build tests tab |
 | All build detail tabs | None — tab bar in `BuildDetailLayout` |
 | All session detail tabs | None — tab bar in `TestSessionLayout` |
@@ -189,16 +190,16 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 
 | File | Metabase ID | Name | Route | Sidebar |
 |------|-------------|------|-------|---------|
-| [00-entry-points.md](./00-entry-points.md) | — | Groups & Apps entry pages | `/dashboards/groups`, `/dashboards/groups/:groupId` | **Add** Dashboards; reorganize Account |
-| [01-builds.md](./01-builds.md) | 1 | Builds | `…/apps/:appId/builds` | None |
-| [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `…/builds/:buildId` | None (tab) |
+| [00-entry-points.md](./00-entry-points.md) | — | Groups & Apps entry pages | `/metrics`, `/metrics/:groupId` | **Add** Dashboards; reorganize Account |
+| [01-app.md](./01-app.md) | 1 | App | `/metrics/:groupId/apps/:appId` | None |
+| [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `/metrics/:groupId/apps/:appId/builds/:buildId` | None (tab) |
 | [03-build-code-coverage.md](./03-build-code-coverage.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` | None (tab) |
 | [04-build-tests.md](./04-build-tests.md) | 4 | Build — Tests (sessions for build) | `…/builds/:buildId/tests` | None (tab) |
 | [05-build-changes-testing.md](./05-build-changes-testing.md) | 5 | Build — Changes Testing | `…/builds/:buildId/changes-testing` | None (tab) |
-| [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `…/apps/:appId/trends` | None |
-| [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `…/groups/:groupId/tests` | None |
-| [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `…/tests/:testSessionId` | None (tab) |
-| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/tests/:testSessionId/coverage` | None (tab) |
+| [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `/metrics/:groupId/apps/:appId/trends` | None |
+| [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `/metrics/:groupId/test-sessions` | None |
+| [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `/metrics/:groupId/test-sessions/:testSessionId` | None (tab) |
+| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/test-sessions/:testSessionId/coverage` | None (tab) |
 | [13-build-impacted-tests.md](./13-build-impacted-tests.md) | 6, 13 | Build — Impacted Tests | `…/builds/:buildId/impacted-tests` | None (tab) |
 | [14-build-impacted-methods.md](./14-build-impacted-methods.md) | 14 | Build — Impacted Methods | `…/builds/:buildId/impacted-methods` | None (tab) |
 | [15-build-changes.md](./15-build-changes.md) | 15 | Build — Changes | `…/builds/:buildId/changes` | None (tab) |

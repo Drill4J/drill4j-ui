@@ -1,7 +1,7 @@
 # Dashboard 14 — Build Impacted Methods
 
 **Metabase ID:** 14  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/impacted-methods`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/impacted-methods`  
 **Tab:** Impacted Methods (on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Paginated table of methods changed between build and baseline, with their impact
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/impacted-methods` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/impacted-methods` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Impacted Methods tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -51,7 +51,7 @@ GET /api/metrics/impacted-methods?groupId=&appId=&...&baselineBuildId=&methodNam
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/impacted-methods.jsx`
+- `pages/metrics/.../builds/[buildId]/impacted-methods.jsx`
 
 ## Metabase export
 

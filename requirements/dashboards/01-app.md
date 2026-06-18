@@ -1,20 +1,20 @@
-# Dashboard 1 — Builds
+# Dashboard 1 — App
 
 **Metabase ID:** 1  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds`
+**Route:** `/metrics/:groupId/apps/:appId`
 
 ## Summary
 
-Paginated table of builds for the current group/app. Replaces Metabase global group/app filters with path-based context. Optional branch/env filters via query params.
+App dashboard — primary landing page after selecting an application. Shows a paginated builds table for the current group/app (Metabase dashboard 1). Replaces Metabase global group/app filters with path-based context. Optional branch/env filters via query params. In-app links to Trends and build detail pages.
 
 ## Routing, auth & sidebar
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds` |
-| **PrivateRoute** | Under existing `/dashboards/*` branch — `roles={["user", "admin"]}` |
-| **Sidebar** | **None** — reach via app hub (`/dashboards/groups/:groupId/apps/:appId`) |
-| **Register in app.jsx** | Add nested route; ensure app hub page links to `…/builds` |
+| **Route** | `/metrics/:groupId/apps/:appId` |
+| **PrivateRoute** | Under existing `/metrics/*` branch — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via apps list (`/metrics/:groupId`) |
+| **Register in app.jsx** | Add nested route; apps list links directly to this page |
 
 ## Metabase source
 
@@ -43,15 +43,18 @@ None — endpoint exists. Ensure `BuildView` includes fields shown in Metabase t
 
 ### Layout
 
-- Breadcrumb: Dashboards → `{groupId}` → `{appId}` → Builds
+- Breadcrumb: Dashboards → `{groupId}` → `{appId}`
+- Page title: `{appId}`
+- In-app navigation: **Trends** → `…/trends`
 - Optional inline filters: `branch`, `envId` (query params, Ant Design Select)
-- Builds table with row click → `/dashboards/groups/:groupId/apps/:appId/builds/:buildId`
+- Builds table with row click → `/metrics/:groupId/apps/:appId/builds/:buildId`
 - Server-side pagination
 
 ### Components
 
 - `MetricsDataTable` with build columns
 - `OptionalFilters` (branch, envId only — not group/app)
+- `pages/metrics/[groupId]/apps/[appId]/index.jsx`
 
 ## Metabase export
 

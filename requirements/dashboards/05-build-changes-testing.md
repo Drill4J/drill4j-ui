@@ -1,7 +1,7 @@
 # Dashboard 5 — Build Changes Testing
 
 **Metabase ID:** 5  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes-testing`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/changes-testing`  
 **Tab:** Changes Testing (on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Risk-focused view combining changed methods with low/no coverage and their impac
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes-testing` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/changes-testing` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Changes Testing tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -60,7 +60,7 @@ GET /api/metrics/build-diff-report?groupId=&appId=&...&coverageThreshold=
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/changes-testing.jsx`
+- `pages/metrics/.../builds/[buildId]/changes-testing.jsx`
 - Reuse `MetricsDataTable`, `BaselineBuildSelect`
 
 ## Metabase export

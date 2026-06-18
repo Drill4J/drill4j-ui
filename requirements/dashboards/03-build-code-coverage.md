@@ -1,7 +1,7 @@
 # Dashboard 3 — Build Code Coverage
 
 **Metabase ID:** 3  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/coverage`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/coverage`  
 **Tab:** Coverage (on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Hierarchical coverage tables: packages → classes → methods. Includes inline 
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/coverage` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/coverage` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Coverage tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -73,7 +73,7 @@ GET /api/metrics/coverage-treemap?buildId=&...
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/coverage.jsx`
+- `pages/metrics/.../builds/[buildId]/coverage.jsx`
 - `components/dashboards/coverage-tables.jsx`
 - `components/charts/treemap-canvas` (existing)
 

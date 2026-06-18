@@ -1,7 +1,7 @@
 # Dashboard 10 & 12 — Tests / Session Code Coverage
 
 **Metabase IDs:** 10 (Tests — Code Coverage), 12 (Session — Code Coverage)  
-**Route:** `/dashboards/groups/:groupId/tests/:testSessionId/coverage`  
+**Route:** `/metrics/:groupId/test-sessions/:testSessionId/coverage`  
 **Tab:** Coverage (on test session detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Coverage tables scoped to a test session (dashboard 12) with optional drill-down
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/tests/:testSessionId/coverage` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/test-sessions/:testSessionId/coverage` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Coverage tab in `TestSessionLayout` |
 | **Register in app.jsx** | Sibling route under test session layout; add tab link in layout |
 
@@ -82,7 +82,7 @@ GET /api/metrics/coverage-treemap?buildId=&testSessionId=&testDefinitionId=
 
 ### Components
 
-- `pages/dashboards/groups/[groupId]/tests/[testSessionId]/coverage.jsx`
+- `pages/metrics/[groupId]/test-sessions/[testSessionId]/coverage.jsx`
 - `components/dashboards/test-definition-select.jsx`
 - Reuse `coverage-tables.jsx`, `CoverageTreemapCanvas`
 

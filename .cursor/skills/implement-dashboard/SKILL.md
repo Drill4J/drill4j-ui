@@ -17,7 +17,7 @@ arguments: [dashboard]
 /implement-dashboard <dashboard-name>
 ```
 
-Example: `/implement-dashboard builds`
+Example: `/implement-dashboard app`
 
 Implement dashboard: **$dashboard**
 
@@ -33,7 +33,7 @@ If `$dashboard` is empty or not in the table below, ask the user to pick a valid
 | Value | Requirement file |
 |-------|------------------|
 | `entry-points` | `00-entry-points.md` |
-| `builds` | `01-builds.md` |
+| `app` | `01-app.md` |
 | `build-summary` | `02-build-summary.md` |
 | `build-code-coverage` | `03-build-code-coverage.md` |
 | `build-tests` | `04-build-tests.md` |

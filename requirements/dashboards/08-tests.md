@@ -1,7 +1,7 @@
 # Dashboard 8 — Tests (Sessions List)
 
 **Metabase ID:** 8  
-**Route:** `/dashboards/groups/:groupId/tests`
+**Route:** `/metrics/:groupId/test-sessions`
 
 ## Summary
 
@@ -11,10 +11,10 @@ Group-scoped list of test sessions. Build-scoped variant lives at `…/builds/:b
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/tests` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
-| **Sidebar** | **None** — reach via **Test Sessions** link on group apps page (`/dashboards/groups/:groupId`) |
-| **Register in app.jsx** | Add nested route under `/dashboards/groups/:groupId/tests` |
+| **Route** | `/metrics/:groupId/test-sessions` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
+| **Sidebar** | **None** — reach via **Test Sessions** link on group apps page (`/metrics/:groupId`) |
+| **Register in app.jsx** | Add nested route under `/metrics/:groupId/test-sessions` |
 
 ## Metabase source
 
@@ -53,11 +53,11 @@ New repository methods querying `metrics.test_session_builds` joined with `metri
 
 - Breadcrumb: Dashboards → `{groupId}` → Test Sessions
 - Optional filters: `buildId` (select scoped to group's builds), `testTaskId`, `createdBy`
-- Paginated table; row click → `/dashboards/groups/:groupId/tests/:testSessionId`
+- Paginated table; row click → `/metrics/:groupId/test-sessions/:testSessionId`
 
 ### Components
 
-- `pages/dashboards/groups/[groupId]/tests/index.jsx`
+- `pages/metrics/[groupId]/test-sessions/index.jsx`
 - `MetricsDataTable`
 
 ## Metabase export

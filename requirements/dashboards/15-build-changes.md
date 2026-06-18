@@ -1,7 +1,7 @@
 # Dashboard 15 — Build Changes
 
 **Metabase ID:** 15  
-**Route:** `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes`  
+**Route:** `/metrics/:groupId/apps/:appId/builds/:buildId/changes`  
 **Tab:** Changes (on build detail page)
 
 ## Summary
@@ -12,8 +12,8 @@ Overview of code changes vs baseline: scalar counts by change type and pie chart
 
 | | |
 |--|--|
-| **Route** | `/dashboards/groups/:groupId/apps/:appId/builds/:buildId/changes` |
-| **PrivateRoute** | Under `/dashboards/*` — `roles={["user", "admin"]}` |
+| **Route** | `/metrics/:groupId/apps/:appId/builds/:buildId/changes` |
+| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
 | **Sidebar** | **None** — Changes tab in `BuildDetailLayout` |
 | **Register in app.jsx** | Sibling route under build detail layout; add tab link in layout |
 
@@ -58,7 +58,7 @@ GET /api/metrics/changes?groupId=&appId=&...&baselineBuildId=&includeDeleted=&in
 
 ### Components
 
-- `pages/dashboards/.../builds/[buildId]/changes.jsx`
+- `pages/metrics/.../builds/[buildId]/changes.jsx`
 - Reuse `CoveragePieChart` (Recharts) with change-type color map (new / modified / deleted)
 
 ## Metabase export
