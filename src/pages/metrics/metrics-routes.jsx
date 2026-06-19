@@ -16,7 +16,9 @@
 import { createRoutesFromElements, Outlet, Route } from "react-router-dom"
 import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
-import { AppHubPage } from "./groups/app-hub"
+import { AppHubRoute } from "./groups/app-hub"
+import { AppTrendsPlaceholderPage } from "./groups/app-trends"
+import { BuildDetailPlaceholderPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import { TestSessionDetailPage } from "./groups/test-session-detail"
 
@@ -31,7 +33,19 @@ export const metricsRoutes = (
     <Route index element={<GroupsPage />} />
     <Route path=":groupId" handle={{ breadcrumb: "groupId" }} element={<Outlet />}>
       <Route index element={<GroupAppsPage />} />
-      <Route path="apps/:appId" handle={{ breadcrumb: "appId" }} element={<AppHubPage />} />
+      <Route path="apps/:appId" handle={{ breadcrumb: "appId" }} element={<Outlet />}>
+        <Route index element={<AppHubRoute />} />
+        <Route
+          path="trends"
+          handle={{ breadcrumb: "Trends" }}
+          element={<AppTrendsPlaceholderPage />}
+        />
+        <Route
+          path="builds/:buildId"
+          handle={{ breadcrumb: "buildId" }}
+          element={<BuildDetailPlaceholderPage />}
+        />
+      </Route>
       <Route path="test-sessions" handle={{ breadcrumb: "Test Sessions" }} element={<Outlet />}>
         <Route index element={<TestSessionsPage />} />
         <Route

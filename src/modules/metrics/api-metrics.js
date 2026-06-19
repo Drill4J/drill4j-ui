@@ -16,12 +16,29 @@
 import axios from "axios"
 import { runCatching } from "../util"
 
+/** Coalesce concurrent identical requests (e.g. React StrictMode double-mount in dev). */
+const pendingRequests = new Map()
+
+function dedupedRequest(key, request) {
+  const pending = pendingRequests.get(key)
+  if (pending) {
+    return pending
+  }
+  const promise = request().finally(() => {
+    pendingRequests.delete(key)
+  })
+  pendingRequests.set(key, promise)
+  return promise
+}
+
 /**
  * @returns {Promise<string[]>}
  */
 export async function getGroups() {
-  const response = await runCatching(axios.get("/metrics/groups"))
-  return response.data.data
+  return dedupedRequest("groups", async () => {
+    const response = await runCatching(axios.get("/metrics/groups"))
+    return response.data.data
+  })
 }
 
 /**
@@ -29,8 +46,68 @@ export async function getGroups() {
  * @returns {Promise<{ groupId: string, appId: string }[]>}
  */
 export async function getApplications(groupId) {
-  const response = await runCatching(
-    axios.get("/metrics/applications", { params: { groupId } })
-  )
-  return response.data.data
+  return dedupedRequest(`applications:${groupId}`, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/applications", { params: { groupId } })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   appId: string,
+ *   branch?: string,
+ *   envId?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getBuilds(params) {
+  const {
+    groupId,
+    appId,
+    branch = "",
+    envId = "",
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = `builds:${groupId}:${appId}:${branch}:${envId}:${page}:${pageSize}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(axios.get("/metrics/builds", { params }))
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} appId
+ * @returns {Promise<string[]>}
+ */
+export async function getAppBranches(groupId, appId) {
+  return dedupedRequest(`branches:${groupId}:${appId}`, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/apps/branches", { params: { groupId, appId } })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} appId
+ * @returns {Promise<string[]>}
+ */
+export async function getAppEnvIds(groupId, appId) {
+  return dedupedRequest(`env-ids:${groupId}:${appId}`, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/apps/env-ids", { params: { groupId, appId } })
+    )
+    return response.data.data
+  })
 }
