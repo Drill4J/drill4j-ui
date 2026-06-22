@@ -17,7 +17,9 @@ import { useEffect, useState } from "react"
 import { message, Tabs } from "antd"
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
 import { BuildContextBar } from "../../../../components/metrics/build-context-bar"
+import { BuildCoverageFiltersBar } from "../../../../components/metrics/build-coverage-filters-bar"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 const TAB_ITEMS = [
   { key: "summary", label: "Summary", path: "" },
@@ -46,6 +48,8 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { branch, envId, testTag, updateQueryParams, clearCoverageFilters } =
+    useBuildDetailSearchParams()
 
   useEffect(() => {
     let cancelled = false
@@ -82,7 +86,7 @@ export const BuildDetailLayout = () => {
       return
     }
     const target = tab.path ? `${buildBasePath}/${tab.path}` : buildBasePath
-    navigate(target)
+    navigate({ pathname: target, search: location.search })
   }
 
   return (
@@ -100,7 +104,18 @@ export const BuildDetailLayout = () => {
           disabled,
         }))}
         onChange={handleTabChange}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 0 }}
+      />
+      <BuildCoverageFiltersBar
+        groupId={groupId}
+        appId={appId}
+        branch={branch}
+        envId={envId}
+        testTag={testTag}
+        onBranchChange={(value) => updateQueryParams({ branch: value })}
+        onEnvChange={(value) => updateQueryParams({ envId: value })}
+        onTestTagChange={(value) => updateQueryParams({ testTag: value })}
+        onClear={clearCoverageFilters}
       />
       <Outlet context={{ build, buildLoading: loading }} />
     </>

@@ -22,6 +22,7 @@ import { Input, Select, Space } from "antd"
  *   testTag?: string,
  *   branchOptions?: string[],
  *   envOptions?: string[],
+ *   size?: "small" | "middle" | "large",
  *   onBranchChange: (value?: string) => void,
  *   onEnvChange: (value?: string) => void,
  *   onTestTagChange?: (value?: string) => void,
@@ -33,17 +34,21 @@ export function OptionalFilters({
   testTag,
   branchOptions = [],
   envOptions = [],
+  size = "middle",
   onBranchChange,
   onEnvChange,
   onTestTagChange,
 }) {
+  const controlWidth = size === "small" ? 130 : 160
+
   return (
-    <Space wrap size="middle">
+    <Space wrap align="center" size={size === "small" ? "small" : "middle"}>
       <Select
         allowClear
         showSearch
+        size={size}
         placeholder="Branch"
-        style={{ minWidth: 160 }}
+        style={{ minWidth: controlWidth }}
         value={branch}
         options={branchOptions.map((value) => ({ value, label: value }))}
         onChange={onBranchChange}
@@ -51,8 +56,9 @@ export function OptionalFilters({
       <Select
         allowClear
         showSearch
+        size={size}
         placeholder="Environment"
-        style={{ minWidth: 160 }}
+        style={{ minWidth: controlWidth }}
         value={envId}
         options={envOptions.map((value) => ({ value, label: value }))}
         onChange={onEnvChange}
@@ -60,8 +66,9 @@ export function OptionalFilters({
       {onTestTagChange && (
         <Input
           allowClear
+          size={size}
           placeholder="Test tag"
-          style={{ width: 160 }}
+          style={{ width: controlWidth }}
           value={testTag}
           onChange={(event) =>
             onTestTagChange(event.target.value || undefined)

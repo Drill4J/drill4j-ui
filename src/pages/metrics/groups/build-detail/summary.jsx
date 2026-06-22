@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Col, Row, Typography, message } from "antd"
 import dayjs from "dayjs"
-import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useOutletContext, useParams } from "react-router-dom"
 import {
   BaselineBuildFilter,
   BaselineBuildPickerDialog,
@@ -26,8 +26,8 @@ import {
   coverageUnitSlicesToChart,
 } from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
-import { OptionalFilters } from "../../../../components/metrics/optional-filters"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 const { Title, Text, Link } = Typography
 
@@ -55,13 +55,8 @@ function buildImpactedParams(build, baselineBuildId) {
 export const BuildSummaryPage = () => {
   const { groupId, appId, buildId } = useParams()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   const { build } = useOutletContext() ?? {}
-
-  const baselineBuildId = searchParams.get("baselineBuildId") || undefined
-  const branch = searchParams.get("branch") || undefined
-  const envId = searchParams.get("envId") || undefined
-  const testTag = searchParams.get("testTag") || undefined
+  const { baselineBuildId, coverageFilters, updateQueryParams } = useBuildDetailSearchParams()
 
   const [similarBuilds, setSimilarBuilds] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -73,7 +68,6 @@ export const BuildSummaryPage = () => {
   const [sessionStats, setSessionStats] = useState(null)
   const [impactedTestsTotal, setImpactedTestsTotal] = useState(null)
   const [impactedMethodsTotal, setImpactedMethodsTotal] = useState(null)
-  const [filterOptions, setFilterOptions] = useState({ branches: [], envIds: [] })
   const [loading, setLoading] = useState({
     similar: false,
     coverage: false,
@@ -83,33 +77,9 @@ export const BuildSummaryPage = () => {
     impacted: false,
   })
 
-  const coverageFilters = useMemo(
-    () => ({ branch, envId, testTag }),
-    [branch, envId, testTag]
-  )
-
   const selectedBaselineBuild = useMemo(
     () => similarBuilds.find((item) => item.buildId === baselineBuildId) ?? null,
     [similarBuilds, baselineBuildId]
-  )
-
-  const updateQueryParams = useCallback(
-    (updates) => {
-      const params = new URLSearchParams()
-      const merged = {
-        baselineBuildId: "baselineBuildId" in updates ? updates.baselineBuildId : baselineBuildId,
-        branch: "branch" in updates ? updates.branch : branch,
-        envId: "envId" in updates ? updates.envId : envId,
-        testTag: "testTag" in updates ? updates.testTag : testTag,
-      }
-      Object.entries(merged).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value)
-        }
-      })
-      setSearchParams(params, { replace: true })
-    },
-    [baselineBuildId, branch, envId, testTag, setSearchParams]
   )
 
   const loadSimilarBuilds = useCallback(async () => {
@@ -130,31 +100,6 @@ export const BuildSummaryPage = () => {
       loadSimilarBuilds()
     }
   }
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadFilters = async () => {
-      try {
-        const [branches, envIds] = await Promise.all([
-          API.getAppBranches(groupId, appId),
-          API.getAppEnvIds(groupId, appId),
-        ])
-        if (!cancelled) {
-          setFilterOptions({ branches, envIds })
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch filter options. ${error?.message}`)
-        }
-      }
-    }
-
-    loadFilters()
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, appId])
 
   useEffect(() => {
     let cancelled = false
@@ -398,21 +343,9 @@ export const BuildSummaryPage = () => {
         </Col>
       </Row>
 
-      <Title level={5} style={{ marginTop: 32, marginBottom: 16 }}>
+      <Title level={5} style={{ marginTop: 16, marginBottom: 16 }}>
         Total coverage
       </Title>
-      <div style={{ marginBottom: 16 }}>
-        <OptionalFilters
-          branch={branch}
-          envId={envId}
-          testTag={testTag}
-          branchOptions={filterOptions.branches}
-          envOptions={filterOptions.envIds}
-          onBranchChange={(value) => updateQueryParams({ branch: value })}
-          onEnvChange={(value) => updateQueryParams({ envId: value })}
-          onTestTagChange={(value) => updateQueryParams({ testTag: value })}
-        />
-      </div>
       <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
         <Col xs={24} md={12}>
           <CoveragePieChart

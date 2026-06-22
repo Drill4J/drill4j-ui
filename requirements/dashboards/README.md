@@ -255,6 +255,7 @@ Do not add Ant Design Charts or ECharts — one chart stack only.
 - `BuildContextBar` — build metadata row (version, branch, commit) on build-scoped pages
 - `BaselineBuildSelect` — Ant Design Select, scoped to current groupId/appId
 - `OptionalFilters` — branch, envId, testTag as compact inline filters (query params)
+- `BuildCoverageFiltersBar` — sticky page-level coverage filters on build detail layout (`components/metrics/build-coverage-filters-bar.jsx`)
 - `MetricsDataTable` — Ant Design Table with server-side pagination
 - `StatRow` — horizontal row of Ant Design `Statistic` cards
 - `KeyValuePanel` — Ant Design Descriptions for object cards

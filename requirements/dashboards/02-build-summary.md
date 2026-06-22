@@ -95,16 +95,19 @@ GET /api/metrics/builds/:buildId/test-session-stats
 
 - `BuildContextBar` — version, branch, commit sha (compact header)
 - Tab bar: Summary | Tests | Coverage | Changes | Changes Testing | Impacted Tests | Impacted Methods
+- `BuildCoverageFiltersBar` — **sticky** bar below tabs (shared layout shell, all build-detail tabs):
+  - Single compact row: label **Coverage filters** (scope hint in tooltip) + `OptionalFilters` (`size="small"`)
+  - Tab navigation preserves current query string (filters + baseline)
 - **Summary tab content:**
   - `KeyValuePanel` — build info (2-column Descriptions)
   - `StatRow` — classes, methods, test sessions, test runs (no baseline required)
-  - **Total coverage** section — optional `branch`/`envId`/`testTag` filters; two `CoveragePieChart`:
+  - **Total coverage** section — two `CoveragePieChart` (scoped by coverage filters in layout bar):
     - Code coverage (probes)
     - Methods coverage (methods)
   - **Baseline comparison** section — baseline metrics load **only after** user picks a baseline:
     - `BaselineBuildFilter` — compact label + “Select baseline” button in section header
     - `BaselineBuildPickerDialog` — modal with similar-builds table (opened from filter button)
-    - When baseline selected (`baselineBuildId` query param): `StatRow` impacted tests/methods, baseline probe & method pies, changes pie
+    - When baseline selected (`baselineBuildId` query param): `StatRow` impacted tests/methods, changed probe & method coverage pies (also scoped by coverage filters)
 
 ### Baseline selection rules
 
@@ -112,11 +115,14 @@ GET /api/metrics/builds/:buildId/test-session-stats
 - `baselineBuildId` query param is set **only** when the user confirms a pick in the dialog.
 - Similar builds are fetched when the picker dialog opens (not on page load).
 - All charts/stats that require a baseline live under **Baseline comparison**; total-coverage charts use the route `buildId` only.
+- Coverage filters (`branch`, `envId`, `testTag`) apply to **all coverage charts** (total + baseline changed coverage), not to build metadata, test activity, impact counts, or changes summary.
 
 ### Components
 
 - `pages/metrics/.../builds/[buildId]/index.jsx` (summary tab)
-- `pages/metrics/.../builds/[buildId]/layout.jsx` (shared tabs + context bar)
+- `pages/metrics/.../builds/[buildId]/layout.jsx` (shared tabs + context bar + sticky coverage filters)
+- `pages/metrics/.../builds/[buildId]/use-build-detail-search-params.js` — shared URL state for baseline + coverage filters
+- `components/metrics/build-coverage-filters-bar.jsx` — sticky `BuildCoverageFiltersBar`
 - `components/metrics/baseline-build-select.jsx` — `BaselineBuildFilter`, `BaselineBuildPickerDialog`, `BaselineBuildTable`
 - `components/charts/coverage-pie-chart.jsx` (Recharts — shared wrapper)
 
