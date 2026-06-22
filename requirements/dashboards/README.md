@@ -274,7 +274,8 @@ These endpoints are referenced by multiple dashboards; implement once in `admin-
 | `GET /api/metrics/groups` | Distinct group IDs (entry page) |
 | `GET /api/metrics/applications?groupId=` | Apps within group (exists) |
 | `GET /api/metrics/builds/:buildId` | Single build details |
-| `GET /api/metrics/builds/:buildId/coverage-summary` | Pie chart data via `get_builds_with_coverage` |
+| `GET /api/metrics/builds/:buildId/coverage-by-probes` | Probe coverage pie via `get_builds_with_coverage` |
+| `GET /api/metrics/builds/:buildId/coverage-by-methods` | Method coverage pie via `get_builds_with_coverage` |
 | `GET /api/metrics/builds/:buildId/changes-summary` | Change type counts |
 | `GET /api/metrics/builds/:buildId/similar-builds` | Baseline picker via `get_similar_builds` |
 | `GET /api/metrics/coverage/by-package` | Aggregated package coverage |

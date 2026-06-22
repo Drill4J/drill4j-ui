@@ -13,25 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Select, Space } from "antd"
+import { Input, Select, Space } from "antd"
 
 /**
  * @param {{
  *   branch?: string,
  *   envId?: string,
+ *   testTag?: string,
  *   branchOptions?: string[],
  *   envOptions?: string[],
  *   onBranchChange: (value?: string) => void,
  *   onEnvChange: (value?: string) => void,
+ *   onTestTagChange?: (value?: string) => void,
  * }} props
  */
 export function OptionalFilters({
   branch,
   envId,
+  testTag,
   branchOptions = [],
   envOptions = [],
   onBranchChange,
   onEnvChange,
+  onTestTagChange,
 }) {
   return (
     <Space wrap size="middle">
@@ -53,6 +57,17 @@ export function OptionalFilters({
         options={envOptions.map((value) => ({ value, label: value }))}
         onChange={onEnvChange}
       />
+      {onTestTagChange && (
+        <Input
+          allowClear
+          placeholder="Test tag"
+          style={{ width: 160 }}
+          value={testTag}
+          onChange={(event) =>
+            onTestTagChange(event.target.value || undefined)
+          }
+        />
+      )}
     </Space>
   )
 }

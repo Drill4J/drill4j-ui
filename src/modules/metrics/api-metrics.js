@@ -111,3 +111,111 @@ export async function getAppEnvIds(groupId, appId) {
     return response.data.data
   })
 }
+
+/**
+ * @param {string} buildId
+ */
+export async function getBuildDetail(buildId) {
+  return dedupedRequest(`build:${buildId}`, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}`)
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ * @param {{ baselineBuildId?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ */
+export async function getBuildCoverageByProbes(buildId, filters = {}) {
+  const { baselineBuildId, envId, branch, testTag } = filters
+  const key = `coverage-probes:${buildId}:${baselineBuildId}:${envId}:${branch}:${testTag}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-probes`, {
+        params: { baselineBuildId, envId, branch, testTag },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ * @param {{ baselineBuildId?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ */
+export async function getBuildCoverageByMethods(buildId, filters = {}) {
+  const { baselineBuildId, envId, branch, testTag } = filters
+  const key = `coverage-methods:${buildId}:${baselineBuildId}:${envId}:${branch}:${testTag}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-methods`, {
+        params: { baselineBuildId, envId, branch, testTag },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ * @param {string} baselineBuildId
+ */
+export async function getBuildChangesSummary(buildId, baselineBuildId) {
+  const key = `changes-summary:${buildId}:${baselineBuildId}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/changes-summary`, {
+        params: { baselineBuildId },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ */
+export async function getSimilarBuilds(buildId) {
+  return dedupedRequest(`similar-builds:${buildId}`, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/similar-builds`)
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ */
+export async function getBuildTestSessionStats(buildId) {
+  return dedupedRequest(`test-session-stats:${buildId}`, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/test-session-stats`)
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {object} body
+ */
+export async function postImpactedTests(body) {
+  const response = await runCatching(axios.post("/metrics/impacted-tests", body))
+  return {
+    data: response.data.data,
+    paging: response.data.paging,
+  }
+}
+
+/**
+ * @param {object} body
+ */
+export async function postImpactedMethods(body) {
+  const response = await runCatching(axios.post("/metrics/impacted-methods", body))
+  return {
+    data: response.data.data,
+    paging: response.data.paging,
+  }
+}

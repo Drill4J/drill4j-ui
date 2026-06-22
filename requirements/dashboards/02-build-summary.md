@@ -49,10 +49,16 @@ GET /api/metrics/builds/:buildId
 Fields: `groupId`, `appId`, `buildId`, `versionId`, `buildVersion`, `branch`, `commitSha`, `commitAuthor`, `commitMessage`, `committedAt`, `appEnvIds`, `totalClasses`, `totalMethods`, `totalProbes`.
 
 ```
-GET /api/metrics/builds/:buildId/coverage-summary?baselineBuildId=&envId=&branch=&testTag=
-→ ApiResponse<CoverageSummaryView>
+GET /api/metrics/builds/:buildId/coverage-by-probes?envId=&branch=&testTag=
+→ ApiResponse<CoverageUnitSummaryView>
 ```
-Returns rows from `get_builds_with_coverage`: `{ metric, probes, methods }` for covered/missed.
+Probe coverage slices `{ metric: "covered"|"missed", value }` from `get_builds_with_coverage`.
+
+```
+GET /api/metrics/builds/:buildId/coverage-by-methods?envId=&branch=&testTag=
+→ ApiResponse<CoverageUnitSummaryView>
+```
+Method coverage slices `{ metric: "covered"|"missed", value }` from `get_builds_with_coverage`.
 
 ```
 GET /api/metrics/builds/:buildId/changes-summary?baselineBuildId=
@@ -91,21 +97,32 @@ GET /api/metrics/builds/:buildId/test-session-stats
 - Tab bar: Summary | Tests | Coverage | Changes | Changes Testing | Impacted Tests | Impacted Methods
 - **Summary tab content:**
   - `KeyValuePanel` — build info (2-column Descriptions)
-  - `StatRow` — classes, methods, impacted tests/methods, test sessions, test runs
-  - Two `CoveragePieChart` side by side — build vs baseline coverage
-  - `CoveragePieChart` — baseline changes (new/modified/deleted)
-  - `BaselineBuildSelect` — table or select of similar builds; selection sets `baselineBuildId` query param
+  - `StatRow` — classes, methods, test sessions, test runs (no baseline required)
+  - **Total coverage** section — optional `branch`/`envId`/`testTag` filters; two `CoveragePieChart`:
+    - Code coverage (probes)
+    - Methods coverage (methods)
+  - **Baseline comparison** section — baseline metrics load **only after** user picks a baseline:
+    - `BaselineBuildFilter` — compact label + “Select baseline” button in section header
+    - `BaselineBuildPickerDialog` — modal with similar-builds table (opened from filter button)
+    - When baseline selected (`baselineBuildId` query param): `StatRow` impacted tests/methods, baseline probe & method pies, changes pie
+
+### Baseline selection rules
+
+- **Never** auto-select a baseline on navigation or page load.
+- `baselineBuildId` query param is set **only** when the user confirms a pick in the dialog.
+- Similar builds are fetched when the picker dialog opens (not on page load).
+- All charts/stats that require a baseline live under **Baseline comparison**; total-coverage charts use the route `buildId` only.
 
 ### Components
 
 - `pages/metrics/.../builds/[buildId]/index.jsx` (summary tab)
 - `pages/metrics/.../builds/[buildId]/layout.jsx` (shared tabs + context bar)
-- `components/dashboards/baseline-build-select.jsx`
+- `components/metrics/baseline-build-select.jsx` — `BaselineBuildFilter`, `BaselineBuildPickerDialog`, `BaselineBuildTable`
 - `components/charts/coverage-pie-chart.jsx` (Recharts — shared wrapper)
 
 ### Navigation
 
-- Baseline build: Ant Design Select/Table scoped to current `groupId`/`appId` — never show builds from other apps
+- Baseline picker dialog: similar builds scoped to current `groupId`/`appId` via `GET .../similar-builds` on current build
 - Links from KPI cards to corresponding tabs (e.g. impacted tests count → impacted-tests tab)
 
 ## Metabase export
