@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Breadcrumb, message, Tabs, Tag, Typography } from "antd"
 import * as API from "../../modules/metrics/api-metrics"
+import { CoveragePackageTree } from "./coverage-package-tree"
 import { MetricsDataTable } from "./metrics-data-table"
 
 const { Text } = Typography
@@ -105,6 +106,8 @@ const methodColumns = [
  * @param {{
  *   buildId: string,
  *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
+ *   treemapRoots: object[],
+ *   treemapLoading: boolean,
  *   packageName?: string,
  *   className?: string,
  *   onPackageSelect: (packageName: string) => void,
@@ -116,6 +119,8 @@ const methodColumns = [
 export function CoverageTables({
   buildId,
   coverageFilters,
+  treemapRoots,
+  treemapLoading,
   packageName,
   className,
   onPackageSelect,
@@ -124,12 +129,10 @@ export function CoverageTables({
   onClearClass,
 }) {
   const [activeTab, setActiveTab] = useState("packages")
-  const [packages, setPackages] = useState([])
   const [classes, setClasses] = useState([])
   const [methods, setMethods] = useState([])
   const [methodsPaging, setMethodsPaging] = useState({ page: 1, pageSize: 20, total: 0 })
   const [loading, setLoading] = useState({
-    packages: false,
     classes: false,
     methods: false,
   })
@@ -143,33 +146,6 @@ export function CoverageTables({
     }
     return activeTab
   }, [activeTab, className, packageName])
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadPackages = async () => {
-      setLoading((state) => ({ ...state, packages: true }))
-      try {
-        const data = await API.getCoverageByPackage(buildId, coverageFilters)
-        if (!cancelled) {
-          setPackages(data)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch package coverage. ${error?.message}`)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading((state) => ({ ...state, packages: false }))
-        }
-      }
-    }
-
-    loadPackages()
-    return () => {
-      cancelled = true
-    }
-  }, [buildId, coverageFilters])
 
   useEffect(() => {
     let cancelled = false
@@ -243,27 +219,11 @@ export function CoverageTables({
     }))
   }
 
-  const packageColumns = useMemo(
-    () =>
-      coverageColumns({
-        nameLabel: "Package",
-        nameKey: "packageName",
-        onNameClick: (row) => {
-          onPackageSelect(row.packageName)
-          setActiveTab("classes")
-        },
-      }).map((column) =>
-        column.key === "packageName"
-          ? {
-              ...column,
-              render: (value, record) => (
-                <Typography.Link onClick={() => onPackageSelect(record.packageName)}>
-                  {formatPackageLabel(value)}
-                </Typography.Link>
-              ),
-            }
-          : column
-      ),
+  const handlePackageSelect = useCallback(
+    (value) => {
+      onPackageSelect(value)
+      setActiveTab("classes")
+    },
     [onPackageSelect]
   )
 
@@ -285,12 +245,10 @@ export function CoverageTables({
       key: "packages",
       label: "Packages",
       children: (
-        <MetricsDataTable
-          rowKey="packageName"
-          loading={loading.packages}
-          dataSource={packages}
-          columns={packageColumns}
-          pagination={false}
+        <CoveragePackageTree
+          data={treemapRoots}
+          loading={treemapLoading}
+          onPackageSelect={handlePackageSelect}
         />
       ),
     },

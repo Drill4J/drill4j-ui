@@ -269,6 +269,63 @@ function coverageFilterKey(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
+ * @param {{
+ *   envIds?: string[],
+ *   branches?: string[],
+ *   testTags?: string[],
+ *   packageNamePattern?: string,
+ *   classNamePattern?: string,
+ *   rootId?: string,
+ *   testSessionId?: string,
+ *   testDefinitionId?: string,
+ * }} [filters]
+ */
+export async function getCoverageTreemap(buildId, filters = {}) {
+  const {
+    envIds,
+    branches,
+    testTags,
+    packageNamePattern,
+    classNamePattern,
+    rootId,
+    testSessionId,
+    testDefinitionId,
+  } = filters
+  const key = [
+    "coverage-treemap",
+    buildId,
+    envIds?.join(","),
+    branches?.join(","),
+    testTags?.join(","),
+    packageNamePattern,
+    classNamePattern,
+    rootId,
+    testSessionId,
+    testDefinitionId,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/coverage-treemap", {
+        params: serializeListQueryParams({
+          buildId,
+          envIds,
+          branches,
+          testTags,
+          packageNamePattern,
+          classNamePattern,
+          rootId,
+          testSessionId,
+          testDefinitionId,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
  * @param {{ envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
  */
 export async function getCoverageByPackage(buildId, filters = {}) {

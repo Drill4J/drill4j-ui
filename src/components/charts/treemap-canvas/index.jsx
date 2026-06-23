@@ -19,7 +19,7 @@ import axios from "axios"
 import { Typography, Spin, InputNumber, Tooltip, Select, Checkbox, Divider } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
-import { buildTree, buildNodeMap, layoutTreemap } from "./layout"
+import { normalizeTreemapRoots, buildNodeMap, layoutTreemap } from "./layout"
 import { drawTreemap } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
@@ -32,7 +32,13 @@ const { Option } = Select
 const DEFAULT_MAX_DEPTH = 3
 const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
 
-export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = {} }) => {
+export const CoverageTreemapCanvas = ({
+  apiEndpoint,
+  queryParams,
+  extraParams = {},
+  roots: externalRoots,
+  rootsLoading,
+}) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
@@ -48,18 +54,28 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
   const [drillRootId, setDrillRootId] = useState(null)
 
-  const params = useMemo(
-    () => ({ ...getNamedParams(searchParams, queryParams), ...extraParams }),
-    [searchParams, queryParams, extraParams]
-  )
+  const usesExternalRoots = externalRoots !== undefined
+
+  const params = useMemo(() => {
+    if (usesExternalRoots) {
+      return {}
+    }
+    return { ...getNamedParams(searchParams, queryParams), ...extraParams }
+  }, [usesExternalRoots, searchParams, queryParams, extraParams])
 
   useEffect(() => {
+    if (usesExternalRoots) {
+      return undefined
+    }
+
     if (!params.buildId) {
       setError("Missing a required parameter: buildId")
       setData([])
       setLoading(false)
-      return
+      return undefined
     }
+
+    let cancelled = false
 
     setError("")
     setLoading(true)
@@ -70,50 +86,66 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
         paramsSerializer: { indexes: null },
       })
       .then((response) => {
-        const jsonData = response.data.data
-        if (!Array.isArray(jsonData)) throw new Error("Invalid data format")
-        setData(jsonData)
+        if (!cancelled) {
+          setData(response.data.data)
+        }
       })
       .catch((fetchError) => {
-        setError(`Failed to load data: ${fetchError.message}`)
+        if (!cancelled) {
+          setError(`Failed to load data: ${fetchError.message}`)
+        }
       })
       .finally(() => {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       })
-  }, [apiEndpoint, params])
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiEndpoint, params, usesExternalRoots])
+
+  const treemapRoots = usesExternalRoots ? externalRoots : data
+  const loadingState = usesExternalRoots ? Boolean(rootsLoading) : loading
 
   useEffect(() => {
     setDrillRootId(null)
-  }, [data])
+  }, [treemapRoots])
 
-  const fullTree = useMemo(() => buildTree(data), [data])
+  const normalizedRoots = useMemo(() => normalizeTreemapRoots(treemapRoots), [treemapRoots])
 
-  const nodeMap = useMemo(() => buildNodeMap(fullTree), [fullTree])
+  const nodeMap = useMemo(() => buildNodeMap(normalizedRoots), [normalizedRoots])
 
-  const activeRoot = useMemo(() => {
-    if (!fullTree) {
+  const drilledNode = useMemo(
+    () => (drillRootId ? nodeMap.get(drillRootId) ?? null : null),
+    [drillRootId, nodeMap]
+  )
+
+  const activeView = useMemo(() => {
+    if (!normalizedRoots?.length) {
       return null
     }
 
-    if (!drillRootId) {
-      return fullTree
+    if (!drilledNode) {
+      return normalizedRoots
     }
 
-    return nodeMap.get(drillRootId) ?? fullTree
-  }, [fullTree, drillRootId, nodeMap])
+    return drilledNode
+  }, [normalizedRoots, drilledNode])
 
   const breadcrumbPath = useMemo(
-    () => buildBreadcrumbPath(activeRoot, fullTree, nodeMap),
-    [activeRoot, fullTree, nodeMap]
+    () => buildBreadcrumbPath(drilledNode, normalizedRoots, nodeMap),
+    [drilledNode, normalizedRoots, nodeMap]
   )
 
   const positionedNodes = useMemo(() => {
-    if (!activeRoot || size.width <= 0 || size.height <= 0) {
+    if (!activeView || size.width <= 0 || size.height <= 0) {
       return []
     }
 
-    return layoutTreemap(activeRoot, size.width, size.height, maxDepth)
-  }, [activeRoot, size.width, size.height, maxDepth])
+    return layoutTreemap(activeView, size.width, size.height, maxDepth)
+  }, [activeView, size.width, size.height, maxDepth])
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -189,7 +221,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
   const handleClick = useCallback(
     (event) => {
       const canvas = canvasRef.current
-      if (!canvas || !positionedNodes.length || !activeRoot) {
+      if (!canvas || !positionedNodes.length) {
         return
       }
 
@@ -202,8 +234,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
         return
       }
 
-      if (hit.node.full_name === activeRoot.full_name) {
-        setDrillRootId(activeRoot.parent ?? null)
+      if (drilledNode && hit.node.full_name === drilledNode.full_name) {
+        setDrillRootId(drilledNode.parent ?? null)
       } else {
         setDrillRootId(hit.node.full_name)
       }
@@ -211,7 +243,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
       setHoveredNodeId(null)
       setTooltip(null)
     },
-    [positionedNodes, activeRoot]
+    [positionedNodes, drilledNode]
   )
 
   const handleBreadcrumbNavigate = useCallback((fullName, isTopRoot) => {
@@ -244,10 +276,10 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
     <div>
       {error ? (
         <Typography.Text>{error}</Typography.Text>
-      ) : !loading && data.length === 0 ? (
+      ) : !loadingState && !normalizedRoots?.length ? (
         <Typography.Text>No data available</Typography.Text>
       ) : (
-        <Spin spinning={loading}>
+        <Spin spinning={loadingState}>
           <TreemapBreadcrumbs items={breadcrumbPath} onNavigate={handleBreadcrumbNavigate} />
           <div
             ref={containerRef}
@@ -361,7 +393,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
   )
 }
 
-function getNamedParams(params, names) {
+function getNamedParams(params, names = []) {
   return names.reduce((result, paramName) => {
     if (COVERAGE_LIST_QUERY_KEYS.includes(paramName)) {
       const values = params.getAll(paramName).filter(Boolean)

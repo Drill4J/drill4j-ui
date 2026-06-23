@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo } from "react"
-import { Typography } from "antd"
+import { useEffect, useMemo, useState } from "react"
+import { message, Typography } from "antd"
 import { useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
+import { getCoverageTreemap } from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 const { Title } = Typography
@@ -31,23 +32,51 @@ export const BuildCoveragePage = () => {
     updateQueryParams,
   } = useBuildDetailSearchParams()
 
-  const treemapParams = useMemo(
+  const [treemapRoots, setTreemapRoots] = useState([])
+  const [treemapLoading, setTreemapLoading] = useState(true)
+
+  const treemapFilters = useMemo(
     () => ({
-      buildId,
-      envIds: coverageFilters.envIds ?? null,
-      branches: coverageFilters.branches ?? null,
-      testTags: coverageFilters.testTags ?? null,
-      packageNamePattern: packageName ?? null,
-      classNamePattern: className ?? null,
+      ...coverageFilters,
+      packageNamePattern: packageName,
+      classNamePattern: className,
     }),
-    [buildId, className, coverageFilters, packageName]
+    [className, coverageFilters, packageName]
   )
+
+  useEffect(() => {
+    let cancelled = false
+
+    setTreemapLoading(true)
+    getCoverageTreemap(buildId, treemapFilters)
+      .then((data) => {
+        if (!cancelled) {
+          setTreemapRoots(data)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch coverage treemap. ${error?.message}`)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setTreemapLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [buildId, treemapFilters])
 
   return (
     <>
       <CoverageTables
         buildId={buildId}
         coverageFilters={coverageFilters}
+        treemapRoots={treemapRoots}
+        treemapLoading={treemapLoading}
         packageName={packageName}
         className={className}
         onPackageSelect={(value) =>
@@ -61,18 +90,7 @@ export const BuildCoveragePage = () => {
       <Title level={5} style={{ marginTop: 24, marginBottom: 12 }}>
         Coverage treemap
       </Title>
-      <CoverageTreemapCanvas
-        apiEndpoint="/metrics/coverage-treemap"
-        queryParams={[
-          "buildId",
-          "testTags",
-          "envIds",
-          "branches",
-          "packageNamePattern",
-          "classNamePattern",
-        ]}
-        extraParams={treemapParams}
-      />
+      <CoverageTreemapCanvas roots={treemapRoots} rootsLoading={treemapLoading} />
     </>
   )
 }
