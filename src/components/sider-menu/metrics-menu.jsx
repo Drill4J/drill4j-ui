@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Menu } from "antd"
 import { AppstoreOutlined, LineChartOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
-
-const { SubMenu } = Menu
 
 const METRICS_SUBMENU_KEY = "metrics-submenu"
 const metricsTitleLinkStyle = { color: "inherit" }
@@ -72,18 +69,36 @@ export function mergeMenuOpenKeys(keys) {
 
 /**
  * @param {{ pathname: string }} location
+ * @returns {import("antd").MenuProps["items"]}
  */
-export function renderMetricsMenu(location) {
+export function getMetricsMenuItems(location) {
   const groupId = getMetricsGroupId(location.pathname)
   const onGroupSelection = isMetricsGroupSelection(location.pathname)
+  const children = []
 
-  return (
-    <SubMenu
-      key={METRICS_SUBMENU_KEY}
-      icon={<LineChartOutlined />}
-      expandIcon={() => null}
-      className={onGroupSelection ? "ant-menu-submenu-selected" : undefined}
-      title={
+  if (!groupId) {
+    children.push({
+      key: "/metrics",
+      style: { display: "none" },
+      label: <Link to="/metrics">Select group</Link>,
+    })
+  }
+  if (groupId) {
+    children.push({
+      key: `/metrics/${groupId}`,
+      icon: <AppstoreOutlined />,
+      label: <Link to={`/metrics/${groupId}`}>{groupId}</Link>,
+    })
+  }
+
+  return [
+    {
+      key: METRICS_SUBMENU_KEY,
+      icon: <LineChartOutlined />,
+      className: onGroupSelection
+        ? "ant-menu-submenu-selected sider-menu-metrics-root"
+        : "sider-menu-metrics-root",
+      label: (
         <Link
           to="/metrics"
           style={metricsTitleLinkStyle}
@@ -91,18 +106,8 @@ export function renderMetricsMenu(location) {
         >
           Metrics
         </Link>
-      }
-    >
-      {!groupId && (
-        <Menu.Item key="/metrics" style={{ display: "none" }} aria-hidden tabIndex={-1}>
-          <Link to="/metrics">Select group</Link>
-        </Menu.Item>
-      )}
-      {groupId && (
-        <Menu.Item key={`/metrics/${groupId}`} icon={<AppstoreOutlined />}>
-          <Link to={`/metrics/${groupId}`}>{groupId}</Link>
-        </Menu.Item>
-      )}
-    </SubMenu>
-  )
+      ),
+      children,
+    },
+  ]
 }

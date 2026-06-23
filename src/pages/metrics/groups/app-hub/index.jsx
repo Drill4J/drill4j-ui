@@ -21,6 +21,10 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { OptionalFilters } from "../../../../components/metrics/optional-filters"
 import * as API from "../../../../modules/metrics/api-metrics"
+import {
+  getListQueryParam,
+  setListQueryParam,
+} from "../../../../modules/metrics/query-params"
 
 const { Title } = Typography
 
@@ -30,9 +34,16 @@ export const AppHubPage = () => {
   const { groupId, appId } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const searchString = searchParams.toString()
 
-  const branch = searchParams.get("branch") || undefined
-  const envId = searchParams.get("envId") || undefined
+  const branches = useMemo(
+    () => getListQueryParam(searchParams, "branches"),
+    [searchString]
+  )
+  const envIds = useMemo(
+    () => getListQueryParam(searchParams, "envIds"),
+    [searchString]
+  )
 
   const [builds, setBuilds] = useState([])
   const [page, setPage] = useState(1)
@@ -47,16 +58,16 @@ export const AppHubPage = () => {
   const updateQueryParams = useCallback(
     (next) => {
       const params = new URLSearchParams()
-      if (next.branch) {
-        params.set("branch", next.branch)
-      }
-      if (next.envId) {
-        params.set("envId", next.envId)
+      setListQueryParam(params, "branches", next.branches)
+      setListQueryParam(params, "envIds", next.envIds)
+      const nextSearch = params.toString()
+      if (nextSearch === searchString) {
+        return
       }
       setSearchParams(params, { replace: true })
       setPage(1)
     },
-    [setSearchParams]
+    [searchString, setSearchParams]
   )
 
   useEffect(() => {
@@ -93,8 +104,8 @@ export const AppHubPage = () => {
         const { data, paging } = await API.getBuilds({
           groupId,
           appId,
-          branch,
-          envId,
+          branches,
+          envIds,
           page,
           pageSize,
         })
@@ -117,7 +128,7 @@ export const AppHubPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, appId, branch, envId, page, pageSize])
+  }, [groupId, appId, branches, envIds, page, pageSize])
 
   const columns = useMemo(
     () => [
@@ -201,15 +212,15 @@ export const AppHubPage = () => {
 
       <div style={{ marginBottom: 16 }}>
         <OptionalFilters
-          branch={branch}
-          envId={envId}
+          branches={branches}
+          envIds={envIds}
           branchOptions={filterOptions.branches}
           envOptions={filterOptions.envIds}
-          onBranchChange={(value) =>
-            updateQueryParams({ branch: value, envId })
+          onBranchesChange={(value) =>
+            updateQueryParams({ branches: value, envIds })
           }
-          onEnvChange={(value) =>
-            updateQueryParams({ branch, envId: value })
+          onEnvIdsChange={(value) =>
+            updateQueryParams({ branches, envIds: value })
           }
         />
       </div>

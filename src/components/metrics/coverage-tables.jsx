@@ -104,7 +104,7 @@ const methodColumns = [
 /**
  * @param {{
  *   buildId: string,
- *   coverageFilters: { branch?: string, envId?: string, testTag?: string },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
  *   packageName?: string,
  *   className?: string,
  *   onPackageSelect: (packageName: string) => void,

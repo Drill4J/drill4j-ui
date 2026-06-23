@@ -34,9 +34,9 @@ export const BuildCoveragePage = () => {
   const treemapParams = useMemo(
     () => ({
       buildId,
-      envId: coverageFilters.envId ?? null,
-      branch: coverageFilters.branch ?? null,
-      testTag: coverageFilters.testTag ?? null,
+      envIds: coverageFilters.envIds ?? null,
+      branches: coverageFilters.branches ?? null,
+      testTags: coverageFilters.testTags ?? null,
       packageNamePattern: packageName ?? null,
       classNamePattern: className ?? null,
     }),
@@ -65,9 +65,9 @@ export const BuildCoveragePage = () => {
         apiEndpoint="/metrics/coverage-treemap"
         queryParams={[
           "buildId",
-          "testTag",
-          "envId",
-          "branch",
+          "testTags",
+          "envIds",
+          "branches",
           "packageNamePattern",
           "classNamePattern",
         ]}

@@ -25,6 +25,7 @@ import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
 import { TreemapTooltip } from "./tooltip"
 import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
+import { COVERAGE_LIST_QUERY_KEYS } from "../../../modules/metrics/query-params"
 
 const { Option } = Select
 
@@ -64,7 +65,10 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
     setLoading(true)
 
     axios
-      .get(apiEndpoint, { params })
+      .get(apiEndpoint, {
+        params,
+        paramsSerializer: { indexes: null },
+      })
       .then((response) => {
         const jsonData = response.data.data
         if (!Array.isArray(jsonData)) throw new Error("Invalid data format")
@@ -359,8 +363,17 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = 
 
 function getNamedParams(params, names) {
   return names.reduce((result, paramName) => {
+    if (COVERAGE_LIST_QUERY_KEYS.includes(paramName)) {
+      const values = params.getAll(paramName).filter(Boolean)
+      if (values.length) {
+        result[paramName] = values
+      }
+      return result
+    }
     const value = params.get(paramName)
-    result[paramName] = value
+    if (value) {
+      result[paramName] = value
+    }
     return result
   }, {})
 }

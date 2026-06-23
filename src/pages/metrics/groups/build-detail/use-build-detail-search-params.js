@@ -15,30 +15,58 @@
  */
 import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
+import {
+  COVERAGE_LIST_QUERY_KEYS,
+  getListQueryParam,
+  setListQueryParam,
+} from "../../../../modules/metrics/query-params"
 
-const QUERY_KEYS = ["baselineBuildId", "branch", "envId", "testTag", "packageName", "className"]
+const QUERY_KEYS = [
+  "baselineBuildId",
+  ...COVERAGE_LIST_QUERY_KEYS,
+  "packageName",
+  "className",
+]
 
 /**
  * Shared query-param state for build detail routes (baseline + coverage filters).
  */
 export function useBuildDetailSearchParams() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const searchString = searchParams.toString()
 
   const baselineBuildId = searchParams.get("baselineBuildId") || undefined
-  const branch = searchParams.get("branch") || undefined
-  const envId = searchParams.get("envId") || undefined
-  const testTag = searchParams.get("testTag") || undefined
   const packageName = searchParams.get("packageName") || undefined
   const className = searchParams.get("className") || undefined
 
+  const branches = useMemo(
+    () => getListQueryParam(searchParams, "branches"),
+    [searchString]
+  )
+  const envIds = useMemo(
+    () => getListQueryParam(searchParams, "envIds"),
+    [searchString]
+  )
+  const testTags = useMemo(
+    () => getListQueryParam(searchParams, "testTags"),
+    [searchString]
+  )
+
   const coverageFilters = useMemo(
-    () => ({ branch, envId, testTag }),
-    [branch, envId, testTag]
+    () => ({ branches, envIds, testTags }),
+    [branches, envIds, testTags]
   )
 
   const updateQueryParams = useCallback(
     (updates) => {
-      const current = { baselineBuildId, branch, envId, testTag, packageName, className }
+      const current = {
+        baselineBuildId,
+        branches,
+        envIds,
+        testTags,
+        packageName,
+        className,
+      }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
         if (key in updates) {
@@ -47,28 +75,45 @@ export function useBuildDetailSearchParams() {
       })
       const params = new URLSearchParams()
       Object.entries(merged).forEach(([key, value]) => {
+        if (COVERAGE_LIST_QUERY_KEYS.includes(key)) {
+          setListQueryParam(params, key, value)
+          return
+        }
         if (value) {
           params.set(key, value)
         }
       })
+      const nextSearch = params.toString()
+      if (nextSearch === searchString) {
+        return
+      }
       setSearchParams(params, { replace: true })
     },
-    [baselineBuildId, branch, envId, testTag, packageName, className, setSearchParams]
+    [
+      baselineBuildId,
+      branches,
+      envIds,
+      testTags,
+      packageName,
+      className,
+      searchString,
+      setSearchParams,
+    ]
   )
 
   const clearCoverageFilters = useCallback(() => {
     updateQueryParams({
-      branch: undefined,
-      envId: undefined,
-      testTag: undefined,
+      branches: undefined,
+      envIds: undefined,
+      testTags: undefined,
     })
   }, [updateQueryParams])
 
   return {
     baselineBuildId,
-    branch,
-    envId,
-    testTag,
+    branches,
+    envIds,
+    testTags,
     packageName,
     className,
     coverageFilters,

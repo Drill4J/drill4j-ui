@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Button, message, Tooltip, Typography } from "antd"
-import { QuestionCircleOutlined } from "@ant-design/icons"
+import { Button, message, Typography } from "antd"
+import { HintIcon } from "../hint-icon"
 import { OptionalFilters } from "./optional-filters"
 import * as API from "../../modules/metrics/api-metrics"
 
 const { Text } = Typography
 
 const FILTER_SCOPE_HINT =
-  "Branch, environment, and test tag apply to all coverage charts on this page."
+  "Branches, environments, and test tags apply to all coverage charts on this page."
+
+const COVERAGE_FILTER_HINTS = {
+  branches:
+    "When aggregating coverage across builds, only includes builds from the selected branches.",
+  envIds: "Shows coverage collected only in the selected environments.",
+  testTags: "Shows coverage contributed only by tests with the selected tags.",
+}
 
 /**
  * Sticky coverage filter bar for build detail pages.
@@ -31,40 +38,59 @@ const FILTER_SCOPE_HINT =
  * @param {{
  *   groupId: string,
  *   appId: string,
- *   branch?: string,
- *   envId?: string,
- *   testTag?: string,
- *   onBranchChange: (value?: string) => void,
- *   onEnvChange: (value?: string) => void,
- *   onTestTagChange: (value?: string) => void,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ *   onBranchesChange: (value?: string[]) => void,
+ *   onEnvIdsChange: (value?: string[]) => void,
+ *   onTestTagsChange: (value?: string[]) => void,
  *   onClear?: () => void,
  * }} props
  */
 export function BuildCoverageFiltersBar({
   groupId,
   appId,
-  branch,
-  envId,
-  testTag,
-  onBranchChange,
-  onEnvChange,
-  onTestTagChange,
+  branches,
+  envIds,
+  testTags,
+  onBranchesChange,
+  onEnvIdsChange,
+  onTestTagsChange,
   onClear,
 }) {
-  const [filterOptions, setFilterOptions] = useState({ branches: [], envIds: [] })
-  const hasActiveFilters = Boolean(branch || envId || testTag)
+  const [filterOptions, setFilterOptions] = useState({
+    branches: [],
+    envIds: [],
+    testTags: [],
+  })
+  const hasActiveFilters = Boolean(
+    branches?.length || envIds?.length || testTags?.length
+  )
 
   useEffect(() => {
     let cancelled = false
 
     const loadFilters = async () => {
       try {
-        const [branches, envIds] = await Promise.all([
+        const [branchesResult, envIdsResult, testTagsResult] = await Promise.allSettled([
           API.getAppBranches(groupId, appId),
           API.getAppEnvIds(groupId, appId),
+          API.getAppTestTags(groupId, appId),
         ])
         if (!cancelled) {
-          setFilterOptions({ branches, envIds })
+          setFilterOptions({
+            branches: branchesResult.status === "fulfilled" ? branchesResult.value : [],
+            envIds: envIdsResult.status === "fulfilled" ? envIdsResult.value : [],
+            testTags: testTagsResult.status === "fulfilled" ? testTagsResult.value : [],
+          })
+        }
+        if (
+          !cancelled &&
+          (branchesResult.status === "rejected" ||
+            envIdsResult.status === "rejected" ||
+            testTagsResult.status === "rejected")
+        ) {
+          message.error("Failed to fetch some filter options.")
         }
       } catch (error) {
         if (!cancelled) {
@@ -101,22 +127,20 @@ export function BuildCoverageFiltersBar({
         style={{ whiteSpace: "nowrap", flexShrink: 0, lineHeight: "24px" }}
       >
         Coverage filters
-        <Tooltip title={FILTER_SCOPE_HINT}>
-          <QuestionCircleOutlined
-            style={{ marginLeft: 6, fontSize: 12, color: "rgba(0, 0, 0, 0.45)" }}
-          />
-        </Tooltip>
+        <HintIcon title={FILTER_SCOPE_HINT} style={{ marginLeft: 6 }} />
       </Text>
       <OptionalFilters
         size="small"
-        branch={branch}
-        envId={envId}
-        testTag={testTag}
+        branches={branches}
+        envIds={envIds}
+        testTags={testTags}
         branchOptions={filterOptions.branches}
         envOptions={filterOptions.envIds}
-        onBranchChange={onBranchChange}
-        onEnvChange={onEnvChange}
-        onTestTagChange={onTestTagChange}
+        testTagOptions={filterOptions.testTags}
+        filterHints={COVERAGE_FILTER_HINTS}
+        onBranchesChange={onBranchesChange}
+        onEnvIdsChange={onEnvIdsChange}
+        onTestTagsChange={onTestTagsChange}
       />
       {onClear && hasActiveFilters && (
         <Button

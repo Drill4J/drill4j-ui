@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Menu } from "antd"
 import { ApiOutlined, UserOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
-
-const { SubMenu } = Menu
 
 const ACCOUNT_SUBMENU_KEY = "account-submenu"
 
@@ -28,15 +25,25 @@ export function getAccountOpenKeys(pathname) {
     : []
 }
 
-export function renderAccountSubMenu() {
-  return (
-    <SubMenu key={ACCOUNT_SUBMENU_KEY} icon={<UserOutlined />} title="Account">
-      <Menu.Item key="/my-api-keys" icon={<ApiOutlined />}>
-        <Link to="/my-api-keys">My API Keys</Link>
-      </Menu.Item>
-      <Menu.Item key="/my-account" icon={<UserOutlined />}>
-        <Link to="/my-account">My Account</Link>
-      </Menu.Item>
-    </SubMenu>
-  )
+/** @returns {import("antd").MenuProps["items"]} */
+export function getAccountMenuItems() {
+  return [
+    {
+      key: ACCOUNT_SUBMENU_KEY,
+      icon: <UserOutlined />,
+      label: "Account",
+      children: [
+        {
+          key: "/my-api-keys",
+          icon: <ApiOutlined />,
+          label: <Link to="/my-api-keys">My API Keys</Link>,
+        },
+        {
+          key: "/my-account",
+          icon: <UserOutlined />,
+          label: <Link to="/my-account">My Account</Link>,
+        },
+      ],
+    },
+  ]
 }

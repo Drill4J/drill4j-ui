@@ -15,6 +15,10 @@
  */
 import axios from "axios"
 import { runCatching } from "../util"
+import {
+  axiosListParamsSerializer,
+  serializeListQueryParams,
+} from "./query-params"
 
 /** Coalesce concurrent identical requests (e.g. React StrictMode double-mount in dev). */
 const pendingRequests = new Map()
@@ -58,8 +62,8 @@ export async function getApplications(groupId) {
  * @param {{
  *   groupId: string,
  *   appId: string,
- *   branch?: string,
- *   envId?: string,
+ *   branches?: string[],
+ *   envIds?: string[],
  *   page?: number,
  *   pageSize?: number,
  * }} params
@@ -69,14 +73,26 @@ export async function getBuilds(params) {
   const {
     groupId,
     appId,
-    branch = "",
-    envId = "",
+    branches = [],
+    envIds = [],
     page = 1,
     pageSize = 20,
   } = params
-  const key = `builds:${groupId}:${appId}:${branch}:${envId}:${page}:${pageSize}`
+  const key = `builds:${groupId}:${appId}:${branches.join(",")}:${envIds.join(",")}:${page}:${pageSize}`
   return dedupedRequest(key, async () => {
-    const response = await runCatching(axios.get("/metrics/builds", { params }))
+    const response = await runCatching(
+      axios.get("/metrics/builds", {
+        params: serializeListQueryParams({
+          groupId,
+          appId,
+          branches,
+          envIds,
+          page,
+          pageSize,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
     return {
       data: response.data.data,
       paging: response.data.paging,
@@ -113,6 +129,20 @@ export async function getAppEnvIds(groupId, appId) {
 }
 
 /**
+ * @param {string} groupId
+ * @param {string} appId
+ * @returns {Promise<string[]>}
+ */
+export async function getAppTestTags(groupId, appId) {
+  return dedupedRequest(`test-tags:${groupId}:${appId}`, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/apps/test-tags", { params: { groupId, appId } })
+    )
+    return response.data.data
+  })
+}
+
+/**
  * @param {string} buildId
  */
 export async function getBuildDetail(buildId) {
@@ -126,15 +156,21 @@ export async function getBuildDetail(buildId) {
 
 /**
  * @param {string} buildId
- * @param {{ baselineBuildId?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
  */
 export async function getBuildCoverageByProbes(buildId, filters = {}) {
-  const { baselineBuildId, envId, branch, testTag } = filters
-  const key = `coverage-probes:${buildId}:${baselineBuildId}:${envId}:${branch}:${testTag}`
+  const { baselineBuildId, envIds, branches, testTags } = filters
+  const key = `coverage-probes:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-probes`, {
-        params: { baselineBuildId, envId, branch, testTag },
+        params: serializeListQueryParams({
+          baselineBuildId,
+          envIds,
+          branches,
+          testTags,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return response.data.data
@@ -143,15 +179,21 @@ export async function getBuildCoverageByProbes(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
- * @param {{ baselineBuildId?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
  */
 export async function getBuildCoverageByMethods(buildId, filters = {}) {
-  const { baselineBuildId, envId, branch, testTag } = filters
-  const key = `coverage-methods:${buildId}:${baselineBuildId}:${envId}:${branch}:${testTag}`
+  const { baselineBuildId, envIds, branches, testTags } = filters
+  const key = `coverage-methods:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-methods`, {
-        params: { baselineBuildId, envId, branch, testTag },
+        params: serializeListQueryParams({
+          baselineBuildId,
+          envIds,
+          branches,
+          testTags,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return response.data.data
@@ -221,21 +263,21 @@ export async function postImpactedMethods(body) {
 }
 
 function coverageFilterKey(buildId, filters = {}) {
-  const { envId, branch, testTag, packageName, className } = filters
-  return `${buildId}:${envId}:${branch}:${testTag}:${packageName}:${className}`
+  const { envIds, branches, testTags, packageName, className } = filters
+  return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}:${packageName}:${className}`
 }
 
 /**
  * @param {string} buildId
- * @param {{ envId?: string, branch?: string, testTag?: string }} [filters]
+ * @param {{ envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
  */
 export async function getCoverageByPackage(buildId, filters = {}) {
-  const { envId, branch, testTag } = filters
   const key = `coverage-packages:${coverageFilterKey(buildId, filters)}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/coverage/by-package", {
-        params: { buildId, envId, branch, testTag },
+        params: serializeListQueryParams({ buildId, ...filters }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return response.data.data
@@ -244,15 +286,15 @@ export async function getCoverageByPackage(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
- * @param {{ packageName?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ * @param {{ packageName?: string, envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
  */
 export async function getCoverageByClass(buildId, filters = {}) {
-  const { packageName, envId, branch, testTag } = filters
   const key = `coverage-classes:${coverageFilterKey(buildId, filters)}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/coverage/by-class", {
-        params: { buildId, packageName, envId, branch, testTag },
+        params: serializeListQueryParams({ buildId, ...filters }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return response.data.data
@@ -264,37 +306,26 @@ export async function getCoverageByClass(buildId, filters = {}) {
  * @param {{
  *   packageName?: string,
  *   className?: string,
- *   envId?: string,
- *   branch?: string,
- *   testTag?: string,
+ *   envIds?: string[],
+ *   branches?: string[],
+ *   testTags?: string[],
  *   page?: number,
  *   pageSize?: number,
  * }} [params]
  */
 export async function getCoverageMethods(buildId, params = {}) {
-  const {
-    packageName,
-    className,
-    envId,
-    branch,
-    testTag,
-    page = 1,
-    pageSize = 20,
-  } = params
+  const { page = 1, pageSize = 20 } = params
   const key = `coverage-methods:${coverageFilterKey(buildId, params)}:${page}:${pageSize}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/coverage", {
-        params: {
+        params: serializeListQueryParams({
           buildId,
-          packageName,
-          className,
-          envId,
-          branch,
-          testTag,
+          ...params,
           page,
           pageSize,
-        },
+        }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return {

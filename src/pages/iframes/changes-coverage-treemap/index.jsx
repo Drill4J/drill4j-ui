@@ -25,9 +25,9 @@ export const ChangesCoverageTreemapPage = () => (
           queryParams={[
             "buildId",
             "baselineBuildId",
-            "testTag",
-            "envId",
-            "branch",
+            "testTags",
+            "envIds",
+            "branches",
             "packageNamePattern",
             "classNamePattern",
             "includeDeleted",

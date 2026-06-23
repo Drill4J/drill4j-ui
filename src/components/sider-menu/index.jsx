@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { Menu, Spin, message } from "antd"
 import { LogoutOutlined, LoadingOutlined } from "@ant-design/icons"
 import { signOut } from "../../modules/auth/api-auth"
 import {
-  renderMetricsMenu,
+  getMetricsMenuItems,
   getMetricsSelectedKeys,
   getMetricsOpenKeys,
   mergeMenuOpenKeys,
 } from "./metrics-menu"
-import { renderAccountSubMenu, getAccountOpenKeys } from "./account-menu"
-import { renderAdminSubMenu, getAdminOpenKeys } from "./admin-menu"
+import { getAccountMenuItems, getAccountOpenKeys } from "./account-menu"
+import { getAdminMenuItems, getAdminOpenKeys } from "./admin-menu"
+import "./sider-menu.css"
 
 export function SiderMenu({ location }) {
   const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
@@ -67,6 +68,36 @@ export function SiderMenu({ location }) {
     setOpenKeys(derivedOpenKeys)
   }, [derivedOpenKeys])
 
+  const items = useMemo(
+    () => [
+      ...getMetricsMenuItems(location),
+      ...getAccountMenuItems(),
+      ...getAdminMenuItems(),
+      {
+        key: "sign-out",
+        icon: <LogoutOutlined />,
+        label: (
+          <>
+            Sign Out{" "}
+            {isSignOutInProgress && (
+              <Spin
+                size="small"
+                indicator={
+                  <LoadingOutlined
+                    style={{ fontSize: "16px", color: "white", marginLeft: "8px" }}
+                    spin
+                  />
+                }
+              />
+            )}
+          </>
+        ),
+        onClick: handleSignOut,
+      },
+    ],
+    [location, isSignOutInProgress, handleSignOut]
+  )
+
   return (
     <Menu
       theme="dark"
@@ -74,24 +105,7 @@ export function SiderMenu({ location }) {
       selectedKeys={selectedKeys}
       openKeys={openKeys}
       onOpenChange={handleOpenChange}
-    >
-      {renderMetricsMenu(location)}
-      {renderAccountSubMenu()}
-      {renderAdminSubMenu()}
-      <Menu.Item key="sign-out" icon={<LogoutOutlined />} onClick={handleSignOut}>
-        Sign Out{" "}
-        {isSignOutInProgress && (
-          <Spin
-            size="small"
-            indicator={
-              <LoadingOutlined
-                style={{ fontSize: "16px", color: "white", marginLeft: "8px" }}
-                spin
-              />
-            }
-          />
-        )}
-      </Menu.Item>
-    </Menu>
+      items={items}
+    />
   )
 }

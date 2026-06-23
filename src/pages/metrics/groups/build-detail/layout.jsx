@@ -48,7 +48,7 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { branch, envId, testTag, updateQueryParams, clearCoverageFilters } =
+  const { branches, envIds, testTags, updateQueryParams, clearCoverageFilters } =
     useBuildDetailSearchParams()
 
   useEffect(() => {
@@ -109,12 +109,12 @@ export const BuildDetailLayout = () => {
       <BuildCoverageFiltersBar
         groupId={groupId}
         appId={appId}
-        branch={branch}
-        envId={envId}
-        testTag={testTag}
-        onBranchChange={(value) => updateQueryParams({ branch: value })}
-        onEnvChange={(value) => updateQueryParams({ envId: value })}
-        onTestTagChange={(value) => updateQueryParams({ testTag: value })}
+        branches={branches}
+        envIds={envIds}
+        testTags={testTags}
+        onBranchesChange={(value) => updateQueryParams({ branches: value })}
+        onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
+        onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
         onClear={clearCoverageFilters}
       />
       <Outlet context={{ build, buildLoading: loading }} />

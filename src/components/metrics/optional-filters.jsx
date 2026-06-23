@@ -13,67 +13,95 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Input, Select, Space } from "antd"
+import { Select, Space } from "antd"
+import { HintIcon } from "../hint-icon"
+
+function toOptions(values = []) {
+  return values.map((value) => ({ value, label: value }))
+}
+
+function handleMultiChange(onChange, values) {
+  onChange(values?.length ? values : undefined)
+}
 
 /**
  * @param {{
- *   branch?: string,
- *   envId?: string,
- *   testTag?: string,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
  *   branchOptions?: string[],
  *   envOptions?: string[],
+ *   testTagOptions?: string[],
  *   size?: "small" | "middle" | "large",
- *   onBranchChange: (value?: string) => void,
- *   onEnvChange: (value?: string) => void,
- *   onTestTagChange?: (value?: string) => void,
+ *   filterHints?: { branches?: string, envIds?: string, testTags?: string },
+ *   onBranchesChange: (value?: string[]) => void,
+ *   onEnvIdsChange: (value?: string[]) => void,
+ *   onTestTagsChange?: (value?: string[]) => void,
  * }} props
  */
 export function OptionalFilters({
-  branch,
-  envId,
-  testTag,
+  branches,
+  envIds,
+  testTags,
   branchOptions = [],
   envOptions = [],
+  testTagOptions = [],
   size = "middle",
-  onBranchChange,
-  onEnvChange,
-  onTestTagChange,
+  filterHints,
+  onBranchesChange,
+  onEnvIdsChange,
+  onTestTagsChange,
 }) {
-  const controlWidth = size === "small" ? 130 : 160
+  const controlWidth = size === "small" ? 180 : 220
 
   return (
     <Space wrap align="center" size={size === "small" ? "small" : "middle"}>
-      <Select
-        allowClear
-        showSearch
-        size={size}
-        placeholder="Branch"
-        style={{ minWidth: controlWidth }}
-        value={branch}
-        options={branchOptions.map((value) => ({ value, label: value }))}
-        onChange={onBranchChange}
-      />
-      <Select
-        allowClear
-        showSearch
-        size={size}
-        placeholder="Environment"
-        style={{ minWidth: controlWidth }}
-        value={envId}
-        options={envOptions.map((value) => ({ value, label: value }))}
-        onChange={onEnvChange}
-      />
-      {onTestTagChange && (
-        <Input
+      <Space align="center" size={size === "small" ? 4 : 6}>
+        <Select
           allowClear
+          showSearch
+          mode="multiple"
+          maxTagCount="responsive"
           size={size}
-          placeholder="Test tag"
-          style={{ width: controlWidth }}
-          value={testTag}
-          onChange={(event) =>
-            onTestTagChange(event.target.value || undefined)
-          }
+          placeholder="Branches"
+          style={{ minWidth: controlWidth }}
+          value={branches ?? []}
+          options={toOptions(branchOptions)}
+          onChange={(values) => handleMultiChange(onBranchesChange, values)}
         />
+        {filterHints?.branches && <HintIcon title={filterHints.branches} />}
+      </Space>
+      <Space align="center" size={size === "small" ? 4 : 6}>
+        <Select
+          allowClear
+          showSearch
+          mode="multiple"
+          maxTagCount="responsive"
+          size={size}
+          placeholder="Environments"
+          style={{ minWidth: controlWidth }}
+          value={envIds ?? []}
+          options={toOptions(envOptions)}
+          onChange={(values) => handleMultiChange(onEnvIdsChange, values)}
+        />
+        {filterHints?.envIds && <HintIcon title={filterHints.envIds} />}
+      </Space>
+      {onTestTagsChange && (
+        <Space align="center" size={size === "small" ? 4 : 6}>
+          <Select
+            allowClear
+            showSearch
+            mode="multiple"
+            maxTagCount="responsive"
+            size={size}
+            placeholder="Test tags"
+            style={{ minWidth: controlWidth }}
+            value={testTags ?? []}
+            options={toOptions(testTagOptions)}
+            onChange={(values) => handleMultiChange(onTestTagsChange, values)}
+          />
+          {filterHints?.testTags && <HintIcon title={filterHints.testTags} />}
+        </Space>
       )}
     </Space>
   )
