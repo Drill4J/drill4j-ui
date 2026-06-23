@@ -31,7 +31,7 @@ const { Option } = Select
 const DEFAULT_MAX_DEPTH = 3
 const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
 
-export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
+export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams, extraParams = {} }) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
@@ -48,8 +48,8 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
   const [drillRootId, setDrillRootId] = useState(null)
 
   const params = useMemo(
-    () => getNamedParams(searchParams, queryParams),
-    [searchParams, queryParams]
+    () => ({ ...getNamedParams(searchParams, queryParams), ...extraParams }),
+    [searchParams, queryParams, extraParams]
   )
 
   useEffect(() => {

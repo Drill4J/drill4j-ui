@@ -219,3 +219,87 @@ export async function postImpactedMethods(body) {
     paging: response.data.paging,
   }
 }
+
+function coverageFilterKey(buildId, filters = {}) {
+  const { envId, branch, testTag, packageName, className } = filters
+  return `${buildId}:${envId}:${branch}:${testTag}:${packageName}:${className}`
+}
+
+/**
+ * @param {string} buildId
+ * @param {{ envId?: string, branch?: string, testTag?: string }} [filters]
+ */
+export async function getCoverageByPackage(buildId, filters = {}) {
+  const { envId, branch, testTag } = filters
+  const key = `coverage-packages:${coverageFilterKey(buildId, filters)}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/coverage/by-package", {
+        params: { buildId, envId, branch, testTag },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ * @param {{ packageName?: string, envId?: string, branch?: string, testTag?: string }} [filters]
+ */
+export async function getCoverageByClass(buildId, filters = {}) {
+  const { packageName, envId, branch, testTag } = filters
+  const key = `coverage-classes:${coverageFilterKey(buildId, filters)}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/coverage/by-class", {
+        params: { buildId, packageName, envId, branch, testTag },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} buildId
+ * @param {{
+ *   packageName?: string,
+ *   className?: string,
+ *   envId?: string,
+ *   branch?: string,
+ *   testTag?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} [params]
+ */
+export async function getCoverageMethods(buildId, params = {}) {
+  const {
+    packageName,
+    className,
+    envId,
+    branch,
+    testTag,
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = `coverage-methods:${coverageFilterKey(buildId, params)}:${page}:${pageSize}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/coverage", {
+        params: {
+          buildId,
+          packageName,
+          className,
+          envId,
+          branch,
+          testTag,
+          page,
+          pageSize,
+        },
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}

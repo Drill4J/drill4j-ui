@@ -15,3 +15,4 @@
  */
 export { BuildDetailLayout } from "./layout"
 export { BuildSummaryPage } from "./summary"
+export { BuildCoveragePage } from "./coverage"

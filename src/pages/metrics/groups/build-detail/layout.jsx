@@ -24,7 +24,7 @@ import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 const TAB_ITEMS = [
   { key: "summary", label: "Summary", path: "" },
   { key: "tests", label: "Tests", path: "tests", disabled: true },
-  { key: "coverage", label: "Coverage", path: "coverage", disabled: true },
+  { key: "coverage", label: "Coverage", path: "coverage" },
   { key: "changes", label: "Changes", path: "changes", disabled: true },
   { key: "changes-testing", label: "Changes Testing", path: "changes-testing", disabled: true },
   { key: "impacted-tests", label: "Impacted Tests", path: "impacted-tests", disabled: true },

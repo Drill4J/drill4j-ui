@@ -16,7 +16,7 @@
 import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 
-const QUERY_KEYS = ["baselineBuildId", "branch", "envId", "testTag"]
+const QUERY_KEYS = ["baselineBuildId", "branch", "envId", "testTag", "packageName", "className"]
 
 /**
  * Shared query-param state for build detail routes (baseline + coverage filters).
@@ -28,6 +28,8 @@ export function useBuildDetailSearchParams() {
   const branch = searchParams.get("branch") || undefined
   const envId = searchParams.get("envId") || undefined
   const testTag = searchParams.get("testTag") || undefined
+  const packageName = searchParams.get("packageName") || undefined
+  const className = searchParams.get("className") || undefined
 
   const coverageFilters = useMemo(
     () => ({ branch, envId, testTag }),
@@ -36,7 +38,7 @@ export function useBuildDetailSearchParams() {
 
   const updateQueryParams = useCallback(
     (updates) => {
-      const current = { baselineBuildId, branch, envId, testTag }
+      const current = { baselineBuildId, branch, envId, testTag, packageName, className }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
         if (key in updates) {
@@ -51,7 +53,7 @@ export function useBuildDetailSearchParams() {
       })
       setSearchParams(params, { replace: true })
     },
-    [baselineBuildId, branch, envId, testTag, setSearchParams]
+    [baselineBuildId, branch, envId, testTag, packageName, className, setSearchParams]
   )
 
   const clearCoverageFilters = useCallback(() => {
@@ -67,6 +69,8 @@ export function useBuildDetailSearchParams() {
     branch,
     envId,
     testTag,
+    packageName,
+    className,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,
