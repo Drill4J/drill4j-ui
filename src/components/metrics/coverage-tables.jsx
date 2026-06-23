@@ -76,12 +76,6 @@ function coverageColumns({ nameLabel, nameKey, onNameClick }) {
 
 const methodColumns = [
   {
-    title: "Class",
-    dataIndex: "className",
-    key: "className",
-    ellipsis: true,
-  },
-  {
     title: "Method",
     dataIndex: "name",
     key: "name",
