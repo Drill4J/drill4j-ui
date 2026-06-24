@@ -193,7 +193,7 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | [00-entry-points.md](./00-entry-points.md) | — | Groups & Apps entry pages | `/metrics`, `/metrics/:groupId` | **Add** Dashboards; reorganize Account |
 | [01-app.md](./01-app.md) | 1 | App | `/metrics/:groupId/apps/:appId` | None |
 | [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `/metrics/:groupId/apps/:appId/builds/:buildId` | None (tab) |
-| [03-build-code-coverage.md](./03-build-code-coverage.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` | None (tab) |
+| [03-build-code-coverage/](./03-build-code-coverage/README.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` | None (tab) |
 | [04-build-tests.md](./04-build-tests.md) | 4 | Build — Tests (sessions for build) | `…/builds/:buildId/tests` | None (tab) |
 | [05-build-changes-testing.md](./05-build-changes-testing.md) | 5 | Build — Changes Testing | `…/builds/:buildId/changes-testing` | None (tab) |
 | [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `/metrics/:groupId/apps/:appId/trends` | None |
@@ -261,7 +261,7 @@ Do not add Ant Design Charts or ECharts — one chart stack only.
 - `KeyValuePanel` — Ant Design Descriptions for object cards
 - `CoveragePieChart` — Recharts wrapper (`components/charts/coverage-pie-chart.jsx`)
 - `TrendChart` — Recharts wrapper (`components/charts/trend-chart.jsx`)
-- `CoverageTreemapCanvas` — existing canvas component, embedded inline (not iframe)
+- `CoverageTreemapCanvas` — existing canvas component, embedded inline (not iframe); spec: [03-build-code-coverage/treemap.md](./03-build-code-coverage/treemap.md)
 - `dashboard-menu.jsx` — Dashboards SubMenu items (`src/modules/dashboards/dashboard-menu.jsx`)
 - `account-menu.jsx` — Account SubMenu items (`src/modules/account/account-menu.jsx`)
 - `admin-menu.jsx` — Manage SubMenu items (`src/modules/admin/admin-menu.jsx`)

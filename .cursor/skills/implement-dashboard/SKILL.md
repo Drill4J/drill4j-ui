@@ -35,7 +35,7 @@ If `$dashboard` is empty or not in the table below, ask the user to pick a valid
 | `entry-points` | `00-entry-points.md` |
 | `app` | `01-app.md` |
 | `build-summary` | `02-build-summary.md` |
-| `build-code-coverage` | `03-build-code-coverage.md` |
+| `build-code-coverage` | `03-build-code-coverage/README.md` (+ component specs in same folder) |
 | `build-tests` | `04-build-tests.md` |
 | `build-changes-testing` | `05-build-changes-testing.md` |
 | `apps-trends` | `07-apps-trends.md` |
@@ -65,7 +65,7 @@ Template: `local-credentials.example.env`.
 ## Before coding
 
 1. Read `requirements/dashboards/README.md` (navigation, conventions, shared API gaps, shared components).
-2. Read the **target** requirement file for `$dashboard`.
+2. Read the **target** requirement file for `$dashboard` (for `build-code-coverage`, also read component specs in `03-build-code-coverage/` — especially `treemap.md` when touching the chart).
 3. Scan **other** requirement files only for:
    - shared endpoints/components you must reuse (not reimplement)
    - dependencies (e.g. `entry-points` adds routing shell used by later dashboards)

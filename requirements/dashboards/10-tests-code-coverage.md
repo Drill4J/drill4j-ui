@@ -37,7 +37,7 @@ Coverage tables scoped to a test session (dashboard 12) with optional drill-down
 | 174 | Test Definition - Methods Coverage | table | same |
 | 185 | Test Definitions By Session | object | `test_session_definitions` view |
 
-**Optional query params:** `buildId`, `testDefinitionId`, `packageName`, `className`
+**Optional query params:** `buildId`, `testDefinitionId`, `packageName`, `className`, `methodSignature`
 
 ## API
 
@@ -77,8 +77,8 @@ GET /api/metrics/coverage-treemap?buildId=&testSessionId=&testDefinitionId=
 - `buildId` from session association or compact select (scoped to session's builds)
 - `TestDefinitionSelect` — Ant Design Select populated from definitions endpoint; "All tests" option for session-level view
 - Optional: `packageName`, `className` via table drill-down (query params)
-- Tables: Packages → Classes → Methods (same drill-down pattern as build coverage)
-- `CoverageTreemapCanvas` with `testSessionId` and optional `testDefinitionId`
+- `CoverageTreemapCanvas` at top — see [03-build-code-coverage/treemap.md](./03-build-code-coverage/treemap.md)
+- Tables below: Packages → Classes → Methods (same drill-down pattern as build coverage)
 
 ### Components
 
