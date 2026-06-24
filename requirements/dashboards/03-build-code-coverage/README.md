@@ -61,7 +61,7 @@ GET /api/metrics/coverage-treemap?buildId=&packageNamePattern=&classNamePattern=
 → ApiResponse<TreemapNode[]>   // exists
 ```
 
-Treemap and packages tree share one treemap API response; page fetches once and passes `roots` to both components.
+Treemap and packages tree share one treemap API response; page fetches once and passes `roots` to both components. Each node includes API-assigned `type` (`package` | `class` | `method`) and scope fields — see [treemap.md § TreemapNode](./treemap.md#treemapnode-api).
 
 ## UI
 
@@ -73,16 +73,16 @@ Top to bottom:
 2. **[Coverage treemap](./treemap.md)** — `CoverageTreemapCanvas` at the **top** of the page content (not iframe)
 3. **[Coverage tables](./coverage-tables.md)** — tabbed Packages | Classes | Methods below the treemap
 
-Treemap and tables stay in sync via shared URL scope (`packageName`, `className`, `methodSignature`) and shared `treemapRoots` data from the page.
+Treemap shows the full build (filtered only by `envId` / `branch` / `testTag`). URL scope (`packageName`, `className`) drives **tables** only — single-click treemap navigation does not refetch or narrow treemap data.
 
 ### Page wiring
 
 `pages/metrics/groups/build-detail/coverage.jsx`:
 
-- Read `buildId` from route; read/write `packageName`, `className`, `methodSignature`, and coverage filters via `useBuildDetailSearchParams`
-- Fetch treemap once: `getCoverageTreemap(buildId, { ...coverageFilters, packageNamePattern, classNamePattern, methodSignaturePattern })`
+- Read `buildId` from route; read/write `packageName`, `className`, and coverage filters via `useBuildDetailSearchParams`
+- Fetch treemap: `getCoverageTreemap(buildId, coverageFilters)` — no package/class URL scope in treemap request
 - Pass `roots` / `rootsLoading` to both `CoverageTreemapCanvas` and `CoverageTables`
-- Wire treemap callbacks to the same handlers as table row clicks (`onPackageSelect`, `onClassSelect`, `onMethodSelect`, clear handlers)
+- Wire treemap callbacks to the same handlers as table row clicks (`onPackageSelect`, `onClassSelect`, clear handlers)
 
 ### Component specs
 

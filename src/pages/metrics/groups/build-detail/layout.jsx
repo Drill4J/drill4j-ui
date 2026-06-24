@@ -48,7 +48,7 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { branches, envIds, testTags, updateQueryParams, clearCoverageFilters } =
+  const { branches, envIds, testTags, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
     useBuildDetailSearchParams()
 
   useEffect(() => {
@@ -80,13 +80,25 @@ export const BuildDetailLayout = () => {
 
   const activeKey = resolveActiveTab(location.pathname, buildBasePath)
 
+  useEffect(() => {
+    if (activeKey !== "coverage" && (packageName || className)) {
+      clearCoverageScope()
+    }
+  }, [activeKey, packageName, className, clearCoverageScope])
+
   const handleTabChange = (key) => {
     const tab = TAB_ITEMS.find((item) => item.key === key)
     if (!tab || tab.disabled) {
       return
     }
     const target = tab.path ? `${buildBasePath}/${tab.path}` : buildBasePath
-    navigate({ pathname: target, search: location.search })
+    const params = new URLSearchParams(location.search)
+    if (key !== "coverage") {
+      params.delete("packageName")
+      params.delete("className")
+    }
+    const search = params.toString()
+    navigate({ pathname: target, search: search ? `?${search}` : "" })
   }
 
   return (

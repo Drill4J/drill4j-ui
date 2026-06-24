@@ -25,12 +25,15 @@ import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
 import { TreemapTooltip } from "./tooltip"
 import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
+import { resolveScopeFromNode, canDrillIntoNode } from "./node-scope"
 import { COVERAGE_LIST_QUERY_KEYS } from "../../../modules/metrics/query-params"
 
 const { Option } = Select
 
 const DEFAULT_MAX_DEPTH = 3
 const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
+const SINGLE_CLICK_DELAY_MS = 250
+const EMPTY_QUERY_PARAMS = {}
 
 export const CoverageTreemapCanvas = ({
   apiEndpoint,
@@ -38,6 +41,8 @@ export const CoverageTreemapCanvas = ({
   extraParams = {},
   roots: externalRoots,
   rootsLoading,
+  onPackageSelect,
+  onClassSelect,
 }) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
@@ -49,16 +54,18 @@ export const CoverageTreemapCanvas = ({
   const [searchParams] = useSearchParams()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
+  const clickTimeoutRef = useRef(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [tooltip, setTooltip] = useState(null)
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
   const [drillRootId, setDrillRootId] = useState(null)
 
   const usesExternalRoots = externalRoots !== undefined
+  const hasPageNavigation = Boolean(onPackageSelect || onClassSelect)
 
   const params = useMemo(() => {
     if (usesExternalRoots) {
-      return {}
+      return EMPTY_QUERY_PARAMS
     }
     return { ...getNamedParams(searchParams, queryParams), ...extraParams }
   }, [usesExternalRoots, searchParams, queryParams, extraParams])
@@ -105,6 +112,15 @@ export const CoverageTreemapCanvas = ({
       cancelled = true
     }
   }, [apiEndpoint, params, usesExternalRoots])
+
+  useEffect(
+    () => () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
+    },
+    []
+  )
 
   const treemapRoots = usesExternalRoots ? externalRoots : data
   const loadingState = usesExternalRoots ? Boolean(rootsLoading) : loading
@@ -183,19 +199,24 @@ export const CoverageTreemapCanvas = ({
     renderCanvas()
   }, [renderCanvas])
 
-  const handleMouseMove = useCallback(
-    (event) => {
+  const getHitAt = useCallback(
+    (clientX, clientY) => {
       const canvas = canvasRef.current
       if (!canvas || !positionedNodes.length) {
-        setHoveredNodeId(null)
-        setTooltip(null)
-        return
+        return null
       }
 
       const rect = canvas.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
-      const hit = findNodeAtPoint(positionedNodes, x, y)
+      return findNodeAtPoint(positionedNodes, clientX - rect.left, clientY - rect.top)
+    },
+    [positionedNodes]
+  )
+
+  const getHit = useCallback((event) => getHitAt(event.clientX, event.clientY), [getHitAt])
+
+  const handleMouseMove = useCallback(
+    (event) => {
+      const hit = getHit(event)
 
       if (!hit) {
         setHoveredNodeId(null)
@@ -210,7 +231,7 @@ export const CoverageTreemapCanvas = ({
         ...formatTooltipContent(hit.node, hit.coverageRatio),
       })
     },
-    [positionedNodes]
+    [getHit]
   )
 
   const handleMouseLeave = useCallback(() => {
@@ -218,19 +239,10 @@ export const CoverageTreemapCanvas = ({
     setTooltip(null)
   }, [])
 
-  const handleClick = useCallback(
-    (event) => {
-      const canvas = canvasRef.current
-      if (!canvas || !positionedNodes.length) {
-        return
-      }
-
-      const rect = canvas.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
-      const hit = findNodeAtPoint(positionedNodes, x, y)
-
-      if (!hit) {
+  const handleDrillDownAt = useCallback(
+    (clientX, clientY) => {
+      const hit = getHitAt(clientX, clientY)
+      if (!hit || !canDrillIntoNode(hit.node)) {
         return
       }
 
@@ -243,7 +255,67 @@ export const CoverageTreemapCanvas = ({
       setHoveredNodeId(null)
       setTooltip(null)
     },
-    [positionedNodes, drilledNode]
+    [drilledNode, getHitAt]
+  )
+
+  const handleScopeSelectAt = useCallback(
+    (clientX, clientY) => {
+      const hit = getHitAt(clientX, clientY)
+      if (!hit) {
+        return
+      }
+
+      const scope = resolveScopeFromNode(hit.node)
+      if (!scope) {
+        return
+      }
+
+      if (scope.className) {
+        onClassSelect?.(scope)
+      } else {
+        onPackageSelect?.(scope.packageName)
+      }
+
+      setHoveredNodeId(null)
+      setTooltip(null)
+    },
+    [getHitAt, onClassSelect, onPackageSelect]
+  )
+
+  const handleClick = useCallback(
+    (event) => {
+      const { clientX, clientY } = event
+
+      if (hasPageNavigation) {
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current)
+        }
+        clickTimeoutRef.current = setTimeout(() => {
+          clickTimeoutRef.current = null
+          handleScopeSelectAt(clientX, clientY)
+        }, SINGLE_CLICK_DELAY_MS)
+        return
+      }
+
+      handleDrillDownAt(clientX, clientY)
+    },
+    [handleDrillDownAt, handleScopeSelectAt, hasPageNavigation]
+  )
+
+  const handleDoubleClick = useCallback(
+    (event) => {
+      if (!hasPageNavigation) {
+        return
+      }
+
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+        clickTimeoutRef.current = null
+      }
+
+      handleDrillDownAt(event.clientX, event.clientY)
+    },
+    [handleDrillDownAt, hasPageNavigation]
   )
 
   const handleBreadcrumbNavigate = useCallback((fullName, isTopRoot) => {
@@ -285,8 +357,8 @@ export const CoverageTreemapCanvas = ({
             ref={containerRef}
             style={{
               width: "100%",
-              height: "70vh",
-              minHeight: 400,
+              height: "35vh",
+              minHeight: 200,
               position: "relative",
             }}
           >
@@ -295,6 +367,7 @@ export const CoverageTreemapCanvas = ({
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
+              onDoubleClick={handleDoubleClick}
               style={{
                 display: "block",
                 width: "100%",

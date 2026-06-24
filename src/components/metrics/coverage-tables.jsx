@@ -19,7 +19,7 @@ import * as API from "../../modules/metrics/api-metrics"
 import { CoveragePackageTree } from "./coverage-package-tree"
 import { MetricsDataTable } from "./metrics-data-table"
 
-const { Text } = Typography
+const { Text, Link } = Typography
 
 function formatPackageLabel(packageName) {
   return packageName || "(default package)"
@@ -40,7 +40,7 @@ function coverageColumns({ nameLabel, nameKey, onNameClick }) {
       key: nameKey,
       render: (value, record) =>
         onNameClick ? (
-          <Typography.Link onClick={() => onNameClick(record)}>{value}</Typography.Link>
+          <Link onClick={() => onNameClick(record)}>{value}</Link>
         ) : (
           value
         ),
@@ -105,7 +105,7 @@ const methodColumns = [
  *   packageName?: string,
  *   className?: string,
  *   onPackageSelect: (packageName: string) => void,
- *   onClassSelect: (className: string) => void,
+ *   onClassSelect: (scope: { packageName: string, className: string }) => void,
  *   onClearPackage: () => void,
  *   onClearClass: () => void,
  * }} props
@@ -135,7 +135,7 @@ export function CoverageTables({
     if (className) {
       return "methods"
     }
-    if (packageName) {
+    if (packageName != null) {
       return "classes"
     }
     return activeTab
@@ -227,11 +227,11 @@ export function CoverageTables({
         nameLabel: "Class",
         nameKey: "className",
         onNameClick: (row) => {
-          onClassSelect(row.className)
+          onClassSelect({ packageName: packageName ?? "", className: row.className })
           setActiveTab("methods")
         },
       }),
-    [onClassSelect]
+    [onClassSelect, packageName]
   )
 
   const tabItems = [
@@ -277,12 +277,12 @@ export function CoverageTables({
 
   return (
     <>
-      {(packageName || className) && (
+      {(packageName != null || className) && (
         <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <Text type="secondary">Scope:</Text>
           <Breadcrumb
             items={[
-              packageName
+              packageName != null
                 ? {
                     title: (
                       <Tag closable onClose={onClearPackage}>

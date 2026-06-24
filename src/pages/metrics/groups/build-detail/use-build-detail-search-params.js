@@ -17,7 +17,6 @@ import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import {
   COVERAGE_LIST_QUERY_KEYS,
-  getListQueryParam,
   setListQueryParam,
 } from "../../../../modules/metrics/query-params"
 
@@ -27,6 +26,19 @@ const QUERY_KEYS = [
   "packageName",
   "className",
 ]
+
+const LIST_PARAM_SEPARATOR = "\0"
+
+function serializeListQueryParam(searchParams, key) {
+  return searchParams.getAll(key).filter(Boolean).join(LIST_PARAM_SEPARATOR)
+}
+
+function deserializeListQueryParam(serialized) {
+  if (!serialized) {
+    return undefined
+  }
+  return serialized.split(LIST_PARAM_SEPARATOR)
+}
 
 /**
  * Shared query-param state for build detail routes (baseline + coverage filters).
@@ -39,17 +51,21 @@ export function useBuildDetailSearchParams() {
   const packageName = searchParams.get("packageName") || undefined
   const className = searchParams.get("className") || undefined
 
+  const branchesSerialized = serializeListQueryParam(searchParams, "branches")
+  const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
+  const testTagsSerialized = serializeListQueryParam(searchParams, "testTags")
+
   const branches = useMemo(
-    () => getListQueryParam(searchParams, "branches"),
-    [searchString]
+    () => deserializeListQueryParam(branchesSerialized),
+    [branchesSerialized]
   )
   const envIds = useMemo(
-    () => getListQueryParam(searchParams, "envIds"),
-    [searchString]
+    () => deserializeListQueryParam(envIdsSerialized),
+    [envIdsSerialized]
   )
   const testTags = useMemo(
-    () => getListQueryParam(searchParams, "testTags"),
-    [searchString]
+    () => deserializeListQueryParam(testTagsSerialized),
+    [testTagsSerialized]
   )
 
   const coverageFilters = useMemo(
@@ -109,6 +125,13 @@ export function useBuildDetailSearchParams() {
     })
   }, [updateQueryParams])
 
+  const clearCoverageScope = useCallback(() => {
+    updateQueryParams({
+      packageName: undefined,
+      className: undefined,
+    })
+  }, [updateQueryParams])
+
   return {
     baselineBuildId,
     branches,
@@ -119,5 +142,6 @@ export function useBuildDetailSearchParams() {
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,
+    clearCoverageScope,
   }
 }

@@ -24,7 +24,7 @@ Tree is built client-side: `normalizeTreemapRoots` → package rows with nested 
 | Probes | `covered / total` |
 | Probe cov. | Percentage |
 
-Method-level nodes are excluded from the tree. Node classification follows [treemap.md § Node hierarchy](./treemap.md#node-hierarchy).
+Method-level nodes (`type === "method"`) are excluded from the tree. Package rows use `node.type === "package"` from the API — see [treemap.md § TreemapNode](./treemap.md#treemapnode-api).
 
 ## Row click — navigation
 

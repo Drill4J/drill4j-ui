@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 import { useEffect, useMemo, useState } from "react"
-import { message, Typography } from "antd"
+import { message } from "antd"
 import { useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
 import { getCoverageTreemap } from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
-
-const { Title } = Typography
 
 export const BuildCoveragePage = () => {
   const { buildId } = useParams()
@@ -35,14 +33,7 @@ export const BuildCoveragePage = () => {
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
 
-  const treemapFilters = useMemo(
-    () => ({
-      ...coverageFilters,
-      packageNamePattern: packageName,
-      classNamePattern: className,
-    }),
-    [className, coverageFilters, packageName]
-  )
+  const treemapFilters = useMemo(() => ({ ...coverageFilters }), [coverageFilters])
 
   useEffect(() => {
     let cancelled = false
@@ -70,27 +61,38 @@ export const BuildCoveragePage = () => {
     }
   }, [buildId, treemapFilters])
 
+  const handlePackageSelect = (value) =>
+    updateQueryParams({ packageName: value || undefined, className: undefined })
+
+  const handleClassSelect = ({ packageName: nextPackageName, className: nextClassName }) =>
+    updateQueryParams({
+      packageName: nextPackageName || undefined,
+      className: nextClassName || undefined,
+    })
+
   return (
     <>
-      <CoverageTables
-        buildId={buildId}
-        coverageFilters={coverageFilters}
-        treemapRoots={treemapRoots}
-        treemapLoading={treemapLoading}
-        packageName={packageName}
-        className={className}
-        onPackageSelect={(value) =>
-          updateQueryParams({ packageName: value || undefined, className: undefined })
-        }
-        onClassSelect={(value) => updateQueryParams({ className: value || undefined })}
-        onClearPackage={() => updateQueryParams({ packageName: undefined, className: undefined })}
-        onClearClass={() => updateQueryParams({ className: undefined })}
+      <CoverageTreemapCanvas
+        roots={treemapRoots}
+        rootsLoading={treemapLoading}
+        onPackageSelect={handlePackageSelect}
+        onClassSelect={handleClassSelect}
       />
 
-      <Title level={5} style={{ marginTop: 24, marginBottom: 12 }}>
-        Coverage treemap
-      </Title>
-      <CoverageTreemapCanvas roots={treemapRoots} rootsLoading={treemapLoading} />
+      <div style={{ marginTop: 24 }}>
+        <CoverageTables
+          buildId={buildId}
+          coverageFilters={coverageFilters}
+          treemapRoots={treemapRoots}
+          treemapLoading={treemapLoading}
+          packageName={packageName}
+          className={className}
+          onPackageSelect={handlePackageSelect}
+          onClassSelect={handleClassSelect}
+          onClearPackage={() => updateQueryParams({ packageName: undefined, className: undefined })}
+          onClearClass={() => updateQueryParams({ className: undefined })}
+        />
+      </div>
     </>
   )
 }

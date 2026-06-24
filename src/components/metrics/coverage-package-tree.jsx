@@ -15,6 +15,7 @@
  */
 import { useMemo } from "react"
 import { Typography } from "antd"
+import { TREEMAP_NODE_TYPE } from "../charts/treemap-canvas/node-scope"
 import { normalizeTreemapRoots } from "../charts/treemap-canvas/layout"
 import { MetricsDataTable } from "./metrics-data-table"
 
@@ -31,34 +32,19 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
-function isMethodNode(node) {
-  return node.params != null
-}
-
-function isClassNode(node) {
-  return node.children?.length > 0 && node.children.every(isMethodNode)
-}
-
-function packageNameForNode(node) {
-  if (isClassNode(node)) {
-    return node.parent ?? ""
-  }
-  return node.full_name
-}
-
 function mapNodeToTableRow(node) {
   const probesCount = node.probes_count ?? 0
   const coveredProbes = node.covered_probes ?? 0
 
   const children = (node.children ?? [])
-    .filter((child) => !isMethodNode(child))
+    .filter((child) => child.type === TREEMAP_NODE_TYPE.PACKAGE)
     .map(mapNodeToTableRow)
     .sort((a, b) => a.name.localeCompare(b.name))
 
   return {
     key: node.full_name || "(default package)",
     name: node.name,
-    packageName: packageNameForNode(node),
+    packageName: node.package_name ?? "",
     probesCount,
     coveredProbes,
     probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
@@ -76,11 +62,11 @@ function buildTableTree(treemapRoots) {
   const defaultPackageClasses = []
 
   roots.forEach((node) => {
-    if (isClassNode(node)) {
+    if (node.type === TREEMAP_NODE_TYPE.CLASS) {
       defaultPackageClasses.push(node)
       return
     }
-    if (!isMethodNode(node)) {
+    if (node.type === TREEMAP_NODE_TYPE.PACKAGE) {
       rows.push(mapNodeToTableRow(node))
     }
   })
