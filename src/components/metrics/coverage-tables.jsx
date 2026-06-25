@@ -124,6 +124,7 @@ export function CoverageTables({
 }) {
   const [activeTab, setActiveTab] = useState("packages")
   const [classes, setClasses] = useState([])
+  const [classesPaging, setClassesPaging] = useState({ page: 1, pageSize: 20, total: 0 })
   const [methods, setMethods] = useState([])
   const [methodsPaging, setMethodsPaging] = useState({ page: 1, pageSize: 20, total: 0 })
   const [loading, setLoading] = useState({
@@ -175,40 +176,46 @@ export function CoverageTables({
     }
   }
 
+  const loadClasses = useCallback(
+    async (page, pageSize) => {
+      setLoading((state) => ({ ...state, classes: true }))
+      try {
+        const result = await API.getCoverageByClass(buildId, {
+          ...coverageFilters,
+          packageName,
+          page,
+          pageSize,
+        })
+        setClasses(result.data)
+        setClassesPaging({
+          page: result.paging.page,
+          pageSize: result.paging.pageSize,
+          total: result.paging.total,
+        })
+      } catch (error) {
+        message.error(`Failed to fetch class coverage. ${error?.message}`)
+      } finally {
+        setLoading((state) => ({ ...state, classes: false }))
+      }
+    },
+    [buildId, coverageFilters, packageName]
+  )
+
   useEffect(() => {
     if (!hasPackageScope) {
       setClasses([])
-      return undefined
+      setClassesPaging((state) => ({ ...state, page: 1, total: 0 }))
+      return
     }
-
-    let cancelled = false
-
-    const loadClasses = async () => {
-      setLoading((state) => ({ ...state, classes: true }))
-      try {
-        const data = await API.getCoverageByClass(buildId, {
-          ...coverageFilters,
-          packageName,
-        })
-        if (!cancelled) {
-          setClasses(data)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch class coverage. ${error?.message}`)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading((state) => ({ ...state, classes: false }))
-        }
-      }
-    }
-
-    loadClasses()
-    return () => {
-      cancelled = true
-    }
+    setClassesPaging((state) => ({ ...state, page: 1 }))
   }, [buildId, coverageFilters, hasPackageScope, packageName])
+
+  useEffect(() => {
+    if (!hasPackageScope) {
+      return
+    }
+    loadClasses(classesPaging.page, classesPaging.pageSize)
+  }, [hasPackageScope, loadClasses, classesPaging.page, classesPaging.pageSize])
 
   const loadMethods = useCallback(
     async (page, pageSize) => {
@@ -251,6 +258,14 @@ export function CoverageTables({
     }
     loadMethods(methodsPaging.page, methodsPaging.pageSize)
   }, [hasClassScope, loadMethods, methodsPaging.page, methodsPaging.pageSize])
+
+  const handleClassesTableChange = (pagination) => {
+    setClassesPaging((state) => ({
+      ...state,
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+    }))
+  }
 
   const handleMethodsTableChange = (pagination) => {
     setMethodsPaging((state) => ({
@@ -303,7 +318,8 @@ export function CoverageTables({
           loading={loading.classes}
           dataSource={classes}
           columns={classColumns}
-          pagination={false}
+          pagination={classesPaging}
+          onTableChange={handleClassesTableChange}
         />
       ),
     },

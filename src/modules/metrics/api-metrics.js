@@ -343,18 +343,34 @@ export async function getCoverageByPackage(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
- * @param {{ packageName?: string, envIds?: string[], branches?: string[], testTags?: string[] }} [filters]
+ * @param {{
+ *   packageName?: string,
+ *   envIds?: string[],
+ *   branches?: string[],
+ *   testTags?: string[],
+ *   page?: number,
+ *   pageSize?: number,
+ * }} [params]
  */
-export async function getCoverageByClass(buildId, filters = {}) {
-  const key = `coverage-classes:${coverageFilterKey(buildId, filters)}`
+export async function getCoverageByClass(buildId, params = {}) {
+  const { page = 1, pageSize = 20 } = params
+  const key = `coverage-classes:${coverageFilterKey(buildId, params)}:${page}:${pageSize}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/coverage/by-class", {
-        params: serializeListQueryParams({ buildId, ...filters }),
+        params: serializeListQueryParams({
+          buildId,
+          ...params,
+          page,
+          pageSize,
+        }),
         paramsSerializer: axiosListParamsSerializer,
       })
     )
-    return response.data.data
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 
