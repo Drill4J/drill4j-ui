@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Typography } from "antd"
 import { TREEMAP_NODE_TYPE } from "../charts/treemap-canvas/node-scope"
 import { normalizeTreemapRoots } from "../charts/treemap-canvas/layout"
 import { MetricsDataTable } from "./metrics-data-table"
+import { CoverageClassesTable } from "./coverage-classes-table"
+import "./coverage-package-tree.css"
 
-const { Link } = Typography
+const HIGHLIGHT_DURATION_MS = 3000
+
+const { Link, Text } = Typography
 
 function formatPackageLabel(packageName) {
   return packageName || "(default package)"
@@ -32,11 +36,56 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
-function mapNodeToTableRow(node) {
+function packageRowId(packageKey) {
+  return `coverage-package-row-${encodeURIComponent(packageKey)}`
+}
+
+function collectAncestorKeys(rows, targetKey, ancestors = []) {
+  for (const row of rows) {
+    if (row.key === targetKey) {
+      return ancestors
+    }
+    if (row.children) {
+      const found = collectAncestorKeys(row.children, targetKey, [...ancestors, row.key])
+      if (found) {
+        return found
+      }
+    }
+  }
+  return null
+}
+
+function mapClassNodeToTableRow(node) {
+  const methods = (node.children ?? []).filter((child) => child.type === TREEMAP_NODE_TYPE.METHOD)
+  const methodsCount = methods.length
+  const coveredMethods = methods.filter((method) => (method.covered_probes ?? 0) > 0).length
   const probesCount = node.probes_count ?? 0
   const coveredProbes = node.covered_probes ?? 0
 
-  const children = (node.children ?? [])
+  return {
+    key: node.full_name || node.class_name,
+    className: node.class_name,
+    packageName: node.package_name ?? "",
+    methodsCount,
+    coveredMethods,
+    methodsCoverageRatio: methodsCount > 0 ? coveredMethods / methodsCount : null,
+    probesCount,
+    coveredProbes,
+    probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+  }
+}
+
+function mapNodeToTableRow(node) {
+  const probesCount = node.probes_count ?? 0
+  const coveredProbes = node.covered_probes ?? 0
+  const childNodes = node.children ?? []
+
+  const classes = childNodes
+    .filter((child) => child.type === TREEMAP_NODE_TYPE.CLASS)
+    .map(mapClassNodeToTableRow)
+    .sort((a, b) => a.className.localeCompare(b.className))
+
+  const children = childNodes
     .filter((child) => child.type === TREEMAP_NODE_TYPE.PACKAGE)
     .map(mapNodeToTableRow)
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -48,6 +97,8 @@ function mapNodeToTableRow(node) {
     probesCount,
     coveredProbes,
     probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+    classesCount: classes.length,
+    classes,
     children: children.length ? children : undefined,
   }
 }
@@ -72,6 +123,9 @@ function buildTableTree(treemapRoots) {
   })
 
   if (defaultPackageClasses.length) {
+    const classes = defaultPackageClasses
+      .map(mapClassNodeToTableRow)
+      .sort((a, b) => a.className.localeCompare(b.className))
     const probesCount = defaultPackageClasses.reduce((sum, node) => sum + (node.probes_count ?? 0), 0)
     const coveredProbes = defaultPackageClasses.reduce(
       (sum, node) => sum + (node.covered_probes ?? 0),
@@ -84,6 +138,8 @@ function buildTableTree(treemapRoots) {
       probesCount,
       coveredProbes,
       probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+      classesCount: classes.length,
+      classes,
     })
   }
 
@@ -94,11 +150,94 @@ function buildTableTree(treemapRoots) {
  * @param {{
  *   data: object[],
  *   loading: boolean,
- *   onPackageSelect: (packageName: string) => void,
+ *   scrollToPackageKey?: string | null,
+ *   onScrollToPackageHandled?: () => void,
+ *   onClassSelect: (scope: { packageName: string, className: string }) => void,
  * }} props
  */
-export function CoveragePackageTree({ data, loading, onPackageSelect }) {
+export function CoveragePackageTree({
+  data,
+  loading,
+  scrollToPackageKey,
+  onScrollToPackageHandled,
+  onClassSelect,
+}) {
+  const [expandedClassesKey, setExpandedClassesKey] = useState(null)
+  const [expandedRowKeys, setExpandedRowKeys] = useState([])
+  const [pendingScrollKey, setPendingScrollKey] = useState(null)
+  const [highlightedKey, setHighlightedKey] = useState(null)
+  const [highlightTick, setHighlightTick] = useState(0)
+  const highlightTimeoutRef = useRef(null)
+
   const treeData = useMemo(() => buildTableTree(data), [data])
+
+  const closeClassesPanel = useCallback(() => {
+    setExpandedClassesKey(null)
+  }, [])
+
+  const handleClassSelect = useCallback(
+    (scope) => {
+      closeClassesPanel()
+      onClassSelect(scope)
+    },
+    [closeClassesPanel, onClassSelect]
+  )
+
+  const toggleClassesPanel = useCallback((recordKey) => {
+    setExpandedClassesKey((current) => (current === recordKey ? null : recordKey))
+  }, [])
+
+  useEffect(() => {
+    if (!scrollToPackageKey || !treeData.length) {
+      return
+    }
+
+    const ancestorKeys = collectAncestorKeys(treeData, scrollToPackageKey)
+    if (ancestorKeys === null) {
+      onScrollToPackageHandled?.()
+      return
+    }
+
+    closeClassesPanel()
+    setExpandedRowKeys(ancestorKeys)
+    setPendingScrollKey(scrollToPackageKey)
+    onScrollToPackageHandled?.()
+  }, [closeClassesPanel, onScrollToPackageHandled, scrollToPackageKey, treeData])
+
+  // Runs after the expanded rows have committed to the DOM, so the target row exists.
+  useEffect(() => {
+    if (!pendingScrollKey) {
+      return
+    }
+
+    const row = document.getElementById(packageRowId(pendingScrollKey))
+    if (!row) {
+      return
+    }
+
+    row.scrollIntoView({ block: "center", behavior: "smooth" })
+
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current)
+    }
+    setHighlightedKey(pendingScrollKey)
+    setHighlightTick((tick) => tick + 1)
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightedKey(null)
+      highlightTimeoutRef.current = null
+    }, HIGHLIGHT_DURATION_MS)
+
+    setPendingScrollKey(null)
+  }, [pendingScrollKey, expandedRowKeys])
+
+  useEffect(
+    () => () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+    },
+    []
+  )
 
   const columns = useMemo(
     () => [
@@ -106,14 +245,47 @@ export function CoveragePackageTree({ data, loading, onPackageSelect }) {
         title: "Package",
         dataIndex: "name",
         key: "name",
-        render: (value, record) => (
-          <Link onClick={() => onPackageSelect(record.packageName)}>{formatPackageLabel(value)}</Link>
-        ),
+        onCell: () => ({ style: { verticalAlign: "top" } }),
+        render: (value, record) => {
+          const isExpanded = expandedClassesKey === record.key
+          const classesLabel = record.classesCount === 1 ? "class" : "classes"
+
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <span>{formatPackageLabel(value)}</span>
+                {record.classesCount > 0 && (
+                  <Link
+                    type="secondary"
+                    onClick={() => toggleClassesPanel(record.key)}
+                    style={{ fontSize: 12 }}
+                  >
+                    {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
+                  </Link>
+                )}
+              </div>
+              {isExpanded && (
+                <div className="coverage-package-classes-panel">
+                  <div className="coverage-package-classes-panel__header">
+                    <Text type="secondary">Package:</Text>{" "}
+                    <Text strong>{formatPackageLabel(record.packageName)}</Text>
+                  </div>
+                  <CoverageClassesTable
+                    dataSource={record.classes}
+                    onClassSelect={handleClassSelect}
+                    pagination={false}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        },
       },
       {
         title: "Probes",
         key: "probes",
         width: 110,
+        onCell: () => ({ style: { verticalAlign: "top" } }),
         render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
       },
       {
@@ -121,10 +293,11 @@ export function CoveragePackageTree({ data, loading, onPackageSelect }) {
         dataIndex: "probesCoverageRatio",
         key: "probesCoverageRatio",
         width: 100,
+        onCell: () => ({ style: { verticalAlign: "top" } }),
         render: formatPercent,
       },
     ],
-    [onPackageSelect]
+    [expandedClassesKey, handleClassSelect, toggleClassesPanel]
   )
 
   return (
@@ -134,6 +307,20 @@ export function CoveragePackageTree({ data, loading, onPackageSelect }) {
       dataSource={treeData}
       columns={columns}
       pagination={false}
+      expandable={{
+        expandedRowKeys,
+        onExpandedRowsChange: (keys) => {
+          closeClassesPanel()
+          setExpandedRowKeys(keys)
+        },
+      }}
+      onRow={(record) => ({
+        id: packageRowId(record.key),
+        className:
+          record.key === highlightedKey
+            ? `coverage-package-row-highlight-${highlightTick % 2}`
+            : undefined,
+      })}
     />
   )
 }

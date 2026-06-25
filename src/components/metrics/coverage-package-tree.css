@@ -1,0 +1,34 @@
+@keyframes coverage-package-row-flash {
+  0% {
+    box-shadow: inset 0 0 0 2px #1677ff;
+    background-color: rgba(22, 119, 255, 0.12);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(22, 119, 255, 0);
+    background-color: rgba(22, 119, 255, 0);
+  }
+}
+
+.coverage-package-row-highlight-0 > td,
+.coverage-package-row-highlight-1 > td {
+  animation: coverage-package-row-flash 3s ease-out forwards;
+}
+
+.coverage-package-classes-panel {
+  /* Break out of the Package cell to fill the empty space under the
+     fixed-width Probes (110px) + Probe cov. (100px) columns + cell padding (8px). */
+  width: calc(100% + 218px);
+  margin-top: 8px;
+  padding: 8px 0 4px;
+  border-top: 1px solid #91caff;
+  border-bottom: 1px solid #91caff;
+  /* Paint above the adjacent cells so their row-hover background
+     does not cover the part of the table overflowing to the right. */
+  position: relative;
+  z-index: 1;
+}
+
+.coverage-package-classes-panel__header {
+  margin-bottom: 8px;
+  font-size: 12px;
+}

@@ -17,84 +17,13 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Breadcrumb, message, Tabs, Tag, Typography } from "antd"
 import * as API from "../../modules/metrics/api-metrics"
 import { CoveragePackageTree } from "./coverage-package-tree"
-import { MetricsDataTable } from "./metrics-data-table"
+import { CoverageMethodsTable } from "./coverage-methods-table"
 
-const { Text, Link } = Typography
+const { Text } = Typography
 
 function formatPackageLabel(packageName) {
   return packageName || "(default package)"
 }
-
-function formatPercent(ratio) {
-  if (ratio == null) {
-    return "—"
-  }
-  return `${(ratio * 100).toFixed(1)}%`
-}
-
-function coverageColumns({ nameLabel, nameKey, onNameClick }) {
-  return [
-    {
-      title: nameLabel,
-      dataIndex: nameKey,
-      key: nameKey,
-      render: (value, record) =>
-        onNameClick ? (
-          <Link onClick={() => onNameClick(record)}>{value}</Link>
-        ) : (
-          value
-        ),
-    },
-    {
-      title: "Methods",
-      key: "methods",
-      width: 110,
-      render: (_, row) => `${row.coveredMethods ?? 0} / ${row.methodsCount ?? 0}`,
-    },
-    {
-      title: "Method cov.",
-      dataIndex: "methodsCoverageRatio",
-      key: "methodsCoverageRatio",
-      width: 110,
-      render: formatPercent,
-    },
-    {
-      title: "Probes",
-      key: "probes",
-      width: 110,
-      render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
-    },
-    {
-      title: "Probe cov.",
-      dataIndex: "probesCoverageRatio",
-      key: "probesCoverageRatio",
-      width: 100,
-      render: formatPercent,
-    },
-  ]
-}
-
-const methodColumns = [
-  {
-    title: "Method",
-    dataIndex: "name",
-    key: "name",
-    ellipsis: true,
-  },
-  {
-    title: "Probes",
-    key: "probes",
-    width: 100,
-    render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
-  },
-  {
-    title: "Coverage",
-    dataIndex: "coverageRatio",
-    key: "coverageRatio",
-    width: 100,
-    render: formatPercent,
-  },
-]
 
 /**
  * @param {{
@@ -104,7 +33,8 @@ const methodColumns = [
  *   treemapLoading: boolean,
  *   packageName?: string,
  *   className?: string,
- *   onPackageSelect: (packageName: string) => void,
+ *   scrollToPackageKey?: string | null,
+ *   onScrollToPackageHandled?: () => void,
  *   onClassSelect: (scope: { packageName: string, className: string }) => void,
  *   onClearPackage: () => void,
  *   onClearClass: () => void,
@@ -117,18 +47,16 @@ export function CoverageTables({
   treemapLoading,
   packageName,
   className,
-  onPackageSelect,
+  scrollToPackageKey,
+  onScrollToPackageHandled,
   onClassSelect,
   onClearPackage,
   onClearClass,
 }) {
   const [activeTab, setActiveTab] = useState("packages")
-  const [classes, setClasses] = useState([])
-  const [classesPaging, setClassesPaging] = useState({ page: 1, pageSize: 20, total: 0 })
   const [methods, setMethods] = useState([])
   const [methodsPaging, setMethodsPaging] = useState({ page: 1, pageSize: 20, total: 0 })
   const [loading, setLoading] = useState({
-    classes: false,
     methods: false,
   })
 
@@ -139,14 +67,11 @@ export function CoverageTables({
     if (hasClassScope) {
       return "methods"
     }
-    if (hasPackageScope) {
-      return "classes"
-    }
-    if (activeTab === "classes" || activeTab === "methods") {
+    if (activeTab === "methods") {
       return "packages"
     }
     return activeTab
-  }, [activeTab, hasClassScope, hasPackageScope])
+  }, [activeTab, hasClassScope])
 
   const handleTabChange = (key) => {
     if (key === "packages") {
@@ -157,17 +82,6 @@ export function CoverageTables({
       return
     }
 
-    if (key === "classes") {
-      if (!hasPackageScope) {
-        return
-      }
-      if (hasClassScope) {
-        onClearClass()
-      }
-      setActiveTab("classes")
-      return
-    }
-
     if (key === "methods") {
       if (!hasClassScope) {
         return
@@ -175,47 +89,6 @@ export function CoverageTables({
       setActiveTab("methods")
     }
   }
-
-  const loadClasses = useCallback(
-    async (page, pageSize) => {
-      setLoading((state) => ({ ...state, classes: true }))
-      try {
-        const result = await API.getCoverageByClass(buildId, {
-          ...coverageFilters,
-          packageName,
-          page,
-          pageSize,
-        })
-        setClasses(result.data)
-        setClassesPaging({
-          page: result.paging.page,
-          pageSize: result.paging.pageSize,
-          total: result.paging.total,
-        })
-      } catch (error) {
-        message.error(`Failed to fetch class coverage. ${error?.message}`)
-      } finally {
-        setLoading((state) => ({ ...state, classes: false }))
-      }
-    },
-    [buildId, coverageFilters, packageName]
-  )
-
-  useEffect(() => {
-    if (!hasPackageScope) {
-      setClasses([])
-      setClassesPaging((state) => ({ ...state, page: 1, total: 0 }))
-      return
-    }
-    setClassesPaging((state) => ({ ...state, page: 1 }))
-  }, [buildId, coverageFilters, hasPackageScope, packageName])
-
-  useEffect(() => {
-    if (!hasPackageScope) {
-      return
-    }
-    loadClasses(classesPaging.page, classesPaging.pageSize)
-  }, [hasPackageScope, loadClasses, classesPaging.page, classesPaging.pageSize])
 
   const loadMethods = useCallback(
     async (page, pageSize) => {
@@ -259,14 +132,6 @@ export function CoverageTables({
     loadMethods(methodsPaging.page, methodsPaging.pageSize)
   }, [hasClassScope, loadMethods, methodsPaging.page, methodsPaging.pageSize])
 
-  const handleClassesTableChange = (pagination) => {
-    setClassesPaging((state) => ({
-      ...state,
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-    }))
-  }
-
   const handleMethodsTableChange = (pagination) => {
     setMethodsPaging((state) => ({
       ...state,
@@ -275,25 +140,12 @@ export function CoverageTables({
     }))
   }
 
-  const handlePackageSelect = useCallback(
-    (value) => {
-      onPackageSelect(value)
-      setActiveTab("classes")
+  const handleClassSelect = useCallback(
+    (scope) => {
+      onClassSelect(scope)
+      setActiveTab("methods")
     },
-    [onPackageSelect]
-  )
-
-  const classColumns = useMemo(
-    () =>
-      coverageColumns({
-        nameLabel: "Class",
-        nameKey: "className",
-        onNameClick: (row) => {
-          onClassSelect({ packageName: packageName ?? "", className: row.className })
-          setActiveTab("methods")
-        },
-      }),
-    [onClassSelect, packageName]
+    [onClassSelect]
   )
 
   const tabItems = [
@@ -304,22 +156,9 @@ export function CoverageTables({
         <CoveragePackageTree
           data={treemapRoots}
           loading={treemapLoading}
-          onPackageSelect={handlePackageSelect}
-        />
-      ),
-    },
-    {
-      key: "classes",
-      label: "Classes",
-      disabled: !hasPackageScope,
-      children: (
-        <MetricsDataTable
-          rowKey="className"
-          loading={loading.classes}
-          dataSource={classes}
-          columns={classColumns}
-          pagination={classesPaging}
-          onTableChange={handleClassesTableChange}
+          scrollToPackageKey={scrollToPackageKey}
+          onScrollToPackageHandled={onScrollToPackageHandled}
+          onClassSelect={handleClassSelect}
         />
       ),
     },
@@ -328,11 +167,9 @@ export function CoverageTables({
       label: "Methods",
       disabled: !hasClassScope,
       children: (
-        <MetricsDataTable
-          rowKey="signature"
+        <CoverageMethodsTable
           loading={loading.methods}
           dataSource={methods}
-          columns={methodColumns}
           pagination={methodsPaging}
           onTableChange={handleMethodsTableChange}
         />

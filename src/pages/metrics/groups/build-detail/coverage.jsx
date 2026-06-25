@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { message } from "antd"
 import { useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
@@ -32,6 +32,7 @@ export const BuildCoveragePage = () => {
 
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
+  const [scrollToPackageKey, setScrollToPackageKey] = useState(null)
 
   const treemapFilters = useMemo(() => ({ ...coverageFilters }), [coverageFilters])
 
@@ -61,8 +62,13 @@ export const BuildCoveragePage = () => {
     }
   }, [buildId, treemapFilters])
 
-  const handlePackageSelect = (value) =>
-    updateQueryParams({ packageName: value || undefined, className: undefined })
+  const handlePackageNavigate = useCallback((packageKey) => {
+    setScrollToPackageKey(packageKey)
+  }, [])
+
+  const handleScrollToPackageHandled = useCallback(() => {
+    setScrollToPackageKey(null)
+  }, [])
 
   const handleClassSelect = ({ packageName: nextPackageName, className: nextClassName }) =>
     updateQueryParams({
@@ -75,7 +81,7 @@ export const BuildCoveragePage = () => {
       <CoverageTreemapCanvas
         roots={treemapRoots}
         rootsLoading={treemapLoading}
-        onPackageSelect={handlePackageSelect}
+        onPackageNavigate={handlePackageNavigate}
         onClassSelect={handleClassSelect}
       />
 
@@ -87,7 +93,8 @@ export const BuildCoveragePage = () => {
           treemapLoading={treemapLoading}
           packageName={packageName}
           className={className}
-          onPackageSelect={handlePackageSelect}
+          scrollToPackageKey={scrollToPackageKey}
+          onScrollToPackageHandled={handleScrollToPackageHandled}
           onClassSelect={handleClassSelect}
           onClearPackage={() => updateQueryParams({ packageName: undefined, className: undefined })}
           onClearClass={() => updateQueryParams({ className: undefined })}
