@@ -131,17 +131,56 @@ export function CoverageTables({
     methods: false,
   })
 
+  const hasPackageScope = packageName != null
+  const hasClassScope = hasPackageScope && Boolean(className)
+
   const resolvedTab = useMemo(() => {
-    if (className) {
+    if (hasClassScope) {
       return "methods"
     }
-    if (packageName != null) {
+    if (hasPackageScope) {
       return "classes"
     }
+    if (activeTab === "classes" || activeTab === "methods") {
+      return "packages"
+    }
     return activeTab
-  }, [activeTab, className, packageName])
+  }, [activeTab, hasClassScope, hasPackageScope])
+
+  const handleTabChange = (key) => {
+    if (key === "packages") {
+      if (hasPackageScope) {
+        onClearPackage()
+      }
+      setActiveTab("packages")
+      return
+    }
+
+    if (key === "classes") {
+      if (!hasPackageScope) {
+        return
+      }
+      if (hasClassScope) {
+        onClearClass()
+      }
+      setActiveTab("classes")
+      return
+    }
+
+    if (key === "methods") {
+      if (!hasClassScope) {
+        return
+      }
+      setActiveTab("methods")
+    }
+  }
 
   useEffect(() => {
+    if (!hasPackageScope) {
+      setClasses([])
+      return undefined
+    }
+
     let cancelled = false
 
     const loadClasses = async () => {
@@ -169,7 +208,7 @@ export function CoverageTables({
     return () => {
       cancelled = true
     }
-  }, [buildId, coverageFilters, packageName])
+  }, [buildId, coverageFilters, hasPackageScope, packageName])
 
   const loadMethods = useCallback(
     async (page, pageSize) => {
@@ -198,12 +237,20 @@ export function CoverageTables({
   )
 
   useEffect(() => {
+    if (!hasClassScope) {
+      setMethods([])
+      setMethodsPaging((state) => ({ ...state, page: 1, total: 0 }))
+      return
+    }
     setMethodsPaging((state) => ({ ...state, page: 1 }))
-  }, [buildId, className, coverageFilters, packageName])
+  }, [buildId, className, coverageFilters, hasClassScope, packageName])
 
   useEffect(() => {
+    if (!hasClassScope) {
+      return
+    }
     loadMethods(methodsPaging.page, methodsPaging.pageSize)
-  }, [loadMethods, methodsPaging.page, methodsPaging.pageSize])
+  }, [hasClassScope, loadMethods, methodsPaging.page, methodsPaging.pageSize])
 
   const handleMethodsTableChange = (pagination) => {
     setMethodsPaging((state) => ({
@@ -249,6 +296,7 @@ export function CoverageTables({
     {
       key: "classes",
       label: "Classes",
+      disabled: !hasPackageScope,
       children: (
         <MetricsDataTable
           rowKey="className"
@@ -262,6 +310,7 @@ export function CoverageTables({
     {
       key: "methods",
       label: "Methods",
+      disabled: !hasClassScope,
       children: (
         <MetricsDataTable
           rowKey="signature"
@@ -304,7 +353,7 @@ export function CoverageTables({
           />
         </div>
       )}
-      <Tabs activeKey={resolvedTab} items={tabItems} onChange={setActiveTab} />
+      <Tabs activeKey={resolvedTab} items={tabItems} onChange={handleTabChange} />
     </>
   )
 }
