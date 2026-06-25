@@ -10,7 +10,9 @@
 }
 
 .coverage-package-row-highlight-0 > td,
-.coverage-package-row-highlight-1 > td {
+.coverage-package-row-highlight-1 > td,
+.coverage-class-row-highlight-0 > td,
+.coverage-class-row-highlight-1 > td {
   animation: coverage-package-row-flash 3s ease-out forwards;
 }
 
@@ -29,6 +31,22 @@
 }
 
 .coverage-package-classes-panel__header {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.coverage-class-methods-panel {
+  /* Break out of the Class cell across Methods, Method cov., Probes, and Probe cov. columns. */
+  width: calc(100% + 438px);
+  margin-top: 8px;
+  padding: 8px 0 4px;
+  border-top: 1px solid #91caff;
+  border-bottom: 1px solid #91caff;
+  position: relative;
+  z-index: 1;
+}
+
+.coverage-class-methods-panel__header {
   margin-bottom: 8px;
   font-size: 12px;
 }

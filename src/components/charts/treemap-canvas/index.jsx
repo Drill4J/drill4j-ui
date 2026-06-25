@@ -44,6 +44,7 @@ export const CoverageTreemapCanvas = ({
   onPackageSelect,
   onPackageNavigate,
   onClassSelect,
+  onClassNavigate,
 }) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
@@ -62,7 +63,9 @@ export const CoverageTreemapCanvas = ({
   const [drillRootId, setDrillRootId] = useState(null)
 
   const usesExternalRoots = externalRoots !== undefined
-  const hasPageNavigation = Boolean(onPackageSelect || onPackageNavigate || onClassSelect)
+  const hasPageNavigation = Boolean(
+    onPackageSelect || onPackageNavigate || onClassSelect || onClassNavigate
+  )
 
   const params = useMemo(() => {
     if (usesExternalRoots) {
@@ -272,9 +275,11 @@ export const CoverageTreemapCanvas = ({
       }
 
       if (scope.className) {
+        onClassNavigate?.(hit.node.full_name)
         onClassSelect?.(scope)
       } else if (onPackageNavigate) {
         onPackageNavigate(hit.node.full_name)
+        onPackageSelect?.(scope.packageName)
       } else {
         onPackageSelect?.(scope.packageName)
       }
@@ -282,7 +287,7 @@ export const CoverageTreemapCanvas = ({
       setHoveredNodeId(null)
       setTooltip(null)
     },
-    [getHitAt, onClassSelect, onPackageNavigate, onPackageSelect]
+    [getHitAt, onClassNavigate, onClassSelect, onPackageNavigate, onPackageSelect]
   )
 
   const handleClick = useCallback(

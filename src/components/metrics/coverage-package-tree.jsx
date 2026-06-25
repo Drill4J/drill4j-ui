@@ -55,6 +55,21 @@ function collectAncestorKeys(rows, targetKey, ancestors = []) {
   return null
 }
 
+function findClassLocation(rows, classKey, ancestors = []) {
+  for (const row of rows) {
+    if (row.classes?.some((classRow) => classRow.key === classKey)) {
+      return { packageKey: row.key, ancestorKeys: ancestors }
+    }
+    if (row.children) {
+      const found = findClassLocation(row.children, classKey, [...ancestors, row.key])
+      if (found) {
+        return found
+      }
+    }
+  }
+  return null
+}
+
 function mapClassNodeToTableRow(node) {
   const methods = (node.children ?? []).filter((child) => child.type === TREEMAP_NODE_TYPE.METHOD)
   const methodsCount = methods.length
@@ -148,23 +163,34 @@ function buildTableTree(treemapRoots) {
 
 /**
  * @param {{
+ *   buildId: string,
+ *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
  *   data: object[],
  *   loading: boolean,
  *   scrollToPackageKey?: string | null,
  *   onScrollToPackageHandled?: () => void,
- *   onClassSelect: (scope: { packageName: string, className: string }) => void,
+ *   scrollToClassKey?: string | null,
+ *   onScrollToClassHandled?: () => void,
+ *   onPackageToggle?: (packageName?: string) => void,
+ *   onClassToggle?: (scope: { packageName: string, className?: string }) => void,
  * }} props
  */
 export function CoveragePackageTree({
+  buildId,
+  coverageFilters,
   data,
   loading,
   scrollToPackageKey,
   onScrollToPackageHandled,
-  onClassSelect,
+  scrollToClassKey,
+  onScrollToClassHandled,
+  onPackageToggle,
+  onClassToggle,
 }) {
   const [expandedClassesKey, setExpandedClassesKey] = useState(null)
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
   const [pendingScrollKey, setPendingScrollKey] = useState(null)
+  const [pendingClassScrollKey, setPendingClassScrollKey] = useState(null)
   const [highlightedKey, setHighlightedKey] = useState(null)
   const [highlightTick, setHighlightTick] = useState(0)
   const highlightTimeoutRef = useRef(null)
@@ -173,19 +199,22 @@ export function CoveragePackageTree({
 
   const closeClassesPanel = useCallback(() => {
     setExpandedClassesKey(null)
+    setPendingClassScrollKey(null)
   }, [])
 
-  const handleClassSelect = useCallback(
-    (scope) => {
-      closeClassesPanel()
-      onClassSelect(scope)
+  const toggleClassesPanel = useCallback(
+    (record) => {
+      setExpandedClassesKey((current) => {
+        if (current === record.key) {
+          onPackageToggle?.()
+          return null
+        }
+        onPackageToggle?.(record.packageName)
+        return record.key
+      })
     },
-    [closeClassesPanel, onClassSelect]
+    [onPackageToggle]
   )
-
-  const toggleClassesPanel = useCallback((recordKey) => {
-    setExpandedClassesKey((current) => (current === recordKey ? null : recordKey))
-  }, [])
 
   useEffect(() => {
     if (!scrollToPackageKey || !treeData.length) {
@@ -198,11 +227,28 @@ export function CoveragePackageTree({
       return
     }
 
-    closeClassesPanel()
+    setExpandedClassesKey(scrollToPackageKey)
     setExpandedRowKeys(ancestorKeys)
     setPendingScrollKey(scrollToPackageKey)
     onScrollToPackageHandled?.()
   }, [closeClassesPanel, onScrollToPackageHandled, scrollToPackageKey, treeData])
+
+  useEffect(() => {
+    if (!scrollToClassKey || !treeData.length) {
+      return
+    }
+
+    const location = findClassLocation(treeData, scrollToClassKey)
+    if (!location) {
+      onScrollToClassHandled?.()
+      return
+    }
+
+    setExpandedRowKeys(location.ancestorKeys)
+    setExpandedClassesKey(location.packageKey)
+    setPendingClassScrollKey(scrollToClassKey)
+    onScrollToClassHandled?.()
+  }, [onScrollToClassHandled, scrollToClassKey, treeData])
 
   // Runs after the expanded rows have committed to the DOM, so the target row exists.
   useEffect(() => {
@@ -257,7 +303,7 @@ export function CoveragePackageTree({
                 {record.classesCount > 0 && (
                   <Link
                     type="secondary"
-                    onClick={() => toggleClassesPanel(record.key)}
+                    onClick={() => toggleClassesPanel(record)}
                     style={{ fontSize: 12 }}
                   >
                     {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
@@ -271,9 +317,14 @@ export function CoveragePackageTree({
                     <Text strong>{formatPackageLabel(record.packageName)}</Text>
                   </div>
                   <CoverageClassesTable
+                    buildId={buildId}
+                    coverageFilters={coverageFilters}
                     dataSource={record.classes}
-                    onClassSelect={handleClassSelect}
-                    pagination={false}
+                    scrollToClassKey={
+                      record.key === expandedClassesKey ? pendingClassScrollKey : null
+                    }
+                    onScrollToClassHandled={() => setPendingClassScrollKey(null)}
+                    onMethodsToggle={onClassToggle}
                   />
                 </div>
               )}
@@ -297,7 +348,14 @@ export function CoveragePackageTree({
         render: formatPercent,
       },
     ],
-    [expandedClassesKey, handleClassSelect, toggleClassesPanel]
+    [
+      buildId,
+      coverageFilters,
+      expandedClassesKey,
+      onClassToggle,
+      pendingClassScrollKey,
+      toggleClassesPanel,
+    ]
   )
 
   return (

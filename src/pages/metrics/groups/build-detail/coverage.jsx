@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { message } from "antd"
 import { useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
@@ -33,6 +33,7 @@ export const BuildCoveragePage = () => {
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
   const [scrollToPackageKey, setScrollToPackageKey] = useState(null)
+  const [scrollToClassKey, setScrollToClassKey] = useState(null)
 
   const treemapFilters = useMemo(() => ({ ...coverageFilters }), [coverageFilters])
 
@@ -62,6 +63,22 @@ export const BuildCoveragePage = () => {
     }
   }, [buildId, treemapFilters])
 
+  // Scroll/highlight from URL scope only once when treemap data first becomes available.
+  useEffect(() => {
+    if (treemapLoading || !treemapRoots.length) {
+      return
+    }
+
+    if (className) {
+      setScrollToClassKey(packageName ? `${packageName}/${className}` : className)
+      return
+    }
+
+    if (packageName) {
+      setScrollToPackageKey(packageName)
+    }
+  }, [treemapLoading, treemapRoots])
+
   const handlePackageNavigate = useCallback((packageKey) => {
     setScrollToPackageKey(packageKey)
   }, [])
@@ -69,6 +86,24 @@ export const BuildCoveragePage = () => {
   const handleScrollToPackageHandled = useCallback(() => {
     setScrollToPackageKey(null)
   }, [])
+
+  const handleClassNavigate = useCallback((classKey) => {
+    setScrollToClassKey(classKey)
+  }, [])
+
+  const handleScrollToClassHandled = useCallback(() => {
+    setScrollToClassKey(null)
+  }, [])
+
+  const handlePackageSelect = useCallback(
+    (nextPackageName) => {
+      updateQueryParams({
+        packageName: nextPackageName || undefined,
+        className: undefined,
+      })
+    },
+    [updateQueryParams]
+  )
 
   const handleClassSelect = ({ packageName: nextPackageName, className: nextClassName }) =>
     updateQueryParams({
@@ -82,6 +117,8 @@ export const BuildCoveragePage = () => {
         roots={treemapRoots}
         rootsLoading={treemapLoading}
         onPackageNavigate={handlePackageNavigate}
+        onPackageSelect={handlePackageSelect}
+        onClassNavigate={handleClassNavigate}
         onClassSelect={handleClassSelect}
       />
 
@@ -91,13 +128,12 @@ export const BuildCoveragePage = () => {
           coverageFilters={coverageFilters}
           treemapRoots={treemapRoots}
           treemapLoading={treemapLoading}
-          packageName={packageName}
-          className={className}
           scrollToPackageKey={scrollToPackageKey}
           onScrollToPackageHandled={handleScrollToPackageHandled}
-          onClassSelect={handleClassSelect}
-          onClearPackage={() => updateQueryParams({ packageName: undefined, className: undefined })}
-          onClearClass={() => updateQueryParams({ className: undefined })}
+          scrollToClassKey={scrollToClassKey}
+          onScrollToClassHandled={handleScrollToClassHandled}
+          onPackageToggle={handlePackageSelect}
+          onClassToggle={handleClassSelect}
         />
       </div>
     </>
