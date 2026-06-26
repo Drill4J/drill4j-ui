@@ -16,6 +16,14 @@
 
 export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
 
+export const BUILD_DETAIL_QUERY_KEYS = [
+  "baselineBuildId",
+  ...COVERAGE_LIST_QUERY_KEYS,
+  "packageName",
+  "className",
+  "methodSignature",
+]
+
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
 
 /**
@@ -66,3 +74,34 @@ export function serializeListQueryParams(params) {
 }
 
 export const axiosListParamsSerializer = { indexes: null }
+
+/**
+ * @typedef {{
+ *   baselineBuildId?: string,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ *   packageName?: string,
+ *   className?: string,
+ *   methodSignature?: string,
+ * }} BuildDetailQueryState
+ */
+
+/**
+ * @param {BuildDetailQueryState} state
+ * @returns {URLSearchParams}
+ */
+export function buildBuildDetailSearchParams(state) {
+  const params = new URLSearchParams()
+  BUILD_DETAIL_QUERY_KEYS.forEach((key) => {
+    const value = state[key]
+    if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
+      setListQueryParam(params, key, value)
+      return
+    }
+    if (value) {
+      params.set(key, value)
+    }
+  })
+  return params
+}

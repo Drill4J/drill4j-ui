@@ -15,6 +15,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react"
 import { MetricsDataTable } from "./metrics-data-table"
+import { CoverageScopeName } from "./coverage-scope-name"
 
 const HIGHLIGHT_DURATION_MS = 3000
 const SCROLL_RETRY_MAX_FRAMES = 120
@@ -54,13 +55,27 @@ function methodRowId(signature) {
   return `coverage-method-row-${encodeURIComponent(signature)}`
 }
 
-const methodColumns = [
-  {
-    title: "Method",
-    dataIndex: "name",
-    key: "name",
-    ellipsis: true,
-  },
+function methodColumns(packageName, className, onMethodSelect) {
+  return [
+    {
+      title: "Method",
+      dataIndex: "name",
+      key: "name",
+      ellipsis: true,
+      render: (value, record) => (
+        <CoverageScopeName
+          ellipsis
+          name={value}
+          onCopyLink={() =>
+            onMethodSelect?.({
+              packageName,
+              className,
+              methodSignature: record.signature,
+            })
+          }
+        />
+      ),
+    },
   {
     title: "Parameters",
     key: "params",
@@ -87,7 +102,8 @@ const methodColumns = [
     width: 100,
     render: formatPercent,
   },
-]
+  ]
+}
 
 /**
  * @param {{
@@ -97,6 +113,9 @@ const methodColumns = [
  *   onTableChange?: import("antd").TableProps["onChange"],
  *   scrollToMethodSignature?: string | null,
  *   onScrollToMethodHandled?: () => void,
+ *   packageName?: string,
+ *   className?: string,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
  * }} props
  */
 export function CoverageMethodsTable({
@@ -106,6 +125,9 @@ export function CoverageMethodsTable({
   onTableChange,
   scrollToMethodSignature,
   onScrollToMethodHandled,
+  packageName = "",
+  className = "",
+  onMethodSelect,
 }) {
   const [pendingScrollKey, setPendingScrollKey] = useState(null)
   const [highlightedKey, setHighlightedKey] = useState(null)
@@ -195,7 +217,10 @@ export function CoverageMethodsTable({
     []
   )
 
-  const columns = useMemo(() => methodColumns, [])
+  const columns = useMemo(
+    () => methodColumns(packageName, className, onMethodSelect),
+    [className, onMethodSelect, packageName]
+  )
 
   return (
     <MetricsDataTable

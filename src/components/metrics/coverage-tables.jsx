@@ -29,6 +29,9 @@ import { CoveragePackageTree } from "./coverage-package-tree"
  *   onScrollToMethodHandled?: () => void,
  *   onPackageToggle?: (packageName?: string) => void,
  *   onClassToggle?: (scope: { packageName: string, className?: string }) => void,
+ *   onPackageSelect?: (packageName?: string) => void,
+ *   onClassSelect?: (scope: { packageName: string, className?: string }) => void,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
  * }} props
  */
 export function CoverageTables({
@@ -44,6 +47,9 @@ export function CoverageTables({
   onScrollToMethodHandled,
   onPackageToggle,
   onClassToggle,
+  onPackageSelect,
+  onClassSelect,
+  onMethodSelect,
 }) {
   return (
     <CoveragePackageTree
@@ -59,6 +65,9 @@ export function CoverageTables({
       onScrollToMethodHandled={onScrollToMethodHandled}
       onPackageToggle={onPackageToggle}
       onClassToggle={onClassToggle}
+      onPackageSelect={onPackageSelect}
+      onClassSelect={onClassSelect}
+      onMethodSelect={onMethodSelect}
     />
   )
 }

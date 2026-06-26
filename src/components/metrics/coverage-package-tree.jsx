@@ -19,6 +19,7 @@ import { TREEMAP_NODE_TYPE } from "../charts/treemap-canvas/node-scope"
 import { normalizeTreemapRoots } from "../charts/treemap-canvas/layout"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageClassesTable } from "./coverage-classes-table"
+import { CoverageScopeName } from "./coverage-scope-name"
 import "./coverage-package-tree.css"
 
 const HIGHLIGHT_DURATION_MS = 3000
@@ -176,6 +177,9 @@ function buildTableTree(treemapRoots) {
  *   onScrollToMethodHandled?: () => void,
  *   onPackageToggle?: (packageName?: string) => void,
  *   onClassToggle?: (scope: { packageName: string, className?: string }) => void,
+ *   onPackageSelect?: (packageName?: string) => void,
+ *   onClassSelect?: (scope: { packageName: string, className?: string }) => void,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
  * }} props
  */
 export function CoveragePackageTree({
@@ -191,6 +195,9 @@ export function CoveragePackageTree({
   onScrollToMethodHandled,
   onPackageToggle,
   onClassToggle,
+  onPackageSelect,
+  onClassSelect,
+  onMethodSelect,
 }) {
   const [expandedClassesKey, setExpandedClassesKey] = useState(null)
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
@@ -219,6 +226,13 @@ export function CoveragePackageTree({
       })
     },
     [onPackageToggle]
+  )
+
+  const handlePackageNameClick = useCallback(
+    (record) => {
+      onPackageSelect?.(record.packageName)
+    },
+    [onPackageSelect]
   )
 
   useEffect(() => {
@@ -335,7 +349,10 @@ export function CoveragePackageTree({
           return (
             <div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span>{formatPackageLabel(value)}</span>
+                <CoverageScopeName
+                  name={formatPackageLabel(value)}
+                  onCopyLink={() => handlePackageNameClick(record)}
+                />
                 {record.classesCount > 0 && (
                   <Link
                     type="secondary"
@@ -365,6 +382,8 @@ export function CoveragePackageTree({
                     }
                     onScrollToMethodHandled={onScrollToMethodHandled}
                     onMethodsToggle={onClassToggle}
+                    onClassSelect={onClassSelect}
+                    onMethodSelect={onMethodSelect}
                   />
                 </div>
               )}
@@ -393,6 +412,9 @@ export function CoveragePackageTree({
       coverageFilters,
       expandedClassesKey,
       onClassToggle,
+      onClassSelect,
+      onMethodSelect,
+      handlePackageNameClick,
       onScrollToMethodHandled,
       pendingClassScrollKey,
       scrollToMethod,

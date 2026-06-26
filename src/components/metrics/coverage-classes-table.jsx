@@ -18,6 +18,7 @@ import { message, Typography } from "antd"
 import * as API from "../../modules/metrics/api-metrics"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageMethodsTable } from "./coverage-methods-table"
+import { CoverageScopeName } from "./coverage-scope-name"
 
 const { Link, Text } = Typography
 
@@ -42,9 +43,11 @@ function classColumns(
   expandedMethodsKey,
   methodsByClass,
   toggleMethodsPanel,
+  handleClassNameClick,
   handleMethodsTableChange,
   pendingMethodScrollKey,
-  onMethodScrollHandled
+  onMethodScrollHandled,
+  onMethodSelect
 ) {
   return [
     {
@@ -63,7 +66,7 @@ function classColumns(
         return (
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <span>{value}</span>
+              <CoverageScopeName name={value} onCopyLink={() => handleClassNameClick(record)} />
               {record.methodsCount > 0 && (
                 <Link
                   type="secondary"
@@ -88,6 +91,9 @@ function classColumns(
                     record.key === expandedMethodsKey ? pendingMethodScrollKey : null
                   }
                   onScrollToMethodHandled={onMethodScrollHandled}
+                  packageName={record.packageName}
+                  className={record.className}
+                  onMethodSelect={onMethodSelect}
                 />
               </div>
             )}
@@ -140,6 +146,8 @@ function classColumns(
  *   scrollToMethod?: { signature: string, classKey: string } | null,
  *   onScrollToMethodHandled?: () => void,
  *   onMethodsToggle?: (scope: { packageName: string, className?: string }) => void,
+ *   onClassSelect?: (scope: { packageName: string, className: string }) => void,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
  * }} props
  */
 export function CoverageClassesTable({
@@ -153,6 +161,8 @@ export function CoverageClassesTable({
   scrollToMethod,
   onScrollToMethodHandled,
   onMethodsToggle,
+  onClassSelect,
+  onMethodSelect,
 }) {
   const [expandedMethodsKey, setExpandedMethodsKey] = useState(null)
   const [methodsByClass, setMethodsByClass] = useState({})
@@ -230,6 +240,13 @@ export function CoverageClassesTable({
       })
     },
     [loadMethods, methodsByClass, onMethodsToggle]
+  )
+
+  const handleClassNameClick = useCallback(
+    (record) => {
+      onClassSelect?.({ packageName: record.packageName, className: record.className })
+    },
+    [onClassSelect]
   )
 
   const handleMethodScrollHandled = useCallback(() => {
@@ -427,15 +444,19 @@ export function CoverageClassesTable({
         expandedMethodsKey,
         methodsByClass,
         toggleMethodsPanel,
+        handleClassNameClick,
         handleMethodsTableChange,
         pendingMethodScrollKey,
-        handleMethodScrollHandled
+        handleMethodScrollHandled,
+        onMethodSelect
       ),
     [
       expandedMethodsKey,
+      handleClassNameClick,
       handleMethodScrollHandled,
       handleMethodsTableChange,
       methodsByClass,
+      onMethodSelect,
       pendingMethodScrollKey,
       toggleMethodsPanel,
     ]

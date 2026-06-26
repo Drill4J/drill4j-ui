@@ -15,10 +15,11 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { message } from "antd"
-import { useParams } from "react-router-dom"
+import { useLocation, useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
 import { getCoverageTreemap } from "../../../../modules/metrics/api-metrics"
+import { buildCoverageScopeUrl, copyScopeLinkToClipboard } from "../../../../modules/metrics/copy-scope-link"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 function buildClassKey(packageName, className) {
@@ -46,8 +47,13 @@ function scopeToQueryParams({ packageName, className, methodSignature }) {
 
 export const BuildCoveragePage = () => {
   const { buildId } = useParams()
+  const location = useLocation()
   const {
+    baselineBuildId,
     coverageFilters,
+    branches,
+    envIds,
+    testTags,
     packageName,
     className,
     methodSignature,
@@ -136,7 +142,41 @@ export const BuildCoveragePage = () => {
     setScrollToMethod(null)
   }, [])
 
+  const queryState = useMemo(
+    () => ({
+      baselineBuildId,
+      branches,
+      envIds,
+      testTags,
+      packageName,
+      className,
+      methodSignature,
+    }),
+    [baselineBuildId, branches, className, envIds, methodSignature, packageName, testTags]
+  )
+
+  const copyScopeLink = useCallback(
+    (scopeUpdates) => {
+      const url = buildCoverageScopeUrl(location.pathname, { ...queryState, ...scopeUpdates })
+      copyScopeLinkToClipboard(url)
+    },
+    [location.pathname, queryState]
+  )
+
   const handlePackageSelect = useCallback(
+    (nextPackageName) => {
+      const updates = {
+        packageName: nextPackageName || undefined,
+        className: undefined,
+        methodSignature: undefined,
+      }
+      updateQueryParams(updates)
+      copyScopeLink(updates)
+    },
+    [copyScopeLink, updateQueryParams]
+  )
+
+  const handlePackageToggle = useCallback(
     (nextPackageName) => {
       updateQueryParams({
         packageName: nextPackageName || undefined,
@@ -147,13 +187,36 @@ export const BuildCoveragePage = () => {
     [updateQueryParams]
   )
 
-  const handleClassSelect = ({ packageName: nextPackageName, className: nextClassName }) =>
-    updateQueryParams({
-      ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
-      methodSignature: undefined,
-    })
+  const handleClassSelect = useCallback(
+    ({ packageName: nextPackageName, className: nextClassName }) => {
+      const updates = {
+        ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
+        methodSignature: undefined,
+      }
+      updateQueryParams(updates)
+      copyScopeLink(updates)
+    },
+    [copyScopeLink, updateQueryParams]
+  )
 
-  const handleMethodSelect = (scope) => updateQueryParams(scopeToQueryParams(scope))
+  const handleClassToggle = useCallback(
+    ({ packageName: nextPackageName, className: nextClassName }) => {
+      updateQueryParams({
+        ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
+        methodSignature: undefined,
+      })
+    },
+    [updateQueryParams]
+  )
+
+  const handleMethodSelect = useCallback(
+    (scope) => {
+      const updates = scopeToQueryParams(scope)
+      updateQueryParams(updates)
+      copyScopeLink(updates)
+    },
+    [copyScopeLink, updateQueryParams]
+  )
 
   return (
     <>
@@ -180,8 +243,11 @@ export const BuildCoveragePage = () => {
           onScrollToClassHandled={handleScrollToClassHandled}
           scrollToMethod={scrollToMethod}
           onScrollToMethodHandled={handleScrollToMethodHandled}
-          onPackageToggle={handlePackageSelect}
-          onClassToggle={handleClassSelect}
+          onPackageToggle={handlePackageToggle}
+          onClassToggle={handleClassToggle}
+          onPackageSelect={handlePackageSelect}
+          onClassSelect={handleClassSelect}
+          onMethodSelect={handleMethodSelect}
         />
       </div>
     </>

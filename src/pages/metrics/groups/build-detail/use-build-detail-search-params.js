@@ -16,17 +16,13 @@
 import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import {
+  BUILD_DETAIL_QUERY_KEYS,
   COVERAGE_LIST_QUERY_KEYS,
+  buildBuildDetailSearchParams,
   setListQueryParam,
 } from "../../../../modules/metrics/query-params"
 
-const QUERY_KEYS = [
-  "baselineBuildId",
-  ...COVERAGE_LIST_QUERY_KEYS,
-  "packageName",
-  "className",
-  "methodSignature",
-]
+const QUERY_KEYS = BUILD_DETAIL_QUERY_KEYS
 
 const LIST_PARAM_SEPARATOR = "\0"
 
@@ -92,16 +88,7 @@ export function useBuildDetailSearchParams() {
           merged[key] = updates[key]
         }
       })
-      const params = new URLSearchParams()
-      Object.entries(merged).forEach(([key, value]) => {
-        if (COVERAGE_LIST_QUERY_KEYS.includes(key)) {
-          setListQueryParam(params, key, value)
-          return
-        }
-        if (value) {
-          params.set(key, value)
-        }
-      })
+      const params = buildBuildDetailSearchParams(merged)
       const nextSearch = params.toString()
       if (nextSearch === searchString) {
         return
