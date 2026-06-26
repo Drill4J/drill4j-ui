@@ -2,19 +2,19 @@ import { Breadcrumb, Typography } from "antd"
 
 const { Link } = Typography
 
-export function buildBreadcrumbPath(activeRoot, fullTree, nodeMap) {
-  if (!activeRoot || !fullTree) {
+export function buildBreadcrumbPath(drilledNode, topLevelRoots, nodeMap) {
+  if (!drilledNode || !topLevelRoots?.length) {
     return []
   }
 
   const path = []
-  let current = activeRoot
+  let current = drilledNode
 
   while (current) {
     path.unshift({
       fullName: current.full_name,
       name: current.name,
-      isTopRoot: current.full_name === fullTree.full_name,
+      isTopRoot: topLevelRoots.some((root) => root.full_name === current.full_name),
     })
     current = current.parent ? nodeMap.get(current.parent) : null
   }

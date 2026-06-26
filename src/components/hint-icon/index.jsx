@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Col, Row } from "antd"
-import { CoverageTreemapCanvas } from "../../../components/charts/treemap-canvas"
+import { Tooltip } from "antd"
+import { QuestionCircleOutlined } from "@ant-design/icons"
 
-export const TreemapCanvasDevPage = () => (
-  <Row>
-    <Col span={24}>
-      <CoverageTreemapCanvas
-        apiEndpoint="/metrics/coverage-treemap"
-        queryParams={[
-          "buildId",
-          "testTags",
-          "envIds",
-          "branches",
-          "packageNamePattern",
-          "classNamePattern",
-          "testSessionId",
-          "testDefinitionId",
-        ]}
-      />
-    </Col>
-  </Row>
-)
+const DEFAULT_STYLE = { fontSize: 12, color: "rgba(0, 0, 0, 0.45)" }
+
+/**
+ * @param {{ title: string, style?: import("react").CSSProperties }} props
+ */
+export function HintIcon({ title, style }) {
+  return (
+    <Tooltip title={title}>
+      <QuestionCircleOutlined style={{ ...DEFAULT_STYLE, ...style }} />
+    </Tooltip>
+  )
+}

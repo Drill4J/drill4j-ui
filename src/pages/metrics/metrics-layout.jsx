@@ -13,25 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Col, Row } from "antd"
-import { CoverageTreemapCanvas } from "../../../components/charts/treemap-canvas"
+import { Outlet } from "react-router-dom"
+import { MetricsBreadcrumb } from "../../components/metrics/metrics-breadcrumb"
 
-export const TreemapCanvasDevPage = () => (
-  <Row>
-    <Col span={24}>
-      <CoverageTreemapCanvas
-        apiEndpoint="/metrics/coverage-treemap"
-        queryParams={[
-          "buildId",
-          "testTags",
-          "envIds",
-          "branches",
-          "packageNamePattern",
-          "classNamePattern",
-          "testSessionId",
-          "testDefinitionId",
-        ]}
-      />
-    </Col>
-  </Row>
-)
+export function MetricsLayout() {
+  return (
+    <>
+      <MetricsBreadcrumb />
+      <Outlet />
+    </>
+  )
+}

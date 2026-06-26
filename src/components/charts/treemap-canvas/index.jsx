@@ -19,19 +19,35 @@ import axios from "axios"
 import { Typography, Spin, InputNumber, Tooltip, Select, Checkbox, Divider } from "antd"
 import { InfoCircleOutlined } from "@ant-design/icons"
 
-import { buildTree, buildNodeMap, layoutTreemap } from "./layout"
+import { normalizeTreemapRoots, buildNodeMap, layoutTreemap } from "./layout"
 import { drawTreemap } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
 import { TreemapTooltip } from "./tooltip"
 import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
+import { resolveScopeFromNode, canDrillIntoNode } from "./node-scope"
+import { COVERAGE_LIST_QUERY_KEYS } from "../../../modules/metrics/query-params"
 
 const { Option } = Select
 
 const DEFAULT_MAX_DEPTH = 3
 const DEFAULT_HIGHLIGHT_THRESHOLD_PERCENTAGE = 50
+const SINGLE_CLICK_DELAY_MS = 250
+const EMPTY_QUERY_PARAMS = {}
 
-export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
+export const CoverageTreemapCanvas = ({
+  apiEndpoint,
+  queryParams,
+  extraParams = {},
+  roots: externalRoots,
+  rootsLoading,
+  onPackageSelect,
+  onPackageNavigate,
+  onClassSelect,
+  onClassNavigate,
+  onMethodSelect,
+  onMethodNavigate,
+}) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
   const [maxDepth, setMaxDepth] = useState(DEFAULT_MAX_DEPTH)
@@ -42,74 +58,121 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
   const [searchParams] = useSearchParams()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
+  const clickTimeoutRef = useRef(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [tooltip, setTooltip] = useState(null)
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
   const [drillRootId, setDrillRootId] = useState(null)
 
-  const params = useMemo(
-    () => getNamedParams(searchParams, queryParams),
-    [searchParams, queryParams]
+  const usesExternalRoots = externalRoots !== undefined
+  const hasPageNavigation = Boolean(
+    onPackageSelect ||
+      onPackageNavigate ||
+      onClassSelect ||
+      onClassNavigate ||
+      onMethodSelect ||
+      onMethodNavigate
   )
 
+  const params = useMemo(() => {
+    if (usesExternalRoots) {
+      return EMPTY_QUERY_PARAMS
+    }
+    return { ...getNamedParams(searchParams, queryParams), ...extraParams }
+  }, [usesExternalRoots, searchParams, queryParams, extraParams])
+
   useEffect(() => {
+    if (usesExternalRoots) {
+      return undefined
+    }
+
     if (!params.buildId) {
       setError("Missing a required parameter: buildId")
       setData([])
       setLoading(false)
-      return
+      return undefined
     }
+
+    let cancelled = false
 
     setError("")
     setLoading(true)
 
     axios
-      .get(apiEndpoint, { params })
+      .get(apiEndpoint, {
+        params,
+        paramsSerializer: { indexes: null },
+      })
       .then((response) => {
-        const jsonData = response.data.data
-        if (!Array.isArray(jsonData)) throw new Error("Invalid data format")
-        setData(jsonData)
+        if (!cancelled) {
+          setData(response.data.data)
+        }
       })
       .catch((fetchError) => {
-        setError(`Failed to load data: ${fetchError.message}`)
+        if (!cancelled) {
+          setError(`Failed to load data: ${fetchError.message}`)
+        }
       })
       .finally(() => {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       })
-  }, [apiEndpoint, params])
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiEndpoint, params, usesExternalRoots])
+
+  useEffect(
+    () => () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+      }
+    },
+    []
+  )
+
+  const treemapRoots = usesExternalRoots ? externalRoots : data
+  const loadingState = usesExternalRoots ? Boolean(rootsLoading) : loading
 
   useEffect(() => {
     setDrillRootId(null)
-  }, [data])
+  }, [treemapRoots])
 
-  const fullTree = useMemo(() => buildTree(data), [data])
+  const normalizedRoots = useMemo(() => normalizeTreemapRoots(treemapRoots), [treemapRoots])
 
-  const nodeMap = useMemo(() => buildNodeMap(fullTree), [fullTree])
+  const nodeMap = useMemo(() => buildNodeMap(normalizedRoots), [normalizedRoots])
 
-  const activeRoot = useMemo(() => {
-    if (!fullTree) {
+  const drilledNode = useMemo(
+    () => (drillRootId ? nodeMap.get(drillRootId) ?? null : null),
+    [drillRootId, nodeMap]
+  )
+
+  const activeView = useMemo(() => {
+    if (!normalizedRoots?.length) {
       return null
     }
 
-    if (!drillRootId) {
-      return fullTree
+    if (!drilledNode) {
+      return normalizedRoots
     }
 
-    return nodeMap.get(drillRootId) ?? fullTree
-  }, [fullTree, drillRootId, nodeMap])
+    return drilledNode
+  }, [normalizedRoots, drilledNode])
 
   const breadcrumbPath = useMemo(
-    () => buildBreadcrumbPath(activeRoot, fullTree, nodeMap),
-    [activeRoot, fullTree, nodeMap]
+    () => buildBreadcrumbPath(drilledNode, normalizedRoots, nodeMap),
+    [drilledNode, normalizedRoots, nodeMap]
   )
 
   const positionedNodes = useMemo(() => {
-    if (!activeRoot || size.width <= 0 || size.height <= 0) {
+    if (!activeView || size.width <= 0 || size.height <= 0) {
       return []
     }
 
-    return layoutTreemap(activeRoot, size.width, size.height, maxDepth)
-  }, [activeRoot, size.width, size.height, maxDepth])
+    return layoutTreemap(activeView, size.width, size.height, maxDepth)
+  }, [activeView, size.width, size.height, maxDepth])
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -147,19 +210,24 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
     renderCanvas()
   }, [renderCanvas])
 
-  const handleMouseMove = useCallback(
-    (event) => {
+  const getHitAt = useCallback(
+    (clientX, clientY) => {
       const canvas = canvasRef.current
       if (!canvas || !positionedNodes.length) {
-        setHoveredNodeId(null)
-        setTooltip(null)
-        return
+        return null
       }
 
       const rect = canvas.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
-      const hit = findNodeAtPoint(positionedNodes, x, y)
+      return findNodeAtPoint(positionedNodes, clientX - rect.left, clientY - rect.top)
+    },
+    [positionedNodes]
+  )
+
+  const getHit = useCallback((event) => getHitAt(event.clientX, event.clientY), [getHitAt])
+
+  const handleMouseMove = useCallback(
+    (event) => {
+      const hit = getHit(event)
 
       if (!hit) {
         setHoveredNodeId(null)
@@ -174,7 +242,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
         ...formatTooltipContent(hit.node, hit.coverageRatio),
       })
     },
-    [positionedNodes]
+    [getHit]
   )
 
   const handleMouseLeave = useCallback(() => {
@@ -182,24 +250,15 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
     setTooltip(null)
   }, [])
 
-  const handleClick = useCallback(
-    (event) => {
-      const canvas = canvasRef.current
-      if (!canvas || !positionedNodes.length || !activeRoot) {
+  const handleDrillDownAt = useCallback(
+    (clientX, clientY) => {
+      const hit = getHitAt(clientX, clientY)
+      if (!hit || !canDrillIntoNode(hit.node)) {
         return
       }
 
-      const rect = canvas.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
-      const hit = findNodeAtPoint(positionedNodes, x, y)
-
-      if (!hit) {
-        return
-      }
-
-      if (hit.node.full_name === activeRoot.full_name) {
-        setDrillRootId(activeRoot.parent ?? null)
+      if (drilledNode && hit.node.full_name === drilledNode.full_name) {
+        setDrillRootId(drilledNode.parent ?? null)
       } else {
         setDrillRootId(hit.node.full_name)
       }
@@ -207,7 +266,89 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
       setHoveredNodeId(null)
       setTooltip(null)
     },
-    [positionedNodes, activeRoot]
+    [drilledNode, getHitAt]
+  )
+
+  const handleScopeSelectAt = useCallback(
+    (clientX, clientY) => {
+      const hit = getHitAt(clientX, clientY)
+      if (!hit) {
+        return
+      }
+
+      const scope = resolveScopeFromNode(hit.node)
+      if (!scope) {
+        return
+      }
+
+      if (scope.methodSignature) {
+        // `hit.node.parent` is the class node's full path (e.g.
+        // "pkg/sub/ClassName"), which matches the class table row key.
+        // `hit.node.class_name` is only the simple class name, so it cannot
+        // be used to locate the class row.
+        onMethodNavigate?.({
+          methodSignature: scope.methodSignature,
+          classKey: hit.node.parent,
+        })
+        onMethodSelect?.(scope)
+      } else if (scope.className) {
+        onClassNavigate?.(hit.node.full_name)
+        onClassSelect?.(scope)
+      } else if (onPackageNavigate) {
+        onPackageNavigate(hit.node.full_name)
+        onPackageSelect?.(scope.packageName)
+      } else {
+        onPackageSelect?.(scope.packageName)
+      }
+
+      setHoveredNodeId(null)
+      setTooltip(null)
+    },
+    [
+      getHitAt,
+      onClassNavigate,
+      onClassSelect,
+      onMethodNavigate,
+      onMethodSelect,
+      onPackageNavigate,
+      onPackageSelect,
+    ]
+  )
+
+  const handleClick = useCallback(
+    (event) => {
+      const { clientX, clientY } = event
+
+      if (hasPageNavigation) {
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current)
+        }
+        clickTimeoutRef.current = setTimeout(() => {
+          clickTimeoutRef.current = null
+          handleScopeSelectAt(clientX, clientY)
+        }, SINGLE_CLICK_DELAY_MS)
+        return
+      }
+
+      handleDrillDownAt(clientX, clientY)
+    },
+    [handleDrillDownAt, handleScopeSelectAt, hasPageNavigation]
+  )
+
+  const handleDoubleClick = useCallback(
+    (event) => {
+      if (!hasPageNavigation) {
+        return
+      }
+
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current)
+        clickTimeoutRef.current = null
+      }
+
+      handleDrillDownAt(event.clientX, event.clientY)
+    },
+    [handleDrillDownAt, hasPageNavigation]
   )
 
   const handleBreadcrumbNavigate = useCallback((fullName, isTopRoot) => {
@@ -240,17 +381,17 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
     <div>
       {error ? (
         <Typography.Text>{error}</Typography.Text>
-      ) : !loading && data.length === 0 ? (
+      ) : !loadingState && !normalizedRoots?.length ? (
         <Typography.Text>No data available</Typography.Text>
       ) : (
-        <Spin spinning={loading}>
+        <Spin spinning={loadingState}>
           <TreemapBreadcrumbs items={breadcrumbPath} onNavigate={handleBreadcrumbNavigate} />
           <div
             ref={containerRef}
             style={{
               width: "100%",
-              height: "70vh",
-              minHeight: 400,
+              height: "35vh",
+              minHeight: 200,
               position: "relative",
             }}
           >
@@ -259,6 +400,7 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
+              onDoubleClick={handleDoubleClick}
               style={{
                 display: "block",
                 width: "100%",
@@ -357,10 +499,19 @@ export const CoverageTreemapCanvas = ({ apiEndpoint, queryParams }) => {
   )
 }
 
-function getNamedParams(params, names) {
+function getNamedParams(params, names = []) {
   return names.reduce((result, paramName) => {
+    if (COVERAGE_LIST_QUERY_KEYS.includes(paramName)) {
+      const values = params.getAll(paramName).filter(Boolean)
+      if (values.length) {
+        result[paramName] = values
+      }
+      return result
+    }
     const value = params.get(paramName)
-    result[paramName] = value
+    if (value) {
+      result[paramName] = value
+    }
     return result
   }, {})
 }

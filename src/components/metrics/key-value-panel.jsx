@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Col, Row } from "antd"
-import { CoverageTreemapCanvas } from "../../../components/charts/treemap-canvas"
+import { Descriptions } from "antd"
 
-export const TreemapCanvasDevPage = () => (
-  <Row>
-    <Col span={24}>
-      <CoverageTreemapCanvas
-        apiEndpoint="/metrics/coverage-treemap"
-        queryParams={[
-          "buildId",
-          "testTags",
-          "envIds",
-          "branches",
-          "packageNamePattern",
-          "classNamePattern",
-          "testSessionId",
-          "testDefinitionId",
-        ]}
-      />
-    </Col>
-  </Row>
-)
+/**
+ * @param {{
+ *   title?: string,
+ *   items: { label: string, value: import("react").ReactNode }[],
+ *   column?: number,
+ * }} props
+ */
+export function KeyValuePanel({ title, items, column = 2 }) {
+  return (
+    <Descriptions title={title} bordered size="small" column={column}>
+      {items.map(({ label, value }) => (
+        <Descriptions.Item key={label} label={label}>
+          {value ?? "—"}
+        </Descriptions.Item>
+      ))}
+    </Descriptions>
+  )
+}
