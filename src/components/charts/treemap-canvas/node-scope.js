@@ -10,17 +10,18 @@ export const TREEMAP_NODE_TYPE = {
 
 /**
  * @param {object} node
- * @returns {{ packageName: string, className?: string } | null}
+ * @returns {{ packageName: string, className?: string, methodSignature?: string } | null}
  */
 export function resolveScopeFromNode(node) {
   switch (node.type) {
     case TREEMAP_NODE_TYPE.METHOD:
-      if (!node.class_name) {
+      if (!node.class_name || !node.signature) {
         return null
       }
       return {
         packageName: node.package_name ?? "",
         className: node.class_name,
+        methodSignature: node.signature,
       }
     case TREEMAP_NODE_TYPE.CLASS:
       if (!node.class_name) {

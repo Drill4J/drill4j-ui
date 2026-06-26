@@ -45,6 +45,8 @@ export const CoverageTreemapCanvas = ({
   onPackageNavigate,
   onClassSelect,
   onClassNavigate,
+  onMethodSelect,
+  onMethodNavigate,
 }) => {
   const [data, setData] = useState([])
   const [error, setError] = useState("")
@@ -64,7 +66,12 @@ export const CoverageTreemapCanvas = ({
 
   const usesExternalRoots = externalRoots !== undefined
   const hasPageNavigation = Boolean(
-    onPackageSelect || onPackageNavigate || onClassSelect || onClassNavigate
+    onPackageSelect ||
+      onPackageNavigate ||
+      onClassSelect ||
+      onClassNavigate ||
+      onMethodSelect ||
+      onMethodNavigate
   )
 
   const params = useMemo(() => {
@@ -274,7 +281,17 @@ export const CoverageTreemapCanvas = ({
         return
       }
 
-      if (scope.className) {
+      if (scope.methodSignature) {
+        // `hit.node.parent` is the class node's full path (e.g.
+        // "pkg/sub/ClassName"), which matches the class table row key.
+        // `hit.node.class_name` is only the simple class name, so it cannot
+        // be used to locate the class row.
+        onMethodNavigate?.({
+          methodSignature: scope.methodSignature,
+          classKey: hit.node.parent,
+        })
+        onMethodSelect?.(scope)
+      } else if (scope.className) {
         onClassNavigate?.(hit.node.full_name)
         onClassSelect?.(scope)
       } else if (onPackageNavigate) {
@@ -287,7 +304,15 @@ export const CoverageTreemapCanvas = ({
       setHoveredNodeId(null)
       setTooltip(null)
     },
-    [getHitAt, onClassNavigate, onClassSelect, onPackageNavigate, onPackageSelect]
+    [
+      getHitAt,
+      onClassNavigate,
+      onClassSelect,
+      onMethodNavigate,
+      onMethodSelect,
+      onPackageNavigate,
+      onPackageSelect,
+    ]
   )
 
   const handleClick = useCallback(

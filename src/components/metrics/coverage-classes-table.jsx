@@ -22,6 +22,7 @@ import { CoverageMethodsTable } from "./coverage-methods-table"
 const { Link, Text } = Typography
 
 const HIGHLIGHT_DURATION_MS = 3000
+const SCROLL_RETRY_MAX_FRAMES = 120
 const DEFAULT_PAGE_SIZE = 10
 
 function classRowId(classKey) {
@@ -41,7 +42,9 @@ function classColumns(
   expandedMethodsKey,
   methodsByClass,
   toggleMethodsPanel,
-  handleMethodsTableChange
+  handleMethodsTableChange,
+  pendingMethodScrollKey,
+  onMethodScrollHandled
 ) {
   return [
     {
@@ -81,6 +84,10 @@ function classColumns(
                   dataSource={methodsState.data}
                   pagination={methodsState.paging}
                   onTableChange={(pagination) => handleMethodsTableChange(record, pagination)}
+                  scrollToMethodSignature={
+                    record.key === expandedMethodsKey ? pendingMethodScrollKey : null
+                  }
+                  onScrollToMethodHandled={onMethodScrollHandled}
                 />
               </div>
             )}
@@ -130,6 +137,8 @@ function classColumns(
  *   rowKey?: string,
  *   scrollToClassKey?: string | null,
  *   onScrollToClassHandled?: () => void,
+ *   scrollToMethod?: { signature: string, classKey: string } | null,
+ *   onScrollToMethodHandled?: () => void,
  *   onMethodsToggle?: (scope: { packageName: string, className?: string }) => void,
  * }} props
  */
@@ -141,11 +150,14 @@ export function CoverageClassesTable({
   rowKey = "key",
   scrollToClassKey,
   onScrollToClassHandled,
+  scrollToMethod,
+  onScrollToMethodHandled,
   onMethodsToggle,
 }) {
   const [expandedMethodsKey, setExpandedMethodsKey] = useState(null)
   const [methodsByClass, setMethodsByClass] = useState({})
   const [pendingScrollKey, setPendingScrollKey] = useState(null)
+  const [pendingMethodScrollKey, setPendingMethodScrollKey] = useState(null)
   const [highlightedKey, setHighlightedKey] = useState(null)
   const [highlightTick, setHighlightTick] = useState(0)
   const [page, setPage] = useState(1)
@@ -217,6 +229,78 @@ export function CoverageClassesTable({
     [loadMethods, methodsByClass, onMethodsToggle]
   )
 
+  const handleMethodScrollHandled = useCallback(() => {
+    setPendingMethodScrollKey(null)
+    onScrollToMethodHandled?.()
+  }, [onScrollToMethodHandled])
+
+  // TODO: Make this work with server-side pagination? To be discussed.
+  // Fetches the whole method list for a class so we can locate the target
+  // methodthen exposes it with normal client-side pagination (default page
+  // size) positioned on the page that actually contains it.
+  // `total` is set to
+  // the loaded length so antd slices the data per page instead of treating it
+  // as a single server page.
+  const loadMethodsForScroll = useCallback(
+    async (record, signature) => {
+      const recordKey = record.key
+      setMethodsByClass((state) => ({
+        ...state,
+        [recordKey]: {
+          data: state[recordKey]?.data ?? [],
+          paging: state[recordKey]?.paging ?? { ...DEFAULT_METHODS_PAGING },
+          loading: true,
+        },
+      }))
+
+      try {
+        const fetchSize = Math.max(record.methodsCount || 0, DEFAULT_METHODS_PAGING.pageSize)
+        const result = await API.getCoverageMethods(buildId, {
+          ...coverageFilters,
+          packageName: record.packageName,
+          className: record.className,
+          page: 1,
+          pageSize: fetchSize,
+        })
+
+        const index = result.data.findIndex((method) => method.signature === signature)
+        const targetPage =
+          index >= 0 ? Math.floor(index / DEFAULT_METHODS_PAGING.pageSize) + 1 : 1
+
+        setMethodsByClass((state) => ({
+          ...state,
+          [recordKey]: {
+            data: result.data,
+            paging: {
+              page: targetPage,
+              pageSize: DEFAULT_METHODS_PAGING.pageSize,
+              total: result.data.length,
+            },
+            loading: false,
+          },
+        }))
+
+        if (index >= 0) {
+          setPendingMethodScrollKey(signature)
+        } else {
+          onScrollToMethodHandled?.()
+        }
+      } catch (error) {
+        message.error(`Failed to fetch method coverage. ${error?.message}`)
+        setMethodsByClass((state) => ({
+          ...state,
+          [recordKey]: {
+            data: state[recordKey]?.data ?? [],
+            paging: state[recordKey]?.paging ?? { ...DEFAULT_METHODS_PAGING },
+            loading: false,
+          },
+        }))
+        onScrollToMethodHandled?.()
+      }
+    },
+    [buildId, coverageFilters, onScrollToMethodHandled]
+  )
+
   const handleMethodsTableChange = useCallback(
     (record, pagination) => {
       loadMethods(record, pagination.current, pagination.pageSize)
@@ -233,9 +317,28 @@ export function CoverageClassesTable({
     setExpandedMethodsKey(null)
     setMethodsByClass({})
     setPendingScrollKey(null)
+    setPendingMethodScrollKey(null)
     setHighlightedKey(null)
     setPage(1)
   }, [buildId, coverageFilters, dataSource])
+
+  useEffect(() => {
+    if (!scrollToMethod?.signature || !scrollToMethod?.classKey) {
+      return
+    }
+
+    const index = dataSource.findIndex((row) => row.key === scrollToMethod.classKey)
+    if (index === -1) {
+      onScrollToMethodHandled?.()
+      return
+    }
+
+    // Jump to the page that holds the target class so its row (and the methods
+    // panel nested inside it) is rendered before we expand and scroll.
+    setPage(Math.floor(index / pageSize) + 1)
+    setExpandedMethodsKey(dataSource[index].key)
+    loadMethodsForScroll(dataSource[index], scrollToMethod.signature)
+  }, [dataSource, loadMethodsForScroll, onScrollToMethodHandled, pageSize, scrollToMethod])
 
   // Jump to the page that holds the target class so its row is rendered before scrolling.
   useEffect(() => {
@@ -254,28 +357,45 @@ export function CoverageClassesTable({
 
   useEffect(() => {
     if (!pendingScrollKey) {
-      return
+      return undefined
     }
 
-    const row = document.getElementById(classRowId(pendingScrollKey))
-    if (!row) {
-      return
+    // Retry across animation frames until the row is painted (page change may
+    // still be committing).
+    let frame
+    let attempts = 0
+    const tryScroll = () => {
+      const row = document.getElementById(classRowId(pendingScrollKey))
+      if (!row) {
+        if (attempts++ < SCROLL_RETRY_MAX_FRAMES) {
+          frame = requestAnimationFrame(tryScroll)
+        }
+        return
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" })
+
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+      setHighlightedKey(pendingScrollKey)
+      setHighlightTick((tick) => tick + 1)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedKey(null)
+        highlightTimeoutRef.current = null
+      }, HIGHLIGHT_DURATION_MS)
+
+      setPendingScrollKey(null)
+      onScrollToClassHandled?.()
     }
 
-    row.scrollIntoView({ block: "center", behavior: "smooth" })
+    tryScroll()
 
-    if (highlightTimeoutRef.current) {
-      clearTimeout(highlightTimeoutRef.current)
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
     }
-    setHighlightedKey(pendingScrollKey)
-    setHighlightTick((tick) => tick + 1)
-    highlightTimeoutRef.current = setTimeout(() => {
-      setHighlightedKey(null)
-      highlightTimeoutRef.current = null
-    }, HIGHLIGHT_DURATION_MS)
-
-    setPendingScrollKey(null)
-    onScrollToClassHandled?.()
   }, [dataSource, onScrollToClassHandled, page, pendingScrollKey])
 
   useEffect(
@@ -288,8 +408,23 @@ export function CoverageClassesTable({
   )
 
   const columns = useMemo(
-    () => classColumns(expandedMethodsKey, methodsByClass, toggleMethodsPanel, handleMethodsTableChange),
-    [expandedMethodsKey, handleMethodsTableChange, methodsByClass, toggleMethodsPanel]
+    () =>
+      classColumns(
+        expandedMethodsKey,
+        methodsByClass,
+        toggleMethodsPanel,
+        handleMethodsTableChange,
+        pendingMethodScrollKey,
+        handleMethodScrollHandled
+      ),
+    [
+      expandedMethodsKey,
+      handleMethodScrollHandled,
+      handleMethodsTableChange,
+      methodsByClass,
+      pendingMethodScrollKey,
+      toggleMethodsPanel,
+    ]
   )
 
   return (

@@ -21,12 +21,36 @@ import { CoverageTables } from "../../../../components/metrics/coverage-tables"
 import { getCoverageTreemap } from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
+function buildClassKey(packageName, className) {
+  if (!className) {
+    return null
+  }
+  if (className.includes("/")) {
+    return className
+  }
+  return packageName ? `${packageName}/${className}` : className
+}
+
+function scopeToQueryParams({ packageName, className, methodSignature }) {
+  let urlClassName = className
+  if (packageName && className?.startsWith(`${packageName}/`)) {
+    urlClassName = className.slice(packageName.length + 1)
+  }
+
+  return {
+    packageName: packageName || undefined,
+    className: urlClassName || undefined,
+    methodSignature: methodSignature || undefined,
+  }
+}
+
 export const BuildCoveragePage = () => {
   const { buildId } = useParams()
   const {
     coverageFilters,
     packageName,
     className,
+    methodSignature,
     updateQueryParams,
   } = useBuildDetailSearchParams()
 
@@ -34,6 +58,7 @@ export const BuildCoveragePage = () => {
   const [treemapLoading, setTreemapLoading] = useState(true)
   const [scrollToPackageKey, setScrollToPackageKey] = useState(null)
   const [scrollToClassKey, setScrollToClassKey] = useState(null)
+  const [scrollToMethod, setScrollToMethod] = useState(null)
 
   const treemapFilters = useMemo(() => ({ ...coverageFilters }), [coverageFilters])
 
@@ -69,8 +94,16 @@ export const BuildCoveragePage = () => {
       return
     }
 
+    if (methodSignature && className) {
+      setScrollToMethod({
+        signature: methodSignature,
+        classKey: buildClassKey(packageName, className),
+      })
+      return
+    }
+
     if (className) {
-      setScrollToClassKey(packageName ? `${packageName}/${className}` : className)
+      setScrollToClassKey(buildClassKey(packageName, className))
       return
     }
 
@@ -95,11 +128,20 @@ export const BuildCoveragePage = () => {
     setScrollToClassKey(null)
   }, [])
 
+  const handleMethodNavigate = useCallback(({ methodSignature: signature, classKey }) => {
+    setScrollToMethod({ signature, classKey })
+  }, [])
+
+  const handleScrollToMethodHandled = useCallback(() => {
+    setScrollToMethod(null)
+  }, [])
+
   const handlePackageSelect = useCallback(
     (nextPackageName) => {
       updateQueryParams({
         packageName: nextPackageName || undefined,
         className: undefined,
+        methodSignature: undefined,
       })
     },
     [updateQueryParams]
@@ -107,9 +149,11 @@ export const BuildCoveragePage = () => {
 
   const handleClassSelect = ({ packageName: nextPackageName, className: nextClassName }) =>
     updateQueryParams({
-      packageName: nextPackageName || undefined,
-      className: nextClassName || undefined,
+      ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
+      methodSignature: undefined,
     })
+
+  const handleMethodSelect = (scope) => updateQueryParams(scopeToQueryParams(scope))
 
   return (
     <>
@@ -120,6 +164,8 @@ export const BuildCoveragePage = () => {
         onPackageSelect={handlePackageSelect}
         onClassNavigate={handleClassNavigate}
         onClassSelect={handleClassSelect}
+        onMethodNavigate={handleMethodNavigate}
+        onMethodSelect={handleMethodSelect}
       />
 
       <div style={{ marginTop: 24 }}>
@@ -132,6 +178,8 @@ export const BuildCoveragePage = () => {
           onScrollToPackageHandled={handleScrollToPackageHandled}
           scrollToClassKey={scrollToClassKey}
           onScrollToClassHandled={handleScrollToClassHandled}
+          scrollToMethod={scrollToMethod}
+          onScrollToMethodHandled={handleScrollToMethodHandled}
           onPackageToggle={handlePackageSelect}
           onClassToggle={handleClassSelect}
         />

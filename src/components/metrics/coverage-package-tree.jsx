@@ -22,6 +22,7 @@ import { CoverageClassesTable } from "./coverage-classes-table"
 import "./coverage-package-tree.css"
 
 const HIGHLIGHT_DURATION_MS = 3000
+const SCROLL_RETRY_MAX_FRAMES = 120
 
 const { Link, Text } = Typography
 
@@ -171,6 +172,8 @@ function buildTableTree(treemapRoots) {
  *   onScrollToPackageHandled?: () => void,
  *   scrollToClassKey?: string | null,
  *   onScrollToClassHandled?: () => void,
+ *   scrollToMethod?: { signature: string, classKey: string } | null,
+ *   onScrollToMethodHandled?: () => void,
  *   onPackageToggle?: (packageName?: string) => void,
  *   onClassToggle?: (scope: { packageName: string, className?: string }) => void,
  * }} props
@@ -184,6 +187,8 @@ export function CoveragePackageTree({
   onScrollToPackageHandled,
   scrollToClassKey,
   onScrollToClassHandled,
+  scrollToMethod,
+  onScrollToMethodHandled,
   onPackageToggle,
   onClassToggle,
 }) {
@@ -250,30 +255,61 @@ export function CoveragePackageTree({
     onScrollToClassHandled?.()
   }, [onScrollToClassHandled, scrollToClassKey, treeData])
 
-  // Runs after the expanded rows have committed to the DOM, so the target row exists.
+  useEffect(() => {
+    if (!scrollToMethod?.classKey || !treeData.length) {
+      return
+    }
+
+    const location = findClassLocation(treeData, scrollToMethod.classKey)
+    if (!location) {
+      onScrollToMethodHandled?.()
+      return
+    }
+
+    setExpandedRowKeys(location.ancestorKeys)
+    setExpandedClassesKey(location.packageKey)
+  }, [onScrollToMethodHandled, scrollToMethod, treeData])
+
+  // Retry across animation frames until the expanded rows have committed to the
+  // DOM and the target row exists.
   useEffect(() => {
     if (!pendingScrollKey) {
-      return
+      return undefined
     }
 
-    const row = document.getElementById(packageRowId(pendingScrollKey))
-    if (!row) {
-      return
+    let frame
+    let attempts = 0
+    const tryScroll = () => {
+      const row = document.getElementById(packageRowId(pendingScrollKey))
+      if (!row) {
+        if (attempts++ < SCROLL_RETRY_MAX_FRAMES) {
+          frame = requestAnimationFrame(tryScroll)
+        }
+        return
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" })
+
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+      setHighlightedKey(pendingScrollKey)
+      setHighlightTick((tick) => tick + 1)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedKey(null)
+        highlightTimeoutRef.current = null
+      }, HIGHLIGHT_DURATION_MS)
+
+      setPendingScrollKey(null)
     }
 
-    row.scrollIntoView({ block: "center", behavior: "smooth" })
+    tryScroll()
 
-    if (highlightTimeoutRef.current) {
-      clearTimeout(highlightTimeoutRef.current)
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
     }
-    setHighlightedKey(pendingScrollKey)
-    setHighlightTick((tick) => tick + 1)
-    highlightTimeoutRef.current = setTimeout(() => {
-      setHighlightedKey(null)
-      highlightTimeoutRef.current = null
-    }, HIGHLIGHT_DURATION_MS)
-
-    setPendingScrollKey(null)
   }, [pendingScrollKey, expandedRowKeys])
 
   useEffect(
@@ -324,6 +360,10 @@ export function CoveragePackageTree({
                       record.key === expandedClassesKey ? pendingClassScrollKey : null
                     }
                     onScrollToClassHandled={() => setPendingClassScrollKey(null)}
+                    scrollToMethod={
+                      record.key === expandedClassesKey ? scrollToMethod : null
+                    }
+                    onScrollToMethodHandled={onScrollToMethodHandled}
                     onMethodsToggle={onClassToggle}
                   />
                 </div>
@@ -353,7 +393,9 @@ export function CoveragePackageTree({
       coverageFilters,
       expandedClassesKey,
       onClassToggle,
+      onScrollToMethodHandled,
       pendingClassScrollKey,
+      scrollToMethod,
       toggleClassesPanel,
     ]
   )

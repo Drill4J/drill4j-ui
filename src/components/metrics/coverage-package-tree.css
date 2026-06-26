@@ -12,7 +12,9 @@
 .coverage-package-row-highlight-0 > td,
 .coverage-package-row-highlight-1 > td,
 .coverage-class-row-highlight-0 > td,
-.coverage-class-row-highlight-1 > td {
+.coverage-class-row-highlight-1 > td,
+.coverage-method-row-highlight-0 > td,
+.coverage-method-row-highlight-1 > td {
   animation: coverage-package-row-flash 3s ease-out forwards;
 }
 

@@ -25,6 +25,7 @@ const QUERY_KEYS = [
   ...COVERAGE_LIST_QUERY_KEYS,
   "packageName",
   "className",
+  "methodSignature",
 ]
 
 const LIST_PARAM_SEPARATOR = "\0"
@@ -50,6 +51,7 @@ export function useBuildDetailSearchParams() {
   const baselineBuildId = searchParams.get("baselineBuildId") || undefined
   const packageName = searchParams.get("packageName") || undefined
   const className = searchParams.get("className") || undefined
+  const methodSignature = searchParams.get("methodSignature") || undefined
 
   const branchesSerialized = serializeListQueryParam(searchParams, "branches")
   const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
@@ -82,6 +84,7 @@ export function useBuildDetailSearchParams() {
         testTags,
         packageName,
         className,
+        methodSignature,
       }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
@@ -112,6 +115,7 @@ export function useBuildDetailSearchParams() {
       testTags,
       packageName,
       className,
+      methodSignature,
       searchString,
       setSearchParams,
     ]
@@ -129,6 +133,7 @@ export function useBuildDetailSearchParams() {
     updateQueryParams({
       packageName: undefined,
       className: undefined,
+      methodSignature: undefined,
     })
   }, [updateQueryParams])
 
@@ -139,6 +144,7 @@ export function useBuildDetailSearchParams() {
     testTags,
     packageName,
     className,
+    methodSignature,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,

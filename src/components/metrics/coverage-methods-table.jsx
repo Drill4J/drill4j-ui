@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useEffect, useMemo, useRef, useState } from "react"
 import { MetricsDataTable } from "./metrics-data-table"
+
+const HIGHLIGHT_DURATION_MS = 3000
+const SCROLL_RETRY_MAX_FRAMES = 120
 
 function formatPercent(ratio) {
   if (ratio == null) {
     return "—"
   }
   return `${(ratio * 100).toFixed(1)}%`
+}
+
+function methodRowId(signature) {
+  return `coverage-method-row-${encodeURIComponent(signature)}`
 }
 
 const methodColumns = [
@@ -50,17 +58,108 @@ const methodColumns = [
  *   loading?: boolean,
  *   pagination?: object | false,
  *   onTableChange?: import("antd").TableProps["onChange"],
+ *   scrollToMethodSignature?: string | null,
+ *   onScrollToMethodHandled?: () => void,
  * }} props
  */
-export function CoverageMethodsTable({ dataSource, loading, pagination, onTableChange }) {
+export function CoverageMethodsTable({
+  dataSource,
+  loading,
+  pagination,
+  onTableChange,
+  scrollToMethodSignature,
+  onScrollToMethodHandled,
+}) {
+  const [pendingScrollKey, setPendingScrollKey] = useState(null)
+  const [highlightedKey, setHighlightedKey] = useState(null)
+  const [highlightTick, setHighlightTick] = useState(0)
+  const highlightTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    if (!scrollToMethodSignature) {
+      return
+    }
+
+    setPendingScrollKey(scrollToMethodSignature)
+  }, [scrollToMethodSignature])
+
+  useEffect(() => {
+    if (!pendingScrollKey || loading) {
+      return undefined
+    }
+
+    if (!dataSource.some((row) => row.signature === pendingScrollKey)) {
+      if (dataSource.length > 0) {
+        setPendingScrollKey(null)
+        onScrollToMethodHandled?.()
+      }
+      return undefined
+    }
+
+    // The target row may not be painted yet (pagination/page change still
+    // committing), so retry across animation frames until it exists.
+    let frame
+    let attempts = 0
+    const tryScroll = () => {
+      const row = document.getElementById(methodRowId(pendingScrollKey))
+      if (!row) {
+        if (attempts++ < SCROLL_RETRY_MAX_FRAMES) {
+          frame = requestAnimationFrame(tryScroll)
+        }
+        return
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" })
+
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+      setHighlightedKey(pendingScrollKey)
+      setHighlightTick((tick) => tick + 1)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedKey(null)
+        highlightTimeoutRef.current = null
+      }, HIGHLIGHT_DURATION_MS)
+
+      setPendingScrollKey(null)
+      onScrollToMethodHandled?.()
+    }
+
+    tryScroll()
+
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
+    }
+  }, [dataSource, loading, onScrollToMethodHandled, pendingScrollKey])
+
+  useEffect(
+    () => () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+    },
+    []
+  )
+
+  const columns = useMemo(() => methodColumns, [])
+
   return (
     <MetricsDataTable
       rowKey="signature"
       loading={loading}
       dataSource={dataSource}
-      columns={methodColumns}
+      columns={columns}
       pagination={pagination}
       onTableChange={onTableChange}
+      onRow={(record) => ({
+        id: methodRowId(record.signature),
+        className:
+          record.signature === highlightedKey
+            ? `coverage-method-row-highlight-${highlightTick % 2}`
+            : undefined,
+      })}
     />
   )
 }
