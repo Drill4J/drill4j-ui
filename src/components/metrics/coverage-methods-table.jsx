@@ -84,27 +84,42 @@ export function CoverageMethodsTable({
   }, [scrollToMethodSignature])
 
   useEffect(() => {
-    if (!pendingScrollKey || loading) {
+    if (!pendingScrollKey) {
       return undefined
     }
 
-    if (!dataSource.some((row) => row.signature === pendingScrollKey)) {
-      if (dataSource.length > 0) {
+    let frame
+    // Paint retry budget only — waiting on fetch does not count against it.
+    let paintAttempts = 0
+
+    const tryScroll = () => {
+      // The method list (re)mounts and fetches its data asynchronously. Keep
+      // polling without spending the retry budget until the fetch settles.
+      if (loading) {
+        frame = requestAnimationFrame(tryScroll)
+        return
+      }
+
+      // Data has settled. If the target method isn't part of it (e.g. filtered
+      // out or not found), there is nothing to scroll to.
+      if (
+        dataSource.length > 0 &&
+        !dataSource.some((row) => row.signature === pendingScrollKey)
+      ) {
         setPendingScrollKey(null)
         onScrollToMethodHandled?.()
+        return
       }
-      return undefined
-    }
 
-    // The target row may not be painted yet (pagination/page change still
-    // committing), so retry across animation frames until it exists.
-    let frame
-    let attempts = 0
-    const tryScroll = () => {
       const row = document.getElementById(methodRowId(pendingScrollKey))
       if (!row) {
-        if (attempts++ < SCROLL_RETRY_MAX_FRAMES) {
+        // Data is ready but the row hasn't been committed to the DOM yet
+        // (pagination/render still settling). Only now do we spend the budget.
+        if (paintAttempts++ < SCROLL_RETRY_MAX_FRAMES) {
           frame = requestAnimationFrame(tryScroll)
+        } else {
+          setPendingScrollKey(null)
+          onScrollToMethodHandled?.()
         }
         return
       }

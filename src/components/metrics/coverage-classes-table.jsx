@@ -163,6 +163,9 @@ export function CoverageClassesTable({
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const highlightTimeoutRef = useRef(null)
+  // Tracks the method-scroll request we've already kicked a fetch for, so the
+  // self-correcting page effect below doesn't refetch on every re-run.
+  const methodScrollStartedRef = useRef(null)
 
   const loadMethods = useCallback(
     async (record, page = 1, pageSize = DEFAULT_METHODS_PAGING.pageSize) => {
@@ -324,21 +327,32 @@ export function CoverageClassesTable({
 
   useEffect(() => {
     if (!scrollToMethod?.signature || !scrollToMethod?.classKey) {
+      methodScrollStartedRef.current = null
       return
     }
 
     const index = dataSource.findIndex((row) => row.key === scrollToMethod.classKey)
     if (index === -1) {
-      onScrollToMethodHandled?.()
+      // Wrong package's table still mounted during switch — don't clear the shared request.
+      methodScrollStartedRef.current = null
       return
     }
 
-    // Jump to the page that holds the target class so its row (and the methods
-    // panel nested inside it) is rendered before we expand and scroll.
-    setPage(Math.floor(index / pageSize) + 1)
+    // Re-apply target page while scrollToMethod is active so a reset can't leave us on page 1.
+    const targetPage = Math.floor(index / pageSize) + 1
+    if (page !== targetPage) {
+      setPage(targetPage)
+    }
     setExpandedMethodsKey(dataSource[index].key)
-    loadMethodsForScroll(dataSource[index], scrollToMethod.signature)
-  }, [dataSource, loadMethodsForScroll, onScrollToMethodHandled, pageSize, scrollToMethod])
+
+    // The fetch must only run once per request, otherwise re-applying the page
+    // above would refetch the method list on every re-render.
+    const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.signature}`
+    if (methodScrollStartedRef.current !== requestKey) {
+      methodScrollStartedRef.current = requestKey
+      loadMethodsForScroll(dataSource[index], scrollToMethod.signature)
+    }
+  }, [dataSource, loadMethodsForScroll, onScrollToMethodHandled, page, pageSize, scrollToMethod])
 
   // Jump to the page that holds the target class so its row is rendered before scrolling.
   useEffect(() => {
