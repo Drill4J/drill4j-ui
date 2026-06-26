@@ -387,7 +387,7 @@ export async function getCoverageByClass(buildId, params = {}) {
  * }} [params]
  */
 export async function getCoverageMethods(buildId, params = {}) {
-  const { page = 1, pageSize = 20 } = params
+  const { page = 1, pageSize = 10 } = params
   const key = `coverage-methods:${coverageFilterKey(buildId, params)}:${page}:${pageSize}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(

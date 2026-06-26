@@ -26,6 +26,30 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
+function formatMethodParams(params) {
+  if (!params?.length) {
+    return "—"
+  }
+
+  const normalized = params.filter((param) => param != null && param !== "")
+  if (!normalized.length) {
+    return "—"
+  }
+
+  if (normalized.length === 1 && normalized[0] === "()") {
+    return "()"
+  }
+
+  return `(${normalized.join(", ")})`
+}
+
+function formatReturnType(returnType) {
+  if (returnType == null || returnType === "") {
+    return "—"
+  }
+  return returnType
+}
+
 function methodRowId(signature) {
   return `coverage-method-row-${encodeURIComponent(signature)}`
 }
@@ -36,6 +60,19 @@ const methodColumns = [
     dataIndex: "name",
     key: "name",
     ellipsis: true,
+  },
+  {
+    title: "Parameters",
+    key: "params",
+    ellipsis: true,
+    render: (_, row) => formatMethodParams(row.params),
+  },
+  {
+    title: "Return type",
+    dataIndex: "returnType",
+    key: "returnType",
+    ellipsis: true,
+    render: formatReturnType,
   },
   {
     title: "Probes",

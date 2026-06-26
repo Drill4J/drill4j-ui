@@ -36,7 +36,7 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
-const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 20, total: 0 }
+const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 10, total: 0 }
 
 function classColumns(
   expandedMethodsKey,
