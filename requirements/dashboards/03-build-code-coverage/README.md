@@ -91,6 +91,7 @@ Treemap shows the full build (filtered only by `envId` / `branch` / `testTag`). 
 | `CoverageTreemapCanvas` | `components/charts/treemap-canvas` | [treemap.md](./treemap.md) — **shared**; also used by test-session coverage |
 | `CoverageTables` | `components/metrics/coverage-tables.jsx` | [coverage-tables.md](./coverage-tables.md) |
 | `CoveragePackageTree` | `components/metrics/coverage-package-tree.jsx` | [packages-tree.md](./packages-tree.md) |
+| `CoverageClassesTable` | `components/metrics/coverage-classes-table.jsx` | [classes-table-sorting.md](./classes-table-sorting.md) |
 
 ## Metabase export
 

@@ -65,6 +65,8 @@ See [packages-tree.md](./packages-tree.md).
 
 ### Classes
 
+Sorting requirements: [classes-table-sorting.md](./classes-table-sorting.md).
+
 | Column | Content |
 |--------|---------|
 | Class | Clickable → `onClassSelect` |
