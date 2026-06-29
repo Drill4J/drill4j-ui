@@ -20,7 +20,7 @@ import { Typography, Spin, InputNumber, Tooltip, Select, Checkbox, Divider } fro
 import { InfoCircleOutlined } from "@ant-design/icons"
 
 import { normalizeTreemapRoots, buildNodeMap, layoutTreemap } from "./layout"
-import { drawTreemap } from "./canvas-renderer"
+import { drawTreemap, drawHoverOverlay } from "./canvas-renderer"
 import { COLORBAR_TICKS, getColorscaleGradient } from "./colors"
 import { findNodeAtPoint, formatTooltipContent } from "./hit-test"
 import { TreemapTooltip } from "./tooltip"
@@ -58,6 +58,7 @@ export const CoverageTreemapCanvas = ({
   const [searchParams] = useSearchParams()
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
+  const overlayCanvasRef = useRef(null)
   const clickTimeoutRef = useRef(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [tooltip, setTooltip] = useState(null)
@@ -176,6 +177,7 @@ export const CoverageTreemapCanvas = ({
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
+    const overlay = overlayCanvasRef.current
     if (!canvas || size.width <= 0 || size.height <= 0) {
       return
     }
@@ -186,29 +188,31 @@ export const CoverageTreemapCanvas = ({
     canvas.style.width = `${size.width}px`
     canvas.style.height = `${size.height}px`
 
+    if (overlay) {
+      overlay.width = size.width * dpr
+      overlay.height = size.height * dpr
+      overlay.style.width = `${size.width}px`
+      overlay.style.height = `${size.height}px`
+    }
+
     const ctx = canvas.getContext("2d")
-    drawTreemap(
-      ctx,
-      positionedNodes,
-      dpr,
-      colorblindMode,
-      hoveredNodeId,
-      highlightEnabled,
-      highlightThreshold
-    )
-  }, [
-    positionedNodes,
-    size.width,
-    size.height,
-    colorblindMode,
-    hoveredNodeId,
-    highlightEnabled,
-    highlightThreshold,
-  ])
+    drawTreemap(ctx, positionedNodes, dpr, colorblindMode, highlightEnabled, highlightThreshold)
+  }, [positionedNodes, size.width, size.height, colorblindMode, highlightEnabled, highlightThreshold])
 
   useEffect(() => {
     renderCanvas()
   }, [renderCanvas])
+
+  useEffect(() => {
+    const overlay = overlayCanvasRef.current
+    if (!overlay || size.width <= 0 || size.height <= 0) {
+      return
+    }
+
+    const dpr = window.devicePixelRatio || 1
+    const ctx = overlay.getContext("2d")
+    drawHoverOverlay(ctx, positionedNodes, dpr, hoveredNodeId)
+  }, [hoveredNodeId, positionedNodes, size.width, size.height])
 
   const getHitAt = useCallback(
     (clientX, clientY) => {
@@ -397,12 +401,22 @@ export const CoverageTreemapCanvas = ({
           >
             <canvas
               ref={canvasRef}
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+              }}
+            />
+            <canvas
+              ref={overlayCanvasRef}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
               style={{
-                display: "block",
+                position: "absolute",
+                top: 0,
+                left: 0,
                 width: "100%",
                 height: "100%",
                 cursor: hoveredNodeId ? "pointer" : "default",
