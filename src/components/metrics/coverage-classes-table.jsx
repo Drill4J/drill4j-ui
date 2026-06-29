@@ -19,12 +19,40 @@ import * as API from "../../modules/metrics/api-metrics"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageMethodsTable } from "./coverage-methods-table"
 import { CoverageScopeName } from "./coverage-scope-name"
+import { TableColumnSortHeader } from "./table-column-sort-header"
 
 const { Link, Text } = Typography
 
 const HIGHLIGHT_DURATION_MS = 3000
 const SCROLL_RETRY_MAX_FRAMES = 120
 const DEFAULT_PAGE_SIZE = 10
+
+const METHOD_COV_SORT_OPTIONS = [
+  {
+    key: "methodsCoverageRatio-DESC",
+    label: "Coverage, high to low",
+    sortBy: "methodsCoverageRatio",
+    sortOrder: "DESC",
+  },
+  {
+    key: "methodsCoverageRatio-ASC",
+    label: "Coverage, low to high",
+    sortBy: "methodsCoverageRatio",
+    sortOrder: "ASC",
+  },
+]
+
+const VALID_CLASS_SORT_ORDERS = {
+  methodsCoverageRatio: new Set(["ASC", "DESC"]),
+}
+
+function parseClassesTableSort(sortBy, sortOrder) {
+  if (!sortBy || !VALID_CLASS_SORT_ORDERS[sortBy]) {
+    return { sortBy: null, sortOrder: null }
+  }
+  const normalizedOrder = VALID_CLASS_SORT_ORDERS[sortBy].has(sortOrder) ? sortOrder : "ASC"
+  return { sortBy, sortOrder: normalizedOrder }
+}
 
 function classRowId(classKey) {
   return `coverage-class-row-${encodeURIComponent(classKey)}`
@@ -37,6 +65,30 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
+function buildClassKey(packageName, className) {
+  if (!className) {
+    return null
+  }
+  if (className.includes("/")) {
+    return className
+  }
+  return packageName ? `${packageName}/${className}` : className
+}
+
+function mapClassCoverageRow(item, packageName) {
+  return {
+    key: buildClassKey(packageName, item.className),
+    className: item.className,
+    packageName,
+    methodsCount: item.methodsCount ?? 0,
+    coveredMethods: item.coveredMethods ?? 0,
+    methodsCoverageRatio: item.methodsCoverageRatio ?? 0,
+    probesCount: item.probesCount ?? 0,
+    coveredProbes: item.coveredProbes ?? 0,
+    probesCoverageRatio: item.probesCoverageRatio ?? 0,
+  }
+}
+
 const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 10, total: 0 }
 
 function classColumns(
@@ -47,7 +99,10 @@ function classColumns(
   handleMethodsTableChange,
   pendingMethodScrollKey,
   onMethodScrollHandled,
-  onMethodSelect
+  onMethodSelect,
+  sortBy,
+  sortOrder,
+  onSortChange
 ) {
   return [
     {
@@ -109,10 +164,18 @@ function classColumns(
       render: (_, row) => `${row.coveredMethods ?? 0} / ${row.methodsCount ?? 0}`,
     },
     {
-      title: "Method cov.",
+      title: (
+        <TableColumnSortHeader
+          title="Method cov."
+          options={METHOD_COV_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
       dataIndex: "methodsCoverageRatio",
       key: "methodsCoverageRatio",
-      width: 110,
+      width: 180,
       onCell: () => ({ style: { verticalAlign: "top" } }),
       render: formatPercent,
     },
@@ -137,9 +200,11 @@ function classColumns(
 /**
  * @param {{
  *   buildId: string,
+ *   packageName: string,
  *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
- *   dataSource: object[],
- *   loading?: boolean,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   onSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  *   rowKey?: string,
  *   scrollToClassKey?: string | null,
  *   onScrollToClassHandled?: () => void,
@@ -152,9 +217,11 @@ function classColumns(
  */
 export function CoverageClassesTable({
   buildId,
+  packageName,
   coverageFilters,
-  dataSource,
-  loading,
+  sortBy: sortByParam,
+  sortOrder: sortOrderParam,
+  onSortChange,
   rowKey = "key",
   scrollToClassKey,
   onScrollToClassHandled,
@@ -172,9 +239,14 @@ export function CoverageClassesTable({
   const [highlightTick, setHighlightTick] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const { sortBy, sortOrder } = useMemo(
+    () => parseClassesTableSort(sortByParam, sortOrderParam),
+    [sortByParam, sortOrderParam]
+  )
+  const [classesData, setClassesData] = useState([])
+  const [classesLoading, setClassesLoading] = useState(false)
+  const [total, setTotal] = useState(0)
   const highlightTimeoutRef = useRef(null)
-  // Tracks the method-scroll request we've already kicked a fetch for, so the
-  // self-correcting page effect below doesn't refetch on every re-run.
   const methodScrollStartedRef = useRef(null)
 
   const loadMethods = useCallback(
@@ -254,13 +326,6 @@ export function CoverageClassesTable({
     onScrollToMethodHandled?.()
   }, [onScrollToMethodHandled])
 
-  // TODO: Make this work with server-side pagination? To be discussed.
-  // Fetches the whole method list for a class so we can locate the target
-  // methodthen exposes it with normal client-side pagination (default page
-  // size) positioned on the page that actually contains it.
-  // `total` is set to
-  // the loaded length so antd slices the data per page instead of treating it
-  // as a single server page.
   const loadMethodsForScroll = useCallback(
     async (record, signature) => {
       const recordKey = record.key
@@ -333,6 +398,35 @@ export function CoverageClassesTable({
     setPageSize(pagination.pageSize)
   }, [])
 
+  const handleSortChange = useCallback(
+    (nextSort) => {
+      onSortChange?.(nextSort)
+      setPage(1)
+    },
+    [onSortChange]
+  )
+
+  const fetchClasses = useCallback(
+    async (fetchPage, fetchPageSize, fetchSortBy, fetchSortOrder, fetchTotal) => {
+      const params = {
+        ...coverageFilters,
+        packageName,
+        page: fetchPage,
+        pageSize: fetchPageSize,
+      }
+      if (fetchSortBy) {
+        params.sortBy = fetchSortBy
+        params.sortOrder = fetchSortOrder ?? "ASC"
+      }
+      const result = await API.getCoverageByClass(buildId, params)
+      return {
+        rows: result.data.map((item) => mapClassCoverageRow(item, packageName)),
+        total: fetchTotal ?? result.paging.total,
+      }
+    },
+    [buildId, coverageFilters, packageName]
+  )
+
   useEffect(() => {
     setExpandedMethodsKey(null)
     setMethodsByClass({})
@@ -340,59 +434,163 @@ export function CoverageClassesTable({
     setPendingMethodScrollKey(null)
     setHighlightedKey(null)
     setPage(1)
-  }, [buildId, coverageFilters, dataSource])
+    setClassesData([])
+    setTotal(0)
+    methodScrollStartedRef.current = null
+  }, [buildId, coverageFilters, packageName])
+
+  useEffect(() => {
+    setPage(1)
+  }, [sortBy, sortOrder])
+
+  useEffect(() => {
+    if (!buildId || !packageName) {
+      return undefined
+    }
+
+    let cancelled = false
+    setClassesLoading(true)
+
+    fetchClasses(page, pageSize, sortBy, sortOrder)
+      .then(({ rows, total: nextTotal }) => {
+        if (cancelled) {
+          return
+        }
+        setClassesData(rows)
+        setTotal(nextTotal)
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch class coverage. ${error?.message}`)
+          setClassesData([])
+          setTotal(0)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setClassesLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [buildId, fetchClasses, packageName, page, pageSize, sortBy, sortOrder])
 
   useEffect(() => {
     if (!scrollToMethod?.signature || !scrollToMethod?.classKey) {
       methodScrollStartedRef.current = null
-      return
+      return undefined
     }
 
-    const index = dataSource.findIndex((row) => row.key === scrollToMethod.classKey)
-    if (index === -1) {
-      // Wrong package's table still mounted during switch — don't clear the shared request.
-      methodScrollStartedRef.current = null
-      return
+    if (classesLoading) {
+      return undefined
     }
 
-    // Re-apply target page while scrollToMethod is active so a reset can't leave us on page 1.
-    const targetPage = Math.floor(index / pageSize) + 1
-    if (page !== targetPage) {
-      setPage(targetPage)
-    }
-    setExpandedMethodsKey(dataSource[index].key)
+    let cancelled = false
 
-    // The fetch must only run once per request, otherwise re-applying the page
-    // above would refetch the method list on every re-render.
-    const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.signature}`
-    if (methodScrollStartedRef.current !== requestKey) {
-      methodScrollStartedRef.current = requestKey
-      loadMethodsForScroll(dataSource[index], scrollToMethod.signature)
-    }
-  }, [dataSource, loadMethodsForScroll, onScrollToMethodHandled, page, pageSize, scrollToMethod])
+    ;(async () => {
+      try {
+        let record = classesData.find((row) => row.key === scrollToMethod.classKey)
 
-  // Jump to the page that holds the target class so its row is rendered before scrolling.
+        if (!record) {
+          const { rows } = await fetchClasses(1, Math.max(total, 1), sortBy, sortOrder, total)
+          if (cancelled) {
+            return
+          }
+          const index = rows.findIndex((row) => row.key === scrollToMethod.classKey)
+          if (index === -1) {
+            methodScrollStartedRef.current = null
+            return
+          }
+
+          const targetPage = Math.floor(index / pageSize) + 1
+          if (page !== targetPage) {
+            setPage(targetPage)
+            return
+          }
+
+          record = rows[index]
+        }
+
+        setExpandedMethodsKey(record.key)
+
+        const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.signature}`
+        if (methodScrollStartedRef.current !== requestKey) {
+          methodScrollStartedRef.current = requestKey
+          loadMethodsForScroll(record, scrollToMethod.signature)
+        }
+      } catch {
+        methodScrollStartedRef.current = null
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    classesData,
+    classesLoading,
+    fetchClasses,
+    loadMethodsForScroll,
+    page,
+    pageSize,
+    scrollToMethod,
+    sortBy,
+    sortOrder,
+    total,
+  ])
+
   useEffect(() => {
-    if (!scrollToClassKey) {
-      return
+    if (!scrollToClassKey || classesLoading) {
+      return undefined
     }
 
-    const index = dataSource.findIndex((row) => row.key === scrollToClassKey)
-    if (index === -1) {
-      return
-    }
+    let cancelled = false
 
-    setPage(Math.floor(index / pageSize) + 1)
-    setPendingScrollKey(scrollToClassKey)
-  }, [dataSource, pageSize, scrollToClassKey])
+    ;(async () => {
+      try {
+        const { rows } = await fetchClasses(1, Math.max(total, 1), sortBy, sortOrder, total)
+        if (cancelled) {
+          return
+        }
+
+        const index = rows.findIndex((row) => row.key === scrollToClassKey)
+        if (index === -1) {
+          return
+        }
+
+        const targetPage = Math.floor(index / pageSize) + 1
+        if (page !== targetPage) {
+          setPage(targetPage)
+          return
+        }
+
+        setPendingScrollKey(scrollToClassKey)
+      } catch {
+        // Scroll target lookup is best-effort.
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    classesLoading,
+    fetchClasses,
+    page,
+    pageSize,
+    scrollToClassKey,
+    sortBy,
+    sortOrder,
+    total,
+  ])
 
   useEffect(() => {
     if (!pendingScrollKey) {
       return undefined
     }
 
-    // Retry across animation frames until the row is painted (page change may
-    // still be committing).
     let frame
     let attempts = 0
     const tryScroll = () => {
@@ -427,7 +625,7 @@ export function CoverageClassesTable({
         cancelAnimationFrame(frame)
       }
     }
-  }, [dataSource, onScrollToClassHandled, page, pendingScrollKey])
+  }, [classesData, onScrollToClassHandled, page, pendingScrollKey])
 
   useEffect(
     () => () => {
@@ -448,16 +646,22 @@ export function CoverageClassesTable({
         handleMethodsTableChange,
         pendingMethodScrollKey,
         handleMethodScrollHandled,
-        onMethodSelect
+        onMethodSelect,
+        sortBy,
+        sortOrder,
+        handleSortChange
       ),
     [
       expandedMethodsKey,
       handleClassNameClick,
       handleMethodScrollHandled,
       handleMethodsTableChange,
+      handleSortChange,
       methodsByClass,
       onMethodSelect,
       pendingMethodScrollKey,
+      sortBy,
+      sortOrder,
       toggleMethodsPanel,
     ]
   )
@@ -465,10 +669,10 @@ export function CoverageClassesTable({
   return (
     <MetricsDataTable
       rowKey={rowKey}
-      loading={loading}
-      dataSource={dataSource}
+      loading={classesLoading}
+      dataSource={classesData}
       columns={columns}
-      pagination={{ page, pageSize, total: dataSource.length }}
+      pagination={{ page, pageSize, total }}
       onTableChange={handleTableChange}
       onRow={(record) => ({
         id: classRowId(record.key),

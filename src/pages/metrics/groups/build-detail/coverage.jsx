@@ -57,6 +57,8 @@ export const BuildCoveragePage = () => {
     packageName,
     className,
     methodSignature,
+    sortBy,
+    sortOrder,
     updateQueryParams,
   } = useBuildDetailSearchParams()
 
@@ -151,8 +153,10 @@ export const BuildCoveragePage = () => {
       packageName,
       className,
       methodSignature,
+      sortBy,
+      sortOrder,
     }),
-    [baselineBuildId, branches, className, envIds, methodSignature, packageName, testTags]
+    [baselineBuildId, branches, className, envIds, methodSignature, packageName, sortBy, sortOrder, testTags]
   )
 
   const copyScopeLink = useCallback(
@@ -169,6 +173,8 @@ export const BuildCoveragePage = () => {
         packageName: nextPackageName || undefined,
         className: undefined,
         methodSignature: undefined,
+        sortBy: undefined,
+        sortOrder: undefined,
       }
       updateQueryParams(updates)
       copyScopeLink(updates)
@@ -178,13 +184,17 @@ export const BuildCoveragePage = () => {
 
   const handlePackageToggle = useCallback(
     (nextPackageName) => {
+      const nextPackage = nextPackageName || undefined
       updateQueryParams({
-        packageName: nextPackageName || undefined,
+        packageName: nextPackage,
         className: undefined,
         methodSignature: undefined,
+        ...(nextPackage !== packageName
+          ? { sortBy: undefined, sortOrder: undefined }
+          : {}),
       })
     },
-    [updateQueryParams]
+    [packageName, updateQueryParams]
   )
 
   const handleClassSelect = useCallback(
@@ -225,6 +235,16 @@ export const BuildCoveragePage = () => {
     [updateQueryParams]
   )
 
+  const handleClassesSortChange = useCallback(
+    ({ sortBy: nextSortBy, sortOrder: nextSortOrder }) => {
+      updateQueryParams({
+        sortBy: nextSortBy || undefined,
+        sortOrder: nextSortOrder || undefined,
+      })
+    },
+    [updateQueryParams]
+  )
+
   return (
     <>
       <CoverageTreemapCanvas
@@ -255,6 +275,9 @@ export const BuildCoveragePage = () => {
           onPackageSelect={handlePackageSelect}
           onClassSelect={handleClassSelect}
           onMethodSelect={handleMethodSelect}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onClassesSortChange={handleClassesSortChange}
         />
       </div>
     </>

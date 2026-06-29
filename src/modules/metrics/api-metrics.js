@@ -350,11 +350,13 @@ export async function getCoverageByPackage(buildId, filters = {}) {
  *   testTags?: string[],
  *   page?: number,
  *   pageSize?: number,
+ *   sortBy?: string,
+ *   sortOrder?: string,
  * }} [params]
  */
 export async function getCoverageByClass(buildId, params = {}) {
-  const { page = 1, pageSize = 20 } = params
-  const key = `coverage-classes:${coverageFilterKey(buildId, params)}:${page}:${pageSize}`
+  const { page = 1, pageSize = 20, sortBy, sortOrder } = params
+  const key = `coverage-classes:${coverageFilterKey(buildId, params)}:${page}:${pageSize}:${sortBy ?? ""}:${sortOrder ?? ""}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/coverage/by-class", {
@@ -363,6 +365,7 @@ export async function getCoverageByClass(buildId, params = {}) {
           ...params,
           page,
           pageSize,
+          ...(sortBy ? { sortBy, sortOrder: sortOrder ?? "ASC" } : {}),
         }),
         paramsSerializer: axiosListParamsSerializer,
       })

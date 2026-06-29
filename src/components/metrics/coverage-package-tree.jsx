@@ -180,6 +180,9 @@ function buildTableTree(treemapRoots) {
  *   onPackageSelect?: (packageName?: string) => void,
  *   onClassSelect?: (scope: { packageName: string, className?: string }) => void,
  *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   onClassesSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  * }} props
  */
 export function CoveragePackageTree({
@@ -198,6 +201,9 @@ export function CoveragePackageTree({
   onPackageSelect,
   onClassSelect,
   onMethodSelect,
+  sortBy,
+  sortOrder,
+  onClassesSortChange,
 }) {
   const [expandedClassesKey, setExpandedClassesKey] = useState(null)
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
@@ -372,7 +378,10 @@ export function CoveragePackageTree({
                   <CoverageClassesTable
                     buildId={buildId}
                     coverageFilters={coverageFilters}
-                    dataSource={record.classes}
+                    packageName={record.packageName}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSortChange={onClassesSortChange}
                     scrollToClassKey={
                       record.key === expandedClassesKey ? pendingClassScrollKey : null
                     }
@@ -413,11 +422,14 @@ export function CoveragePackageTree({
       expandedClassesKey,
       onClassToggle,
       onClassSelect,
+      onClassesSortChange,
       onMethodSelect,
       handlePackageNameClick,
       onScrollToMethodHandled,
       pendingClassScrollKey,
       scrollToMethod,
+      sortBy,
+      sortOrder,
       toggleClassesPanel,
     ]
   )

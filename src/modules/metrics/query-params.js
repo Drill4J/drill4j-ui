@@ -22,6 +22,8 @@ export const BUILD_DETAIL_QUERY_KEYS = [
   "packageName",
   "className",
   "methodSignature",
+  "sortBy",
+  "sortOrder",
 ]
 
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
@@ -84,6 +86,8 @@ export const axiosListParamsSerializer = { indexes: null }
  *   packageName?: string,
  *   className?: string,
  *   methodSignature?: string,
+ *   sortBy?: string,
+ *   sortOrder?: string,
  * }} BuildDetailQueryState
  */
 

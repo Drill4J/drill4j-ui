@@ -32,6 +32,9 @@ import { CoveragePackageTree } from "./coverage-package-tree"
  *   onPackageSelect?: (packageName?: string) => void,
  *   onClassSelect?: (scope: { packageName: string, className?: string }) => void,
  *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   onClassesSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  * }} props
  */
 export function CoverageTables({
@@ -50,6 +53,9 @@ export function CoverageTables({
   onPackageSelect,
   onClassSelect,
   onMethodSelect,
+  sortBy,
+  sortOrder,
+  onClassesSortChange,
 }) {
   return (
     <CoveragePackageTree
@@ -68,6 +74,9 @@ export function CoverageTables({
       onPackageSelect={onPackageSelect}
       onClassSelect={onClassSelect}
       onMethodSelect={onMethodSelect}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
+      onClassesSortChange={onClassesSortChange}
     />
   )
 }

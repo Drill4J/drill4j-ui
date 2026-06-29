@@ -48,6 +48,8 @@ export function useBuildDetailSearchParams() {
   const packageName = searchParams.get("packageName") || undefined
   const className = searchParams.get("className") || undefined
   const methodSignature = searchParams.get("methodSignature") || undefined
+  const sortBy = searchParams.get("sortBy") || undefined
+  const sortOrder = searchParams.get("sortOrder") || undefined
 
   const branchesSerialized = serializeListQueryParam(searchParams, "branches")
   const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
@@ -81,6 +83,8 @@ export function useBuildDetailSearchParams() {
         packageName,
         className,
         methodSignature,
+        sortBy,
+        sortOrder,
       }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
@@ -103,6 +107,8 @@ export function useBuildDetailSearchParams() {
       packageName,
       className,
       methodSignature,
+      sortBy,
+      sortOrder,
       searchString,
       setSearchParams,
     ]
@@ -113,6 +119,8 @@ export function useBuildDetailSearchParams() {
       branches: undefined,
       envIds: undefined,
       testTags: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     })
   }, [updateQueryParams])
 
@@ -121,6 +129,8 @@ export function useBuildDetailSearchParams() {
       packageName: undefined,
       className: undefined,
       methodSignature: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     })
   }, [updateQueryParams])
 
@@ -132,6 +142,8 @@ export function useBuildDetailSearchParams() {
     packageName,
     className,
     methodSignature,
+    sortBy,
+    sortOrder,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,
