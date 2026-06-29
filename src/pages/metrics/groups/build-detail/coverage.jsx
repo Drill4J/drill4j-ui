@@ -218,17 +218,24 @@ export const BuildCoveragePage = () => {
     [copyScopeLink, updateQueryParams]
   )
 
+  const handleMethodToggle = useCallback(
+    (scope) => {
+      updateQueryParams(scopeToQueryParams(scope))
+    },
+    [updateQueryParams]
+  )
+
   return (
     <>
       <CoverageTreemapCanvas
         roots={treemapRoots}
         rootsLoading={treemapLoading}
         onPackageNavigate={handlePackageNavigate}
-        onPackageSelect={handlePackageSelect}
+        onPackageSelect={handlePackageToggle}
         onClassNavigate={handleClassNavigate}
-        onClassSelect={handleClassSelect}
+        onClassSelect={handleClassToggle}
         onMethodNavigate={handleMethodNavigate}
-        onMethodSelect={handleMethodSelect}
+        onMethodSelect={handleMethodToggle}
       />
 
       <div style={{ marginTop: 24 }}>
