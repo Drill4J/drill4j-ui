@@ -42,8 +42,37 @@ const METHOD_COV_SORT_OPTIONS = [
   },
 ]
 
+const METHODS_SORT_OPTIONS = [
+  {
+    key: "methodsCount-DESC",
+    label: "Total methods, high to low",
+    sortBy: "methodsCount",
+    sortOrder: "DESC",
+  },
+  {
+    key: "methodsCount-ASC",
+    label: "Total methods, low to high",
+    sortBy: "methodsCount",
+    sortOrder: "ASC",
+  },
+  {
+    key: "coveredMethods-DESC",
+    label: "Covered methods, high to low",
+    sortBy: "coveredMethods",
+    sortOrder: "DESC",
+  },
+  {
+    key: "coveredMethods-ASC",
+    label: "Covered methods, low to high",
+    sortBy: "coveredMethods",
+    sortOrder: "ASC",
+  },
+]
+
 const VALID_CLASS_SORT_ORDERS = {
   methodsCoverageRatio: new Set(["ASC", "DESC"]),
+  methodsCount: new Set(["ASC", "DESC"]),
+  coveredMethods: new Set(["ASC", "DESC"]),
 }
 
 function parseClassesTableSort(sortBy, sortOrder) {
@@ -157,7 +186,15 @@ function classColumns(
       },
     },
     {
-      title: "Methods",
+      title: (
+        <TableColumnSortHeader
+          title="Methods"
+          options={METHODS_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
       key: "methods",
       width: 110,
       onCell: () => ({ style: { verticalAlign: "top" } }),
