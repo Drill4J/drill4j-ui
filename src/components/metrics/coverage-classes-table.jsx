@@ -69,10 +69,55 @@ const METHODS_SORT_OPTIONS = [
   },
 ]
 
+const PROBE_COV_SORT_OPTIONS = [
+  {
+    key: "probesCoverageRatio-DESC",
+    label: "Coverage, high to low",
+    sortBy: "probesCoverageRatio",
+    sortOrder: "DESC",
+  },
+  {
+    key: "probesCoverageRatio-ASC",
+    label: "Coverage, low to high",
+    sortBy: "probesCoverageRatio",
+    sortOrder: "ASC",
+  },
+]
+
+const PROBES_SORT_OPTIONS = [
+  {
+    key: "probesCount-DESC",
+    label: "Total probes, high to low",
+    sortBy: "probesCount",
+    sortOrder: "DESC",
+  },
+  {
+    key: "probesCount-ASC",
+    label: "Total probes, low to high",
+    sortBy: "probesCount",
+    sortOrder: "ASC",
+  },
+  {
+    key: "coveredProbes-DESC",
+    label: "Covered probes, high to low",
+    sortBy: "coveredProbes",
+    sortOrder: "DESC",
+  },
+  {
+    key: "coveredProbes-ASC",
+    label: "Covered probes, low to high",
+    sortBy: "coveredProbes",
+    sortOrder: "ASC",
+  },
+]
+
 const VALID_CLASS_SORT_ORDERS = {
   methodsCoverageRatio: new Set(["ASC", "DESC"]),
   methodsCount: new Set(["ASC", "DESC"]),
   coveredMethods: new Set(["ASC", "DESC"]),
+  probesCoverageRatio: new Set(["ASC", "DESC"]),
+  probesCount: new Set(["ASC", "DESC"]),
+  coveredProbes: new Set(["ASC", "DESC"]),
 }
 
 function parseClassesTableSort(sortBy, sortOrder) {
@@ -217,17 +262,33 @@ function classColumns(
       render: formatPercent,
     },
     {
-      title: "Probes",
+      title: (
+        <TableColumnSortHeader
+          title="Probes"
+          options={PROBES_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
       key: "probes",
       width: 110,
       onCell: () => ({ style: { verticalAlign: "top" } }),
       render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
     },
     {
-      title: "Probe cov.",
+      title: (
+        <TableColumnSortHeader
+          title="Probe cov."
+          options={PROBE_COV_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
       dataIndex: "probesCoverageRatio",
       key: "probesCoverageRatio",
-      width: 100,
+      width: 180,
       onCell: () => ({ style: { verticalAlign: "top" } }),
       render: formatPercent,
     },
