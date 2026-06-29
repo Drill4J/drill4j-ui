@@ -16,7 +16,6 @@ export function drawTreemap(
   positionedNodes,
   dpr,
   colorblindMode = "DEFAULT",
-  hoveredNodeId = null,
   highlightEnabled = false,
   highlightThreshold = 50
 ) {
@@ -47,6 +46,14 @@ export function drawTreemap(
       drawLabel(ctx, node.name, Math.round(coverageRatio * 100), x, y, width, height)
     }
   })
+
+  ctx.restore()
+}
+
+export function drawHoverOverlay(ctx, positionedNodes, dpr, hoveredNodeId) {
+  ctx.save()
+  ctx.scale(dpr, dpr)
+  ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
 
   if (hoveredNodeId) {
     const hovered = positionedNodes.find((positioned) => positioned.node.full_name === hoveredNodeId)

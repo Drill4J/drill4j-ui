@@ -1,0 +1,42 @@
+.coverage-scope-name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.coverage-scope-name--ellipsis {
+  display: flex;
+}
+
+.coverage-scope-name--ellipsis .coverage-scope-name__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-scope-name__link {
+  flex: none;
+  opacity: 0;
+  color: #1677ff;
+  cursor: pointer;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/*
+ * Reveal the chain icon when the name's table row is hovered (or the name
+ * itself). Strict `>` chains target only the name cell of the hovered row so
+ * hovering a parent row does not reveal every nested row's icon at once.
+ * - methods cell:        td > span.coverage-scope-name
+ * - package/class cell:  td > div > div > span.coverage-scope-name
+ */
+.coverage-scope-name:hover .coverage-scope-name__link,
+tr:hover > td > .coverage-scope-name > .coverage-scope-name__link,
+tr:hover > td > div > div > .coverage-scope-name > .coverage-scope-name__link {
+  opacity: 1;
+}
+
+.coverage-scope-name__link:hover {
+  color: #0958d9;
+}
