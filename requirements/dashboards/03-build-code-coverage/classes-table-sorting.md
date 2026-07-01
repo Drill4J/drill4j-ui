@@ -95,19 +95,19 @@ On mount and whenever `buildId`, `coverageFilters`, `packageName`, `page`, `page
 
 Remove reliance on treemap-embedded `record.classes` as the table `dataSource`. The treemap may still be used to determine *which* classes exist for expand/scroll targeting, but displayed rows come from the API.
 
-Map `ClassCoverageView` → table row:
+Map `ClassCoverageView` fields directly to table rows — no client-side mapping. Use `fullClassName` as the row key; display `className` (simple name) in the Class column.
 
-| API field | Table row field |
-|-----------|-----------------|
-| `className` | `className`, `key` |
-| `methodsCount` | `methodsCount` |
-| `coveredMethods` | `coveredMethods` |
-| `methodsCoverageRatio` | `methodsCoverageRatio` |
-| `probesCount` | `probesCount` |
-| `coveredProbes` | `coveredProbes` |
-| `probesCoverageRatio` | `probesCoverageRatio` |
-
-Missing numeric values should be treated the same way as current rendering fallbacks: `0`.
+| API field | Usage |
+|-----------|-------|
+| `fullClassName` | Row key, scroll/highlight targeting |
+| `packageName` | Method fetches, scope navigation |
+| `className` | Display, method fetches, scope navigation |
+| `methodsCount` | Methods column |
+| `coveredMethods` | Methods column |
+| `methodsCoverageRatio` | Method cov. column |
+| `probesCount` | Probes column |
+| `coveredProbes` | Probes column |
+| `probesCoverageRatio` | Probe cov. column |
 
 ## Sort Options
 

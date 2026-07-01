@@ -26,23 +26,7 @@ function buildClassKey(packageName, className) {
   if (!className) {
     return null
   }
-  if (className.includes("/")) {
-    return className
-  }
   return packageName ? `${packageName}/${className}` : className
-}
-
-function scopeToQueryParams({ packageName, className, methodSignature }) {
-  let urlClassName = className
-  if (packageName && className?.startsWith(`${packageName}/`)) {
-    urlClassName = className.slice(packageName.length + 1)
-  }
-
-  return {
-    packageName: packageName || undefined,
-    className: urlClassName || undefined,
-    methodSignature: methodSignature || undefined,
-  }
 }
 
 export const BuildCoveragePage = () => {
@@ -170,7 +154,7 @@ export const BuildCoveragePage = () => {
   const handlePackageSelect = useCallback(
     (nextPackageName) => {
       const updates = {
-        packageName: nextPackageName || undefined,
+        packageName: nextPackageName,
         className: undefined,
         methodSignature: undefined,
         sortBy: undefined,
@@ -184,12 +168,11 @@ export const BuildCoveragePage = () => {
 
   const handlePackageToggle = useCallback(
     (nextPackageName) => {
-      const nextPackage = nextPackageName || undefined
       updateQueryParams({
-        packageName: nextPackage,
+        packageName: nextPackageName,
         className: undefined,
         methodSignature: undefined,
-        ...(nextPackage !== packageName
+        ...(nextPackageName !== packageName
           ? { sortBy: undefined, sortOrder: undefined }
           : {}),
       })
@@ -200,7 +183,8 @@ export const BuildCoveragePage = () => {
   const handleClassSelect = useCallback(
     ({ packageName: nextPackageName, className: nextClassName }) => {
       const updates = {
-        ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
+        packageName: nextPackageName,
+        className: nextClassName,
         methodSignature: undefined,
       }
       updateQueryParams(updates)
@@ -212,7 +196,8 @@ export const BuildCoveragePage = () => {
   const handleClassToggle = useCallback(
     ({ packageName: nextPackageName, className: nextClassName }) => {
       updateQueryParams({
-        ...scopeToQueryParams({ packageName: nextPackageName, className: nextClassName }),
+        packageName: nextPackageName,
+        className: nextClassName,
         methodSignature: undefined,
       })
     },
@@ -221,16 +206,15 @@ export const BuildCoveragePage = () => {
 
   const handleMethodSelect = useCallback(
     (scope) => {
-      const updates = scopeToQueryParams(scope)
-      updateQueryParams(updates)
-      copyScopeLink(updates)
+      updateQueryParams(scope)
+      copyScopeLink(scope)
     },
     [copyScopeLink, updateQueryParams]
   )
 
   const handleMethodToggle = useCallback(
     (scope) => {
-      updateQueryParams(scopeToQueryParams(scope))
+      updateQueryParams(scope)
     },
     [updateQueryParams]
   )
@@ -238,8 +222,8 @@ export const BuildCoveragePage = () => {
   const handleClassesSortChange = useCallback(
     ({ sortBy: nextSortBy, sortOrder: nextSortOrder }) => {
       updateQueryParams({
-        sortBy: nextSortBy || undefined,
-        sortOrder: nextSortOrder || undefined,
+        sortBy: nextSortBy,
+        sortOrder: nextSortOrder,
       })
     },
     [updateQueryParams]

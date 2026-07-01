@@ -40,6 +40,7 @@ Optional contextual filters (`branch`, `envId`, `testTag`, `baselineBuildId`, et
 | Charts | [Recharts](https://recharts.org/) (`recharts` npm package) for pie/line/area; existing canvas treemap for hierarchy |
 | Iframes | Keep legacy `/iframe/*` routes; new dashboards use components directly |
 | API response shape | Existing `ApiResponse` / `PagedDataResponse` wrappers |
+| API contract | Drill controls both `admin-metrics` and `drill4j-ui`. Use the API as the single source of truth — do **not** add client-side fallback or legacy-compat paths (e.g. parsing full class paths when the API already returns `packageName` and `className` separately). Fix gaps in the API instead. |
 | Auth | All dashboard routes require signed-in user with role `user` or `admin` |
 | Sidebar | Central menu config — see [Routing, auth & sidebar](#routing-auth--sidebar) |
 

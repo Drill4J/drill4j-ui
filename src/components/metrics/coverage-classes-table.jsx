@@ -139,30 +139,6 @@ function formatPercent(ratio) {
   return `${(ratio * 100).toFixed(1)}%`
 }
 
-function buildClassKey(packageName, className) {
-  if (!className) {
-    return null
-  }
-  if (className.includes("/")) {
-    return className
-  }
-  return packageName ? `${packageName}/${className}` : className
-}
-
-function mapClassCoverageRow(item, packageName) {
-  return {
-    key: buildClassKey(packageName, item.className),
-    className: item.className,
-    packageName,
-    methodsCount: item.methodsCount ?? 0,
-    coveredMethods: item.coveredMethods ?? 0,
-    methodsCoverageRatio: item.methodsCoverageRatio ?? 0,
-    probesCount: item.probesCount ?? 0,
-    coveredProbes: item.coveredProbes ?? 0,
-    probesCoverageRatio: item.probesCoverageRatio ?? 0,
-  }
-}
-
 const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 10, total: 0 }
 
 function classColumns(
@@ -184,9 +160,9 @@ function classColumns(
       dataIndex: "className",
       key: "className",
       render: (value, record) => {
-        const isExpanded = expandedMethodsKey === record.key
+        const isExpanded = expandedMethodsKey === record.fullClassName
         const methodsLabel = record.methodsCount === 1 ? "method" : "methods"
-        const methodsState = methodsByClass[record.key] ?? {
+        const methodsState = methodsByClass[record.fullClassName] ?? {
           data: [],
           paging: DEFAULT_METHODS_PAGING,
           loading: false,
@@ -217,7 +193,7 @@ function classColumns(
                   pagination={methodsState.paging}
                   onTableChange={(pagination) => handleMethodsTableChange(record, pagination)}
                   scrollToMethodSignature={
-                    record.key === expandedMethodsKey ? pendingMethodScrollKey : null
+                    record.fullClassName === expandedMethodsKey ? pendingMethodScrollKey : null
                   }
                   onScrollToMethodHandled={onMethodScrollHandled}
                   packageName={record.packageName}
@@ -243,7 +219,7 @@ function classColumns(
       key: "methods",
       width: 110,
       onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: (_, row) => `${row.coveredMethods ?? 0} / ${row.methodsCount ?? 0}`,
+      render: (_, row) => `${row.coveredMethods} / ${row.methodsCount}`,
     },
     {
       title: (
@@ -274,7 +250,7 @@ function classColumns(
       key: "probes",
       width: 110,
       onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
+      render: (_, row) => `${row.coveredProbes} / ${row.probesCount}`,
     },
     {
       title: (
@@ -320,7 +296,7 @@ export function CoverageClassesTable({
   sortBy: sortByParam,
   sortOrder: sortOrderParam,
   onSortChange,
-  rowKey = "key",
+  rowKey = "fullClassName",
   scrollToClassKey,
   onScrollToClassHandled,
   scrollToMethod,
@@ -349,7 +325,7 @@ export function CoverageClassesTable({
 
   const loadMethods = useCallback(
     async (record, page = 1, pageSize = DEFAULT_METHODS_PAGING.pageSize) => {
-      const recordKey = record.key
+      const recordKey = record.fullClassName
       setMethodsByClass((state) => ({
         ...state,
         [recordKey]: {
@@ -398,15 +374,15 @@ export function CoverageClassesTable({
   const toggleMethodsPanel = useCallback(
     (record) => {
       setExpandedMethodsKey((current) => {
-        if (current === record.key) {
+        if (current === record.fullClassName) {
           onMethodsToggle?.({ packageName: record.packageName })
           return null
         }
-        if (!methodsByClass[record.key]) {
+        if (!methodsByClass[record.fullClassName]) {
           loadMethods(record)
         }
         onMethodsToggle?.({ packageName: record.packageName, className: record.className })
-        return record.key
+        return record.fullClassName
       })
     },
     [loadMethods, methodsByClass, onMethodsToggle]
@@ -426,7 +402,7 @@ export function CoverageClassesTable({
 
   const loadMethodsForScroll = useCallback(
     async (record, signature) => {
-      const recordKey = record.key
+      const recordKey = record.fullClassName
       setMethodsByClass((state) => ({
         ...state,
         [recordKey]: {
@@ -518,7 +494,7 @@ export function CoverageClassesTable({
       }
       const result = await API.getCoverageByClass(buildId, params)
       return {
-        rows: result.data.map((item) => mapClassCoverageRow(item, packageName)),
+        rows: result.data,
         total: fetchTotal ?? result.paging.total,
       }
     },
@@ -589,14 +565,14 @@ export function CoverageClassesTable({
 
     ;(async () => {
       try {
-        let record = classesData.find((row) => row.key === scrollToMethod.classKey)
+        let record = classesData.find((row) => row.fullClassName === scrollToMethod.classKey)
 
         if (!record) {
           const { rows } = await fetchClasses(1, Math.max(total, 1), sortBy, sortOrder, total)
           if (cancelled) {
             return
           }
-          const index = rows.findIndex((row) => row.key === scrollToMethod.classKey)
+          const index = rows.findIndex((row) => row.fullClassName === scrollToMethod.classKey)
           if (index === -1) {
             methodScrollStartedRef.current = null
             return
@@ -611,7 +587,7 @@ export function CoverageClassesTable({
           record = rows[index]
         }
 
-        setExpandedMethodsKey(record.key)
+        setExpandedMethodsKey(record.fullClassName)
 
         const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.signature}`
         if (methodScrollStartedRef.current !== requestKey) {
@@ -653,7 +629,7 @@ export function CoverageClassesTable({
           return
         }
 
-        const index = rows.findIndex((row) => row.key === scrollToClassKey)
+        const index = rows.findIndex((row) => row.fullClassName === scrollToClassKey)
         if (index === -1) {
           return
         }
@@ -773,9 +749,9 @@ export function CoverageClassesTable({
       pagination={{ page, pageSize, total }}
       onTableChange={handleTableChange}
       onRow={(record) => ({
-        id: classRowId(record.key),
+        id: classRowId(record.fullClassName),
         className:
-          record.key === highlightedKey
+          record.fullClassName === highlightedKey
             ? `coverage-class-row-highlight-${highlightTick % 2}`
             : undefined,
       })}
