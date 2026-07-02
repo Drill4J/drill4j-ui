@@ -24,7 +24,7 @@ In scope:
 Out of scope:
 
 - Sorting package rows in `CoveragePackageTree`.
-- Sorting methods in nested `CoverageMethodsTable`.
+- Sorting methods in nested `CoverageMethodsTable` (see [methods-table-sorting.md](./methods-table-sorting.md)).
 - Persisting the selected sort in URL query params.
 
 ## API

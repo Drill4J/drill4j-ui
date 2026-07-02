@@ -43,6 +43,8 @@ export const BuildCoveragePage = () => {
     methodSignature,
     sortBy,
     sortOrder,
+    methodsSortBy,
+    methodsSortOrder,
     updateQueryParams,
   } = useBuildDetailSearchParams()
 
@@ -139,8 +141,10 @@ export const BuildCoveragePage = () => {
       methodSignature,
       sortBy,
       sortOrder,
+      methodsSortBy,
+      methodsSortOrder,
     }),
-    [baselineBuildId, branches, className, envIds, methodSignature, packageName, sortBy, sortOrder, testTags]
+    [baselineBuildId, branches, className, envIds, methodSignature, methodsSortBy, methodsSortOrder, packageName, sortBy, sortOrder, testTags]
   )
 
   const copyScopeLink = useCallback(
@@ -159,6 +163,8 @@ export const BuildCoveragePage = () => {
         methodSignature: undefined,
         sortBy: undefined,
         sortOrder: undefined,
+        methodsSortBy: undefined,
+        methodsSortOrder: undefined,
       }
       updateQueryParams(updates)
       copyScopeLink(updates)
@@ -173,7 +179,12 @@ export const BuildCoveragePage = () => {
         className: undefined,
         methodSignature: undefined,
         ...(nextPackageName !== packageName
-          ? { sortBy: undefined, sortOrder: undefined }
+          ? {
+              sortBy: undefined,
+              sortOrder: undefined,
+              methodsSortBy: undefined,
+              methodsSortOrder: undefined,
+            }
           : {}),
       })
     },
@@ -199,9 +210,12 @@ export const BuildCoveragePage = () => {
         packageName: nextPackageName,
         className: nextClassName,
         methodSignature: undefined,
+        ...(nextClassName !== className || !nextClassName
+          ? { methodsSortBy: undefined, methodsSortOrder: undefined }
+          : {}),
       })
     },
-    [updateQueryParams]
+    [className, updateQueryParams]
   )
 
   const handleMethodSelect = useCallback(
@@ -224,6 +238,16 @@ export const BuildCoveragePage = () => {
       updateQueryParams({
         sortBy: nextSortBy,
         sortOrder: nextSortOrder,
+      })
+    },
+    [updateQueryParams]
+  )
+
+  const handleMethodsSortChange = useCallback(
+    ({ sortBy: nextSortBy, sortOrder: nextSortOrder }) => {
+      updateQueryParams({
+        methodsSortBy: nextSortBy,
+        methodsSortOrder: nextSortOrder,
       })
     },
     [updateQueryParams]
@@ -262,6 +286,11 @@ export const BuildCoveragePage = () => {
           sortBy={sortBy}
           sortOrder={sortOrder}
           onClassesSortChange={handleClassesSortChange}
+          scopedPackageName={packageName}
+          scopedClassName={className}
+          methodsSortBy={methodsSortBy}
+          methodsSortOrder={methodsSortOrder}
+          onMethodsSortChange={handleMethodsSortChange}
         />
       </div>
     </>

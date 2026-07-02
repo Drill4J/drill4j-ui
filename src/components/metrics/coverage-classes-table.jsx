@@ -128,6 +128,20 @@ function parseClassesTableSort(sortBy, sortOrder) {
   return { sortBy, sortOrder: normalizedOrder }
 }
 
+const VALID_METHODS_SORT_ORDERS = {
+  coverageRatio: new Set(["ASC", "DESC"]),
+  probesCount: new Set(["ASC", "DESC"]),
+  coveredProbes: new Set(["ASC", "DESC"]),
+}
+
+function parseMethodsTableSort(sortBy, sortOrder) {
+  if (!sortBy || !VALID_METHODS_SORT_ORDERS[sortBy]) {
+    return { sortBy: null, sortOrder: null }
+  }
+  const normalizedOrder = VALID_METHODS_SORT_ORDERS[sortBy].has(sortOrder) ? sortOrder : "ASC"
+  return { sortBy, sortOrder: normalizedOrder }
+}
+
 function classRowId(classKey) {
   return `coverage-class-row-${encodeURIComponent(classKey)}`
 }
@@ -141,15 +155,34 @@ function formatPercent(ratio) {
 
 const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 10, total: 0 }
 
+function buildMethodsFetchParams(coverageFilters, record, page, pageSize, sortBy, sortOrder) {
+  const params = {
+    ...coverageFilters,
+    packageName: record.packageName,
+    className: record.className,
+    page,
+    pageSize,
+  }
+  if (sortBy) {
+    params.sortBy = sortBy
+    params.sortOrder = sortOrder ?? "ASC"
+  }
+  return params
+}
+
 function classColumns(
   expandedMethodsKey,
   methodsByClass,
   toggleMethodsPanel,
   handleClassNameClick,
   handleMethodsTableChange,
+  handleMethodsSortChange,
   pendingMethodScrollKey,
   onMethodScrollHandled,
   onMethodSelect,
+  scopedClassName,
+  methodsSortBy,
+  methodsSortOrder,
   sortBy,
   sortOrder,
   onSortChange
@@ -167,6 +200,10 @@ function classColumns(
           paging: DEFAULT_METHODS_PAGING,
           loading: false,
         }
+        const activeMethodsSort =
+          record.className === scopedClassName
+            ? { sortBy: methodsSortBy, sortOrder: methodsSortOrder }
+            : { sortBy: null, sortOrder: null }
 
         return (
           <div>
@@ -192,6 +229,9 @@ function classColumns(
                   dataSource={methodsState.data}
                   pagination={methodsState.paging}
                   onTableChange={(pagination) => handleMethodsTableChange(record, pagination)}
+                  sortBy={activeMethodsSort.sortBy}
+                  sortOrder={activeMethodsSort.sortOrder}
+                  onSortChange={(nextSort) => handleMethodsSortChange(record, nextSort)}
                   scrollToMethodSignature={
                     record.fullClassName === expandedMethodsKey ? pendingMethodScrollKey : null
                   }
@@ -287,6 +327,10 @@ function classColumns(
  *   onMethodsToggle?: (scope: { packageName: string, className?: string }) => void,
  *   onClassSelect?: (scope: { packageName: string, className: string }) => void,
  *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
+ *   scopedClassName?: string,
+ *   methodsSortBy?: string,
+ *   methodsSortOrder?: string,
+ *   onMethodsSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  * }} props
  */
 export function CoverageClassesTable({
@@ -296,6 +340,10 @@ export function CoverageClassesTable({
   sortBy: sortByParam,
   sortOrder: sortOrderParam,
   onSortChange,
+  scopedClassName,
+  methodsSortBy: methodsSortByParam,
+  methodsSortOrder: methodsSortOrderParam,
+  onMethodsSortChange,
   rowKey = "fullClassName",
   scrollToClassKey,
   onScrollToClassHandled,
@@ -317,6 +365,10 @@ export function CoverageClassesTable({
     () => parseClassesTableSort(sortByParam, sortOrderParam),
     [sortByParam, sortOrderParam]
   )
+  const { sortBy: methodsSortBy, sortOrder: methodsSortOrder } = useMemo(
+    () => parseMethodsTableSort(methodsSortByParam, methodsSortOrderParam),
+    [methodsSortByParam, methodsSortOrderParam]
+  )
   const [classesData, setClassesData] = useState([])
   const [classesLoading, setClassesLoading] = useState(false)
   const [total, setTotal] = useState(0)
@@ -324,7 +376,13 @@ export function CoverageClassesTable({
   const methodScrollStartedRef = useRef(null)
 
   const loadMethods = useCallback(
-    async (record, page = 1, pageSize = DEFAULT_METHODS_PAGING.pageSize) => {
+    async (
+      record,
+      page = 1,
+      pageSize = DEFAULT_METHODS_PAGING.pageSize,
+      sortBy = null,
+      sortOrder = null
+    ) => {
       const recordKey = record.fullClassName
       setMethodsByClass((state) => ({
         ...state,
@@ -336,13 +394,10 @@ export function CoverageClassesTable({
       }))
 
       try {
-        const result = await API.getCoverageMethods(buildId, {
-          ...coverageFilters,
-          packageName: record.packageName,
-          className: record.className,
-          page,
-          pageSize,
-        })
+        const result = await API.getCoverageMethods(
+          buildId,
+          buildMethodsFetchParams(coverageFilters, record, page, pageSize, sortBy, sortOrder)
+        )
 
         setMethodsByClass((state) => ({
           ...state,
@@ -375,17 +430,28 @@ export function CoverageClassesTable({
     (record) => {
       setExpandedMethodsKey((current) => {
         if (current === record.fullClassName) {
+          setMethodsByClass((state) => {
+            const next = { ...state }
+            delete next[record.fullClassName]
+            return next
+          })
           onMethodsToggle?.({ packageName: record.packageName })
           return null
         }
         if (!methodsByClass[record.fullClassName]) {
-          loadMethods(record)
+          loadMethods(
+            record,
+            1,
+            DEFAULT_METHODS_PAGING.pageSize,
+            methodsSortBy,
+            methodsSortOrder
+          )
         }
         onMethodsToggle?.({ packageName: record.packageName, className: record.className })
         return record.fullClassName
       })
     },
-    [loadMethods, methodsByClass, onMethodsToggle]
+    [loadMethods, methodsByClass, methodsSortBy, methodsSortOrder, onMethodsToggle]
   )
 
   const handleClassNameClick = useCallback(
@@ -403,6 +469,11 @@ export function CoverageClassesTable({
   const loadMethodsForScroll = useCallback(
     async (record, signature) => {
       const recordKey = record.fullClassName
+      const methodsState = methodsByClass[recordKey]
+      const pageSize = methodsState?.paging?.pageSize ?? DEFAULT_METHODS_PAGING.pageSize
+      const sortBy = record.className === scopedClassName ? methodsSortBy : null
+      const sortOrder = record.className === scopedClassName ? methodsSortOrder : null
+
       setMethodsByClass((state) => ({
         ...state,
         [recordKey]: {
@@ -413,37 +484,59 @@ export function CoverageClassesTable({
       }))
 
       try {
-        const fetchSize = Math.max(record.methodsCount || 0, DEFAULT_METHODS_PAGING.pageSize)
-        const result = await API.getCoverageMethods(buildId, {
-          ...coverageFilters,
-          packageName: record.packageName,
-          className: record.className,
-          page: 1,
-          pageSize: fetchSize,
-        })
+        const lookupParams = buildMethodsFetchParams(
+          coverageFilters,
+          record,
+          1,
+          Math.max(record.methodsCount || 0, pageSize),
+          sortBy,
+          sortOrder
+        )
+        const lookupResult = await API.getCoverageMethods(buildId, lookupParams)
 
-        const index = result.data.findIndex((method) => method.signature === signature)
-        const targetPage =
-          index >= 0 ? Math.floor(index / DEFAULT_METHODS_PAGING.pageSize) + 1 : 1
+        const index = lookupResult.data.findIndex((method) => method.signature === signature)
+        if (index === -1) {
+          setMethodsByClass((state) => ({
+            ...state,
+            [recordKey]: {
+              data: state[recordKey]?.data ?? [],
+              paging: state[recordKey]?.paging ?? { ...DEFAULT_METHODS_PAGING },
+              loading: false,
+            },
+          }))
+          onScrollToMethodHandled?.()
+          return
+        }
+
+        const targetPage = Math.floor(index / pageSize) + 1
+        const pageResult =
+          targetPage === 1 && lookupResult.data.length === lookupResult.paging.total
+            ? lookupResult
+            : await API.getCoverageMethods(
+                buildId,
+                buildMethodsFetchParams(
+                  coverageFilters,
+                  record,
+                  targetPage,
+                  pageSize,
+                  sortBy,
+                  sortOrder
+                )
+              )
 
         setMethodsByClass((state) => ({
           ...state,
           [recordKey]: {
-            data: result.data,
+            data: pageResult.data,
             paging: {
-              page: targetPage,
-              pageSize: DEFAULT_METHODS_PAGING.pageSize,
-              total: result.data.length,
+              page: pageResult.paging.page,
+              pageSize: pageResult.paging.pageSize,
+              total: pageResult.paging.total,
             },
             loading: false,
           },
         }))
-
-        if (index >= 0) {
-          setPendingMethodScrollKey(signature)
-        } else {
-          onScrollToMethodHandled?.()
-        }
+        setPendingMethodScrollKey(signature)
       } catch (error) {
         message.error(`Failed to fetch method coverage. ${error?.message}`)
         setMethodsByClass((state) => ({
@@ -457,14 +550,34 @@ export function CoverageClassesTable({
         onScrollToMethodHandled?.()
       }
     },
-    [buildId, coverageFilters, onScrollToMethodHandled]
+    [buildId, coverageFilters, methodsByClass, methodsSortBy, methodsSortOrder, onScrollToMethodHandled, scopedClassName]
   )
 
   const handleMethodsTableChange = useCallback(
     (record, pagination) => {
-      loadMethods(record, pagination.current, pagination.pageSize)
+      const sortBy =
+        record.className === scopedClassName ? methodsSortBy : null
+      const sortOrder =
+        record.className === scopedClassName ? methodsSortOrder : null
+      loadMethods(
+        record,
+        pagination.current,
+        pagination.pageSize,
+        sortBy,
+        sortOrder
+      )
     },
-    [loadMethods]
+    [loadMethods, methodsSortBy, methodsSortOrder, scopedClassName]
+  )
+
+  const handleMethodsSortChange = useCallback(
+    (record, nextSort) => {
+      onMethodsSortChange?.(nextSort)
+      const pageSize =
+        methodsByClass[record.fullClassName]?.paging?.pageSize ?? DEFAULT_METHODS_PAGING.pageSize
+      loadMethods(record, 1, pageSize, nextSort.sortBy, nextSort.sortOrder)
+    },
+    [loadMethods, methodsByClass, onMethodsSortChange]
   )
 
   const handleTableChange = useCallback((pagination) => {
@@ -516,6 +629,28 @@ export function CoverageClassesTable({
   useEffect(() => {
     setPage(1)
   }, [sortBy, sortOrder])
+
+  useEffect(() => {
+    if (!scopedClassName || classesLoading) {
+      return
+    }
+    const record = classesData.find((row) => row.className === scopedClassName)
+    if (!record) {
+      return
+    }
+    setExpandedMethodsKey(record.fullClassName)
+    if (!methodsByClass[record.fullClassName]) {
+      loadMethods(record, 1, DEFAULT_METHODS_PAGING.pageSize, methodsSortBy, methodsSortOrder)
+    }
+  }, [
+    classesData,
+    classesLoading,
+    loadMethods,
+    methodsByClass,
+    methodsSortBy,
+    methodsSortOrder,
+    scopedClassName,
+  ])
 
   useEffect(() => {
     if (!buildId || !packageName) {
@@ -718,9 +853,13 @@ export function CoverageClassesTable({
         toggleMethodsPanel,
         handleClassNameClick,
         handleMethodsTableChange,
+        handleMethodsSortChange,
         pendingMethodScrollKey,
         handleMethodScrollHandled,
         onMethodSelect,
+        scopedClassName,
+        methodsSortBy,
+        methodsSortOrder,
         sortBy,
         sortOrder,
         handleSortChange
@@ -730,10 +869,14 @@ export function CoverageClassesTable({
       handleClassNameClick,
       handleMethodScrollHandled,
       handleMethodsTableChange,
+      handleMethodsSortChange,
       handleSortChange,
       methodsByClass,
+      methodsSortBy,
+      methodsSortOrder,
       onMethodSelect,
       pendingMethodScrollKey,
+      scopedClassName,
       sortBy,
       sortOrder,
       toggleMethodsPanel,

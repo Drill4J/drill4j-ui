@@ -77,6 +77,8 @@ Sorting requirements: [classes-table-sorting.md](./classes-table-sorting.md).
 
 ### Methods
 
+Sorting requirements: [methods-table-sorting.md](./methods-table-sorting.md).
+
 | Column | Content |
 |--------|---------|
 | Method | Clickable signature (ellipsis) → `onMethodSelect` |

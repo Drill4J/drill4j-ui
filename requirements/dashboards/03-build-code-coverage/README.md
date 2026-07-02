@@ -92,6 +92,7 @@ Treemap shows the full build (filtered only by `envId` / `branch` / `testTag`). 
 | `CoverageTables` | `components/metrics/coverage-tables.jsx` | [coverage-tables.md](./coverage-tables.md) |
 | `CoveragePackageTree` | `components/metrics/coverage-package-tree.jsx` | [packages-tree.md](./packages-tree.md) |
 | `CoverageClassesTable` | `components/metrics/coverage-classes-table.jsx` | [classes-table-sorting.md](./classes-table-sorting.md) |
+| `CoverageMethodsTable` | `components/metrics/coverage-methods-table.jsx` | [methods-table-sorting.md](./methods-table-sorting.md) |
 
 ## Metabase export
 

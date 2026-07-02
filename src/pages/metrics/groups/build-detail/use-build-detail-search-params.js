@@ -50,6 +50,8 @@ export function useBuildDetailSearchParams() {
   const methodSignature = searchParams.get("methodSignature") || undefined
   const sortBy = searchParams.get("sortBy") || undefined
   const sortOrder = searchParams.get("sortOrder") || undefined
+  const methodsSortBy = searchParams.get("methodsSortBy") || undefined
+  const methodsSortOrder = searchParams.get("methodsSortOrder") || undefined
 
   const branchesSerialized = serializeListQueryParam(searchParams, "branches")
   const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
@@ -85,6 +87,8 @@ export function useBuildDetailSearchParams() {
         methodSignature,
         sortBy,
         sortOrder,
+        methodsSortBy,
+        methodsSortOrder,
       }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
@@ -109,6 +113,8 @@ export function useBuildDetailSearchParams() {
       methodSignature,
       sortBy,
       sortOrder,
+      methodsSortBy,
+      methodsSortOrder,
       searchString,
       setSearchParams,
     ]
@@ -121,6 +127,8 @@ export function useBuildDetailSearchParams() {
       testTags: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      methodsSortBy: undefined,
+      methodsSortOrder: undefined,
     })
   }, [updateQueryParams])
 
@@ -131,6 +139,8 @@ export function useBuildDetailSearchParams() {
       methodSignature: undefined,
       sortBy: undefined,
       sortOrder: undefined,
+      methodsSortBy: undefined,
+      methodsSortOrder: undefined,
     })
   }, [updateQueryParams])
 
@@ -144,6 +154,8 @@ export function useBuildDetailSearchParams() {
     methodSignature,
     sortBy,
     sortOrder,
+    methodsSortBy,
+    methodsSortOrder,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,

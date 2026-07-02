@@ -35,6 +35,11 @@ import { CoveragePackageTree } from "./coverage-package-tree"
  *   sortBy?: string,
  *   sortOrder?: string,
  *   onClassesSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   scopedPackageName?: string,
+ *   scopedClassName?: string,
+ *   methodsSortBy?: string,
+ *   methodsSortOrder?: string,
+ *   onMethodsSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  * }} props
  */
 export function CoverageTables({
@@ -56,6 +61,11 @@ export function CoverageTables({
   sortBy,
   sortOrder,
   onClassesSortChange,
+  scopedPackageName,
+  scopedClassName,
+  methodsSortBy,
+  methodsSortOrder,
+  onMethodsSortChange,
 }) {
   return (
     <CoveragePackageTree
@@ -77,6 +87,11 @@ export function CoverageTables({
       sortBy={sortBy}
       sortOrder={sortOrder}
       onClassesSortChange={onClassesSortChange}
+      scopedPackageName={scopedPackageName}
+      scopedClassName={scopedClassName}
+      methodsSortBy={methodsSortBy}
+      methodsSortOrder={methodsSortOrder}
+      onMethodsSortChange={onMethodsSortChange}
     />
   )
 }
