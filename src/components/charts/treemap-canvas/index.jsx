@@ -285,13 +285,13 @@ export const CoverageTreemapCanvas = ({
         return
       }
 
-      if (scope.methodSignature) {
+      if (scope.methodId) {
         // `hit.node.parent` is the class node's full path (e.g.
         // "pkg/sub/ClassName"), which matches the class table row key.
         // `hit.node.class_name` is only the simple class name, so it cannot
         // be used to locate the class row.
         onMethodNavigate?.({
-          methodSignature: scope.methodSignature,
+          methodId: scope.methodId,
           classKey: hit.node.parent,
         })
         onMethodSelect?.(scope)

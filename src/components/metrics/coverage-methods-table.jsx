@@ -94,8 +94,8 @@ function formatReturnType(returnType) {
   return returnType
 }
 
-function methodRowId(signature) {
-  return `coverage-method-row-${encodeURIComponent(signature)}`
+function methodRowId(methodId) {
+  return `coverage-method-row-${encodeURIComponent(methodId)}`
 }
 
 function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder, onSortChange) {
@@ -113,7 +113,7 @@ function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder
             onMethodSelect?.({
               packageName,
               className,
-              methodSignature: record.signature,
+              methodId: record.methodId,
             })
           }
         />
@@ -170,11 +170,11 @@ function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder
  *   loading?: boolean,
  *   pagination?: object | false,
  *   onTableChange?: import("antd").TableProps["onChange"],
- *   scrollToMethodSignature?: string | null,
+ *   scrollToMethodId?: string | null,
  *   onScrollToMethodHandled?: () => void,
  *   packageName?: string,
  *   className?: string,
- *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodId: string }) => void,
  *   sortBy?: string | null,
  *   sortOrder?: string | null,
  *   onSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
@@ -185,7 +185,7 @@ export function CoverageMethodsTable({
   loading,
   pagination,
   onTableChange,
-  scrollToMethodSignature,
+  scrollToMethodId,
   onScrollToMethodHandled,
   packageName = "",
   className = "",
@@ -200,12 +200,12 @@ export function CoverageMethodsTable({
   const highlightTimeoutRef = useRef(null)
 
   useEffect(() => {
-    if (!scrollToMethodSignature) {
+    if (!scrollToMethodId) {
       return
     }
 
-    setPendingScrollKey(scrollToMethodSignature)
-  }, [scrollToMethodSignature])
+    setPendingScrollKey(scrollToMethodId)
+  }, [scrollToMethodId])
 
   useEffect(() => {
     if (!pendingScrollKey) {
@@ -228,7 +228,7 @@ export function CoverageMethodsTable({
       // out or not found), there is nothing to scroll to.
       if (
         dataSource.length > 0 &&
-        !dataSource.some((row) => row.signature === pendingScrollKey)
+        !dataSource.some((row) => row.methodId === pendingScrollKey)
       ) {
         setPendingScrollKey(null)
         onScrollToMethodHandled?.()
@@ -289,16 +289,16 @@ export function CoverageMethodsTable({
 
   return (
     <MetricsDataTable
-      rowKey="signature"
+      rowKey="methodId"
       loading={loading}
       dataSource={dataSource}
       columns={columns}
       pagination={pagination}
       onTableChange={onTableChange}
       onRow={(record) => ({
-        id: methodRowId(record.signature),
+        id: methodRowId(record.methodId),
         className:
-          record.signature === highlightedKey
+          record.methodId === highlightedKey
             ? `coverage-method-row-highlight-${highlightTick % 2}`
             : undefined,
       })}

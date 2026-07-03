@@ -47,7 +47,7 @@ export function useBuildDetailSearchParams() {
   const baselineBuildId = searchParams.get("baselineBuildId") || undefined
   const packageName = searchParams.get("packageName") || undefined
   const className = searchParams.get("className") || undefined
-  const methodSignature = searchParams.get("methodSignature") || undefined
+  const methodId = searchParams.get("methodId") || undefined
   const sortBy = searchParams.get("sortBy") || undefined
   const sortOrder = searchParams.get("sortOrder") || undefined
   const methodsSortBy = searchParams.get("methodsSortBy") || undefined
@@ -84,7 +84,7 @@ export function useBuildDetailSearchParams() {
         testTags,
         packageName,
         className,
-        methodSignature,
+        methodId,
         sortBy,
         sortOrder,
         methodsSortBy,
@@ -110,7 +110,7 @@ export function useBuildDetailSearchParams() {
       testTags,
       packageName,
       className,
-      methodSignature,
+      methodId,
       sortBy,
       sortOrder,
       methodsSortBy,
@@ -136,7 +136,7 @@ export function useBuildDetailSearchParams() {
     updateQueryParams({
       packageName: undefined,
       className: undefined,
-      methodSignature: undefined,
+      methodId: undefined,
       sortBy: undefined,
       sortOrder: undefined,
       methodsSortBy: undefined,
@@ -151,7 +151,7 @@ export function useBuildDetailSearchParams() {
     testTags,
     packageName,
     className,
-    methodSignature,
+    methodId,
     sortBy,
     sortOrder,
     methodsSortBy,

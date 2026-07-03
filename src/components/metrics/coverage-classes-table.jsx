@@ -232,7 +232,7 @@ function classColumns(
                   sortBy={activeMethodsSort.sortBy}
                   sortOrder={activeMethodsSort.sortOrder}
                   onSortChange={(nextSort) => handleMethodsSortChange(record, nextSort)}
-                  scrollToMethodSignature={
+                  scrollToMethodId={
                     record.fullClassName === expandedMethodsKey ? pendingMethodScrollKey : null
                   }
                   onScrollToMethodHandled={onMethodScrollHandled}
@@ -322,11 +322,11 @@ function classColumns(
  *   rowKey?: string,
  *   scrollToClassKey?: string | null,
  *   onScrollToClassHandled?: () => void,
- *   scrollToMethod?: { signature: string, classKey: string } | null,
+ *   scrollToMethod?: { methodId: string, classKey: string } | null,
  *   onScrollToMethodHandled?: () => void,
  *   onMethodsToggle?: (scope: { packageName: string, className?: string }) => void,
  *   onClassSelect?: (scope: { packageName: string, className: string }) => void,
- *   onMethodSelect?: (scope: { packageName: string, className: string, methodSignature: string }) => void,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodId: string }) => void,
  *   scopedClassName?: string,
  *   methodsSortBy?: string,
  *   methodsSortOrder?: string,
@@ -467,7 +467,7 @@ export function CoverageClassesTable({
   }, [onScrollToMethodHandled])
 
   const loadMethodsForScroll = useCallback(
-    async (record, signature) => {
+    async (record, methodId) => {
       const recordKey = record.fullClassName
       const methodsState = methodsByClass[recordKey]
       const pageSize = methodsState?.paging?.pageSize ?? DEFAULT_METHODS_PAGING.pageSize
@@ -494,7 +494,7 @@ export function CoverageClassesTable({
         )
         const lookupResult = await API.getCoverageMethods(buildId, lookupParams)
 
-        const index = lookupResult.data.findIndex((method) => method.signature === signature)
+        const index = lookupResult.data.findIndex((method) => method.methodId === methodId)
         if (index === -1) {
           setMethodsByClass((state) => ({
             ...state,
@@ -536,7 +536,7 @@ export function CoverageClassesTable({
             loading: false,
           },
         }))
-        setPendingMethodScrollKey(signature)
+        setPendingMethodScrollKey(methodId)
       } catch (error) {
         message.error(`Failed to fetch method coverage. ${error?.message}`)
         setMethodsByClass((state) => ({
@@ -687,7 +687,7 @@ export function CoverageClassesTable({
   }, [buildId, fetchClasses, packageName, page, pageSize, sortBy, sortOrder])
 
   useEffect(() => {
-    if (!scrollToMethod?.signature || !scrollToMethod?.classKey) {
+    if (!scrollToMethod?.methodId || !scrollToMethod?.classKey) {
       methodScrollStartedRef.current = null
       return undefined
     }
@@ -724,10 +724,10 @@ export function CoverageClassesTable({
 
         setExpandedMethodsKey(record.fullClassName)
 
-        const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.signature}`
+        const requestKey = `${scrollToMethod.classKey}\u0000${scrollToMethod.methodId}`
         if (methodScrollStartedRef.current !== requestKey) {
           methodScrollStartedRef.current = requestKey
-          loadMethodsForScroll(record, scrollToMethod.signature)
+          loadMethodsForScroll(record, scrollToMethod.methodId)
         }
       } catch {
         methodScrollStartedRef.current = null

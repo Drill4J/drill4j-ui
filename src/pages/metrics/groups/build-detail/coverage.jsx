@@ -40,7 +40,7 @@ export const BuildCoveragePage = () => {
     testTags,
     packageName,
     className,
-    methodSignature,
+    methodId,
     sortBy,
     sortOrder,
     methodsSortBy,
@@ -88,9 +88,9 @@ export const BuildCoveragePage = () => {
       return
     }
 
-    if (methodSignature && className) {
+    if (methodId && className) {
       setScrollToMethod({
-        signature: methodSignature,
+        methodId,
         classKey: buildClassKey(packageName, className),
       })
       return
@@ -122,8 +122,8 @@ export const BuildCoveragePage = () => {
     setScrollToClassKey(null)
   }, [])
 
-  const handleMethodNavigate = useCallback(({ methodSignature: signature, classKey }) => {
-    setScrollToMethod({ signature, classKey })
+  const handleMethodNavigate = useCallback(({ methodId, classKey }) => {
+    setScrollToMethod({ methodId, classKey })
   }, [])
 
   const handleScrollToMethodHandled = useCallback(() => {
@@ -138,13 +138,13 @@ export const BuildCoveragePage = () => {
       testTags,
       packageName,
       className,
-      methodSignature,
+      methodId,
       sortBy,
       sortOrder,
       methodsSortBy,
       methodsSortOrder,
     }),
-    [baselineBuildId, branches, className, envIds, methodSignature, methodsSortBy, methodsSortOrder, packageName, sortBy, sortOrder, testTags]
+    [baselineBuildId, branches, className, envIds, methodId, methodsSortBy, methodsSortOrder, packageName, sortBy, sortOrder, testTags]
   )
 
   const copyScopeLink = useCallback(
@@ -160,7 +160,7 @@ export const BuildCoveragePage = () => {
       const updates = {
         packageName: nextPackageName,
         className: undefined,
-        methodSignature: undefined,
+        methodId: undefined,
         sortBy: undefined,
         sortOrder: undefined,
         methodsSortBy: undefined,
@@ -177,7 +177,7 @@ export const BuildCoveragePage = () => {
       updateQueryParams({
         packageName: nextPackageName,
         className: undefined,
-        methodSignature: undefined,
+        methodId: undefined,
         ...(nextPackageName !== packageName
           ? {
               sortBy: undefined,
@@ -196,7 +196,7 @@ export const BuildCoveragePage = () => {
       const updates = {
         packageName: nextPackageName,
         className: nextClassName,
-        methodSignature: undefined,
+        methodId: undefined,
       }
       updateQueryParams(updates)
       copyScopeLink(updates)
@@ -209,7 +209,7 @@ export const BuildCoveragePage = () => {
       updateQueryParams({
         packageName: nextPackageName,
         className: nextClassName,
-        methodSignature: undefined,
+        methodId: undefined,
         ...(nextClassName !== className || !nextClassName
           ? { methodsSortBy: undefined, methodsSortOrder: undefined }
           : {}),
