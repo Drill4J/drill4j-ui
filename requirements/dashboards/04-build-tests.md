@@ -61,6 +61,7 @@ GET /api/metrics/builds/:buildId
 - Shared build detail layout (tabs + `BuildContextBar`)
 - Paginated table of test sessions for this build
 - Row click → `/metrics/:groupId/test-sessions/:testSessionId`
+- No coverage filter bar on this tab (not in Metabase dashboard 4)
 - No group/app filters (from path); optional `testTaskId`, `createdBy` as query-param filters if needed
 
 ### Components

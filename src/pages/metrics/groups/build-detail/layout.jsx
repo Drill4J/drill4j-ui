@@ -21,6 +21,8 @@ import { BuildCoverageFiltersBar } from "../../../../components/metrics/build-co
 import * as API from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
+const TABS_WITH_COVERAGE_FILTERS = new Set(["summary", "coverage"])
+
 const TAB_ITEMS = [
   { key: "summary", label: "Summary", path: "" },
   { key: "tests", label: "Tests", path: "tests" },
@@ -118,17 +120,19 @@ export const BuildDetailLayout = () => {
         onChange={handleTabChange}
         style={{ marginBottom: 0 }}
       />
-      <BuildCoverageFiltersBar
-        groupId={groupId}
-        appId={appId}
-        branches={branches}
-        envIds={envIds}
-        testTags={testTags}
-        onBranchesChange={(value) => updateQueryParams({ branches: value })}
-        onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
-        onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
-        onClear={clearCoverageFilters}
-      />
+      {TABS_WITH_COVERAGE_FILTERS.has(activeKey) ? (
+        <BuildCoverageFiltersBar
+          groupId={groupId}
+          appId={appId}
+          branches={branches}
+          envIds={envIds}
+          testTags={testTags}
+          onBranchesChange={(value) => updateQueryParams({ branches: value })}
+          onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
+          onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
+          onClear={clearCoverageFilters}
+        />
+      ) : null}
       <Outlet context={{ build, buildLoading: loading }} />
     </>
   )
