@@ -39,6 +39,7 @@ GET /api/metrics/test-sessions?groupId=&buildId=&testTaskId=&createdBy=&page=&pa
 - `testDefinitions`, `testLaunches`, `result`
 - `testDuration`, `testDurationFormatted`
 - `failed`, `passed`, `skipped`, `smartSkipped`, `success`, `successRate`
+- `timeSaved`, `timeSavedFormatted`
 - Coverage fields if available from join
 
 SQL reference: Metabase model card 153.

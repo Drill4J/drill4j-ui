@@ -43,6 +43,7 @@ GET /api/metrics/test-sessions?groupId=&buildId=&page=&pageSize=
 - `testDefinitions`, `testLaunches`, `result`
 - `testDuration`, `testDurationFormatted`
 - `failed`, `passed`, `skipped`, `smartSkipped`, `success`, `successRate`
+- `timeSaved`, `timeSavedFormatted` — from `test_sessions_with_statistics.time_saved` (Metabase card 153)
 
 Same endpoint as group-level tests list (`08-tests.md`), with `buildId` fixed from the route.
 

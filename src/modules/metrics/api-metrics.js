@@ -241,6 +241,55 @@ export async function getBuildTestSessionStats(buildId) {
 }
 
 /**
+ * @param {{
+ *   groupId: string,
+ *   buildId?: string,
+ *   testTaskId?: string,
+ *   createdBy?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getTestSessions(params) {
+  const {
+    groupId,
+    buildId,
+    testTaskId,
+    createdBy,
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = [
+    "test-sessions",
+    groupId,
+    buildId,
+    testTaskId,
+    createdBy,
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/test-sessions", {
+        params: {
+          groupId,
+          buildId,
+          testTaskId,
+          createdBy,
+          page,
+          pageSize,
+        },
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
  * @param {object} body
  */
 export async function postImpactedTests(body) {

@@ -18,7 +18,7 @@ import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
 import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPlaceholderPage } from "./groups/app-trends"
-import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage } from "./groups/build-detail"
+import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage, BuildTestsPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import { TestSessionDetailPage } from "./groups/test-session-detail"
 
@@ -46,6 +46,7 @@ export const metricsRoutes = (
           element={<BuildDetailLayout />}
         >
           <Route index element={<BuildSummaryPage />} />
+          <Route path="tests" element={<BuildTestsPage />} />
           <Route path="coverage" element={<BuildCoveragePage />} />
         </Route>
       </Route>
