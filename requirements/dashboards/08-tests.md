@@ -29,9 +29,16 @@ Group-scoped list of test sessions. Build-scoped variant lives at `…/builds/:b
 ### New endpoint
 
 ```
-GET /api/metrics/test-sessions?groupId=&buildId=&testTaskId=&createdBy=&page=&pageSize=
+GET /api/metrics/test-sessions?groupId=&buildId=&testTaskIds=&createdBys=&results=&sortBy=&sortOrder=&page=&pageSize=
 → PagedDataResponse<TestSessionView>
+
+GET /api/metrics/test-sessions/filter-options?groupId=&buildId=
+→ ApiResponse<{ testTaskIds, createdBys, results }>
 ```
+
+**Filters** (multi-value, server-side): `testTaskIds`, `createdBys`, `results` — see [04-build-tests.md](./04-build-tests.md) for `TestSessionsFiltersBar` on the build Tests tab.
+
+**Sort** (server-side): `sortBy` = `sessionStartedAt` | `successRate`; `sortOrder` = `ASC` | `DESC` (default `sessionStartedAt DESC`).
 
 `TestSessionView` fields (from model 153):
 - `groupId`, `appId`, `buildId`, `testSessionId`

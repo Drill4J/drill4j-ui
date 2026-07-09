@@ -13,63 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { message } from "antd"
-import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { TestSessionsTable } from "../../../../components/metrics/test-sessions-table"
 import * as API from "../../../../modules/metrics/api-metrics"
-
-const DEFAULT_PAGE_SIZE = 20
+import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
 
 export const BuildTestsPage = () => {
   const { groupId, buildId } = useParams()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const page = Number(searchParams.get("page")) || 1
-  const pageSize = Number(searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE
-  const testTaskId = searchParams.get("testTaskId") || undefined
-  const createdBy = searchParams.get("createdBy") || undefined
+  const {
+    page,
+    pageSize,
+    testTaskIds,
+    createdBys,
+    results,
+    sessionsSortBy,
+    sessionsSortOrder,
+    updateQueryParams,
+    handleSortChange,
+  } = useTestSessionsSearchParams()
 
   const [sessions, setSessions] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-
-  const updateQueryParams = useCallback(
-    (next) => {
-      const params = new URLSearchParams(searchParams)
-      if (next.page != null) {
-        if (next.page === 1) {
-          params.delete("page")
-        } else {
-          params.set("page", String(next.page))
-        }
-      }
-      if (next.pageSize != null) {
-        if (next.pageSize === DEFAULT_PAGE_SIZE) {
-          params.delete("pageSize")
-        } else {
-          params.set("pageSize", String(next.pageSize))
-        }
-      }
-      if ("testTaskId" in next) {
-        if (next.testTaskId) {
-          params.set("testTaskId", next.testTaskId)
-        } else {
-          params.delete("testTaskId")
-        }
-      }
-      if ("createdBy" in next) {
-        if (next.createdBy) {
-          params.set("createdBy", next.createdBy)
-        } else {
-          params.delete("createdBy")
-        }
-      }
-      setSearchParams(params, { replace: true })
-    },
-    [searchParams, setSearchParams]
-  )
 
   useEffect(() => {
     let cancelled = false
@@ -80,8 +48,11 @@ export const BuildTestsPage = () => {
         const { data, paging } = await API.getTestSessions({
           groupId,
           buildId,
-          testTaskId,
-          createdBy,
+          testTaskIds,
+          createdBys,
+          results,
+          sortBy: sessionsSortBy,
+          sortOrder: sessionsSortOrder,
           page,
           pageSize,
         })
@@ -104,7 +75,17 @@ export const BuildTestsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, buildId, testTaskId, createdBy, page, pageSize])
+  }, [
+    groupId,
+    buildId,
+    testTaskIds,
+    createdBys,
+    results,
+    sessionsSortBy,
+    sessionsSortOrder,
+    page,
+    pageSize,
+  ])
 
   const pagination = useMemo(
     () => ({ page, pageSize, total }),
@@ -127,6 +108,9 @@ export const BuildTestsPage = () => {
       sessions={sessions}
       loading={loading}
       pagination={pagination}
+      sortBy={sessionsSortBy}
+      sortOrder={sessionsSortOrder}
+      onSortChange={handleSortChange}
       onTableChange={handleTableChange}
       onRowClick={handleRowClick}
     />

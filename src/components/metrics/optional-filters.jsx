@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Select, Space } from "antd"
+import { Space } from "antd"
 import { HintIcon } from "../hint-icon"
-
-function toOptions(values = []) {
-  return values.map((value) => ({ value, label: value }))
-}
-
-function handleMultiChange(onChange, values) {
-  onChange(values?.length ? values : undefined)
-}
+import { FilterMultiSelect } from "./filter-multi-select"
 
 /**
  * @param {{
@@ -52,53 +45,36 @@ export function OptionalFilters({
   onEnvIdsChange,
   onTestTagsChange,
 }) {
-  const controlWidth = size === "small" ? 180 : 220
-
   return (
     <Space wrap align="center" size={size === "small" ? "small" : "middle"}>
       <Space align="center" size={size === "small" ? 4 : 6}>
-        <Select
-          allowClear
-          showSearch
-          mode="multiple"
-          maxTagCount="responsive"
+        <FilterMultiSelect
           size={size}
           placeholder="Branches"
-          style={{ minWidth: controlWidth }}
-          value={branches ?? []}
-          options={toOptions(branchOptions)}
-          onChange={(values) => handleMultiChange(onBranchesChange, values)}
+          options={branchOptions}
+          value={branches}
+          onChange={onBranchesChange}
         />
         {filterHints?.branches && <HintIcon title={filterHints.branches} />}
       </Space>
       <Space align="center" size={size === "small" ? 4 : 6}>
-        <Select
-          allowClear
-          showSearch
-          mode="multiple"
-          maxTagCount="responsive"
+        <FilterMultiSelect
           size={size}
           placeholder="Environments"
-          style={{ minWidth: controlWidth }}
-          value={envIds ?? []}
-          options={toOptions(envOptions)}
-          onChange={(values) => handleMultiChange(onEnvIdsChange, values)}
+          options={envOptions}
+          value={envIds}
+          onChange={onEnvIdsChange}
         />
         {filterHints?.envIds && <HintIcon title={filterHints.envIds} />}
       </Space>
       {onTestTagsChange && (
         <Space align="center" size={size === "small" ? 4 : 6}>
-          <Select
-            allowClear
-            showSearch
-            mode="multiple"
-            maxTagCount="responsive"
+          <FilterMultiSelect
             size={size}
             placeholder="Test tags"
-            style={{ minWidth: controlWidth }}
-            value={testTags ?? []}
-            options={toOptions(testTagOptions)}
-            onChange={(values) => handleMultiChange(onTestTagsChange, values)}
+            options={testTagOptions}
+            value={testTags}
+            onChange={onTestTagsChange}
           />
           {filterHints?.testTags && <HintIcon title={filterHints.testTags} />}
         </Space>

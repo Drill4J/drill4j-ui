@@ -244,8 +244,11 @@ export async function getBuildTestSessionStats(buildId) {
  * @param {{
  *   groupId: string,
  *   buildId?: string,
- *   testTaskId?: string,
- *   createdBy?: string,
+ *   testTaskIds?: string[],
+ *   createdBys?: string[],
+ *   results?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
  *   page?: number,
  *   pageSize?: number,
  * }} params
@@ -255,8 +258,11 @@ export async function getTestSessions(params) {
   const {
     groupId,
     buildId,
-    testTaskId,
-    createdBy,
+    testTaskIds = [],
+    createdBys = [],
+    results = [],
+    sortBy,
+    sortOrder,
     page = 1,
     pageSize = 20,
   } = params
@@ -264,28 +270,51 @@ export async function getTestSessions(params) {
     "test-sessions",
     groupId,
     buildId,
-    testTaskId,
-    createdBy,
+    testTaskIds.join(","),
+    createdBys.join(","),
+    results.join(","),
+    sortBy,
+    sortOrder,
     page,
     pageSize,
   ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/test-sessions", {
-        params: {
+        params: serializeListQueryParams({
           groupId,
           buildId,
-          testTaskId,
-          createdBy,
+          testTaskIds,
+          createdBys,
+          results,
           page,
           pageSize,
-        },
+          ...(sortBy ? { sortBy, sortOrder } : {}),
+        }),
+        paramsSerializer: axiosListParamsSerializer,
       })
     )
     return {
       data: response.data.data,
       paging: response.data.paging,
     }
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} [buildId]
+ * @returns {Promise<{ testTaskIds: string[], createdBys: string[], results: string[] }>}
+ */
+export async function getTestSessionFilterOptions(groupId, buildId) {
+  const key = `test-session-filter-options:${groupId}:${buildId ?? ""}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/test-sessions/filter-options", {
+        params: { groupId, buildId },
+      })
+    )
+    return response.data.data
   })
 }
 

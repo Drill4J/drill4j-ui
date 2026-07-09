@@ -17,6 +17,7 @@ import { useMemo } from "react"
 import { Tag } from "antd"
 import dayjs from "dayjs"
 import { MetricsDataTable } from "./metrics-data-table"
+import { TableColumnSortHeader } from "./table-column-sort-header"
 
 const RESULT_COLORS = {
   FAILED: "error",
@@ -25,6 +26,36 @@ const RESULT_COLORS = {
   SKIPPED: "default",
   UNKNOWN: "default",
 }
+
+const SESSION_STARTED_SORT_OPTIONS = [
+  {
+    key: "sessionStartedAt-desc",
+    label: "Newest first",
+    sortBy: "sessionStartedAt",
+    sortOrder: "DESC",
+  },
+  {
+    key: "sessionStartedAt-asc",
+    label: "Oldest first",
+    sortBy: "sessionStartedAt",
+    sortOrder: "ASC",
+  },
+]
+
+const SUCCESS_RATE_SORT_OPTIONS = [
+  {
+    key: "successRate-desc",
+    label: "Highest first",
+    sortBy: "successRate",
+    sortOrder: "DESC",
+  },
+  {
+    key: "successRate-asc",
+    label: "Lowest first",
+    sortBy: "successRate",
+    sortOrder: "ASC",
+  },
+]
 
 /**
  * @param {string} result
@@ -40,84 +71,110 @@ function formatSuccessRate(rate) {
   return `${(rate * 100).toFixed(1)}%`
 }
 
-export const TEST_SESSIONS_TABLE_COLUMNS = [
-  {
-    title: "Started",
-    dataIndex: "sessionStartedAt",
-    key: "sessionStartedAt",
-    render: (value) => (value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "—"),
-  },
-  {
-    title: "Test task",
-    dataIndex: "testTaskId",
-    key: "testTaskId",
-  },
-  {
-    title: "Created by",
-    dataIndex: "createdBy",
-    key: "createdBy",
-    render: (value) => value || "—",
-  },
-  {
-    title: "Result",
-    dataIndex: "result",
-    key: "result",
-    render: renderResultTag,
-  },
-  {
-    title: "Definitions",
-    dataIndex: "testDefinitions",
-    key: "testDefinitions",
-  },
-  {
-    title: "Launches",
-    dataIndex: "testLaunches",
-    key: "testLaunches",
-  },
-  {
-    title: "Duration",
-    dataIndex: "testDurationFormatted",
-    key: "testDurationFormatted",
-  },
-  {
-    title: "Passed",
-    dataIndex: "passed",
-    key: "passed",
-  },
-  {
-    title: "Failed",
-    dataIndex: "failed",
-    key: "failed",
-  },
-  {
-    title: "Skipped",
-    dataIndex: "skipped",
-    key: "skipped",
-  },
-  {
-    title: "Smart skipped",
-    dataIndex: "smartSkipped",
-    key: "smartSkipped",
-  },
-  {
-    title: "Time saved",
-    dataIndex: "timeSavedFormatted",
-    key: "timeSavedFormatted",
-    render: (value, record) => (record.timeSaved > 0 ? value : "—"),
-  },
-  {
-    title: "Success rate",
-    dataIndex: "successRate",
-    key: "successRate",
-    render: formatSuccessRate,
-  },
-]
+/**
+ * @param {string | undefined} sortBy
+ * @param {string | undefined} sortOrder
+ * @param {(sort: { sortBy: string | null, sortOrder: string | null }) => void} onSortChange
+ */
+function buildTestSessionsColumns(sortBy, sortOrder, onSortChange) {
+  return [
+    {
+      title: (
+        <TableColumnSortHeader
+          title="Started"
+          options={SESSION_STARTED_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
+      dataIndex: "sessionStartedAt",
+      key: "sessionStartedAt",
+      render: (value) => (value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "—"),
+    },
+    {
+      title: "Test task",
+      dataIndex: "testTaskId",
+      key: "testTaskId",
+    },
+    {
+      title: "Created by",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (value) => value || "—",
+    },
+    {
+      title: "Result",
+      dataIndex: "result",
+      key: "result",
+      render: renderResultTag,
+    },
+    {
+      title: "Definitions",
+      dataIndex: "testDefinitions",
+      key: "testDefinitions",
+    },
+    {
+      title: "Launches",
+      dataIndex: "testLaunches",
+      key: "testLaunches",
+    },
+    {
+      title: "Duration",
+      dataIndex: "testDurationFormatted",
+      key: "testDurationFormatted",
+    },
+    {
+      title: "Passed",
+      dataIndex: "passed",
+      key: "passed",
+    },
+    {
+      title: "Failed",
+      dataIndex: "failed",
+      key: "failed",
+    },
+    {
+      title: "Skipped",
+      dataIndex: "skipped",
+      key: "skipped",
+    },
+    {
+      title: "Smart skipped",
+      dataIndex: "smartSkipped",
+      key: "smartSkipped",
+    },
+    {
+      title: "Time saved",
+      dataIndex: "timeSavedFormatted",
+      key: "timeSavedFormatted",
+      render: (value, record) => (record.timeSaved > 0 ? value : "—"),
+    },
+    {
+      title: (
+        <TableColumnSortHeader
+          title="Success rate"
+          options={SUCCESS_RATE_SORT_OPTIONS}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
+      ),
+      dataIndex: "successRate",
+      key: "successRate",
+      render: formatSuccessRate,
+    },
+  ]
+}
 
 /**
  * @param {{
  *   sessions: object[],
  *   loading?: boolean,
  *   pagination: { page: number, pageSize: number, total: number },
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   onSortChange: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  *   onTableChange: import("antd").TableProps["onChange"],
  *   onRowClick?: (session: object) => void,
  * }} props
@@ -126,10 +183,16 @@ export function TestSessionsTable({
   sessions,
   loading = false,
   pagination,
+  sortBy,
+  sortOrder,
+  onSortChange,
   onTableChange,
   onRowClick,
 }) {
-  const columns = useMemo(() => TEST_SESSIONS_TABLE_COLUMNS, [])
+  const columns = useMemo(
+    () => buildTestSessionsColumns(sortBy, sortOrder, onSortChange),
+    [onSortChange, sortBy, sortOrder]
+  )
 
   return (
     <MetricsDataTable

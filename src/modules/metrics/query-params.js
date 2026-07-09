@@ -16,6 +16,21 @@
 
 export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
 
+export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
+
+export const LIST_QUERY_PARAM_KEYS = new Set([
+  ...COVERAGE_LIST_QUERY_KEYS,
+  ...TEST_SESSIONS_LIST_QUERY_KEYS,
+])
+
+export const TEST_SESSIONS_QUERY_KEYS = [
+  "page",
+  "pageSize",
+  ...TEST_SESSIONS_LIST_QUERY_KEYS,
+  "sessionsSortBy",
+  "sessionsSortOrder",
+]
+
 export const BUILD_DETAIL_QUERY_KEYS = [
   "baselineBuildId",
   ...COVERAGE_LIST_QUERY_KEYS,
@@ -29,6 +44,31 @@ export const BUILD_DETAIL_QUERY_KEYS = [
 ]
 
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
+
+/**
+ * @param {URLSearchParams} params
+ * @param {string} key
+ */
+export function deleteListQueryParam(params, key) {
+  params.delete(key)
+  while (params.has(key)) {
+    params.delete(key)
+  }
+}
+
+/**
+ * @param {URLSearchParams} params
+ * @param {string[]} keys
+ */
+export function clearTestSessionsQueryParams(params) {
+  TEST_SESSIONS_QUERY_KEYS.forEach((key) => {
+    if (TEST_SESSIONS_LIST_QUERY_KEYS.includes(key)) {
+      deleteListQueryParam(params, key)
+      return
+    }
+    params.delete(key)
+  })
+}
 
 /**
  * @param {URLSearchParams} searchParams
@@ -64,7 +104,7 @@ export function serializeListQueryParams(params) {
     if (value == null || value === "") {
       return
     }
-    if (COVERAGE_LIST_QUERY_KEY_SET.has(key) && Array.isArray(value)) {
+    if (LIST_QUERY_PARAM_KEYS.has(key) && Array.isArray(value)) {
       if (value.length) {
         result[key] = value
       }

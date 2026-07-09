@@ -18,10 +18,14 @@ import { message, Tabs } from "antd"
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
 import { BuildContextBar } from "../../../../components/metrics/build-context-bar"
 import { BuildCoverageFiltersBar } from "../../../../components/metrics/build-coverage-filters-bar"
+import { TestSessionsFiltersBar } from "../../../../components/metrics/test-sessions-filters-bar"
 import * as API from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
+import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
+import { clearTestSessionsQueryParams } from "../../../../modules/metrics/query-params"
 
 const TABS_WITH_COVERAGE_FILTERS = new Set(["summary", "coverage"])
+const TABS_WITH_SESSION_FILTERS = new Set(["tests"])
 
 const TAB_ITEMS = [
   { key: "summary", label: "Summary", path: "" },
@@ -52,6 +56,13 @@ export const BuildDetailLayout = () => {
   const [loading, setLoading] = useState(true)
   const { branches, envIds, testTags, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
     useBuildDetailSearchParams()
+  const {
+    testTaskIds,
+    createdBys,
+    results,
+    updateQueryParams: updateSessionQueryParams,
+    clearFilters: clearSessionFilters,
+  } = useTestSessionsSearchParams()
 
   useEffect(() => {
     let cancelled = false
@@ -99,6 +110,9 @@ export const BuildDetailLayout = () => {
       params.delete("packageName")
       params.delete("className")
     }
+    if (key !== "tests") {
+      clearTestSessionsQueryParams(params)
+    }
     const search = params.toString()
     navigate({ pathname: target, search: search ? `?${search}` : "" })
   }
@@ -131,6 +145,19 @@ export const BuildDetailLayout = () => {
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
           onClear={clearCoverageFilters}
+        />
+      ) : null}
+      {TABS_WITH_SESSION_FILTERS.has(activeKey) ? (
+        <TestSessionsFiltersBar
+          groupId={groupId}
+          buildId={buildId}
+          testTaskIds={testTaskIds}
+          createdBys={createdBys}
+          results={results}
+          onTestTaskIdsChange={(value) => updateSessionQueryParams({ testTaskIds: value, page: 1 })}
+          onCreatedBysChange={(value) => updateSessionQueryParams({ createdBys: value, page: 1 })}
+          onResultsChange={(value) => updateSessionQueryParams({ results: value, page: 1 })}
+          onClear={clearSessionFilters}
         />
       ) : null}
       <Outlet context={{ build, buildLoading: loading }} />
