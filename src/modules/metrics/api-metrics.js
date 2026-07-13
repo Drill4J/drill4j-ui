@@ -340,6 +340,90 @@ export async function postImpactedMethods(body) {
   }
 }
 
+/**
+ * @param {{
+ *   groupId: string,
+ *   appId: string,
+ *   buildVersion?: string,
+ *   commitSha?: string,
+ *   baselineBuildVersion?: string,
+ *   includeDeleted?: boolean,
+ *   includeEqual?: boolean,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ */
+export async function getChanges(params) {
+  const { page = 1, pageSize = 20, ...rest } = params
+  const key = [
+    "changes",
+    rest.groupId,
+    rest.appId,
+    rest.buildVersion,
+    rest.commitSha,
+    rest.baselineBuildVersion,
+    rest.includeDeleted,
+    rest.includeEqual,
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/changes", {
+        params: serializeListQueryParams({ ...rest, page, pageSize }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   appId: string,
+ *   buildVersion?: string,
+ *   commitSha?: string,
+ *   baselineBuildVersion?: string,
+ *   testTags?: string[],
+ *   envIds?: string[],
+ *   branches?: string[],
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ */
+export async function getRisks(params) {
+  const { page = 1, pageSize = 20, ...rest } = params
+  const key = [
+    "risks",
+    rest.groupId,
+    rest.appId,
+    rest.buildVersion,
+    rest.commitSha,
+    rest.baselineBuildVersion,
+    rest.testTags?.join(","),
+    rest.envIds?.join(","),
+    rest.branches?.join(","),
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/risks", {
+        params: serializeListQueryParams({ ...rest, page, pageSize }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
 function coverageFilterKey(buildId, filters = {}) {
   const { envIds, branches, testTags, packageName, className } = filters
   return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}:${packageName}:${className}`

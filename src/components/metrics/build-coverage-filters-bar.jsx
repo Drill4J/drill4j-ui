@@ -45,6 +45,9 @@ const COVERAGE_FILTER_HINTS = {
  *   onEnvIdsChange: (value?: string[]) => void,
  *   onTestTagsChange: (value?: string[]) => void,
  *   onClear?: () => void,
+ *   scopeHint?: string,
+ *   filterHints?: { branches?: string, envIds?: string, testTags?: string },
+ *   sticky?: boolean,
  * }} props
  */
 export function BuildCoverageFiltersBar({
@@ -57,6 +60,9 @@ export function BuildCoverageFiltersBar({
   onEnvIdsChange,
   onTestTagsChange,
   onClear,
+  scopeHint = FILTER_SCOPE_HINT,
+  filterHints = COVERAGE_FILTER_HINTS,
+  sticky = true,
 }) {
   const [filterOptions, setFilterOptions] = useState({
     branches: [],
@@ -72,25 +78,17 @@ export function BuildCoverageFiltersBar({
 
     const loadFilters = async () => {
       try {
-        const [branchesResult, envIdsResult, testTagsResult] = await Promise.allSettled([
+        const [branchesOptions, envIdsOptions, testTagsOptions] = await Promise.all([
           API.getAppBranches(groupId, appId),
           API.getAppEnvIds(groupId, appId),
           API.getAppTestTags(groupId, appId),
         ])
         if (!cancelled) {
           setFilterOptions({
-            branches: branchesResult.status === "fulfilled" ? branchesResult.value : [],
-            envIds: envIdsResult.status === "fulfilled" ? envIdsResult.value : [],
-            testTags: testTagsResult.status === "fulfilled" ? testTagsResult.value : [],
+            branches: branchesOptions,
+            envIds: envIdsOptions,
+            testTags: testTagsOptions,
           })
-        }
-        if (
-          !cancelled &&
-          (branchesResult.status === "rejected" ||
-            envIdsResult.status === "rejected" ||
-            testTagsResult.status === "rejected")
-        ) {
-          message.error("Failed to fetch some filter options.")
         }
       } catch (error) {
         if (!cancelled) {
@@ -108,7 +106,7 @@ export function BuildCoverageFiltersBar({
   return (
     <div
       style={{
-        position: "sticky",
+        position: sticky ? "sticky" : "static",
         top: 0,
         zIndex: 100,
         display: "flex",
@@ -127,7 +125,7 @@ export function BuildCoverageFiltersBar({
         style={{ whiteSpace: "nowrap", flexShrink: 0, lineHeight: "24px" }}
       >
         Coverage filters
-        <HintIcon title={FILTER_SCOPE_HINT} style={{ marginLeft: 6 }} />
+        <HintIcon title={scopeHint} style={{ marginLeft: 6 }} />
       </Text>
       <OptionalFilters
         size="small"
@@ -137,7 +135,7 @@ export function BuildCoverageFiltersBar({
         branchOptions={filterOptions.branches}
         envOptions={filterOptions.envIds}
         testTagOptions={filterOptions.testTags}
-        filterHints={COVERAGE_FILTER_HINTS}
+        filterHints={filterHints}
         onBranchesChange={onBranchesChange}
         onEnvIdsChange={onEnvIdsChange}
         onTestTagsChange={onTestTagsChange}

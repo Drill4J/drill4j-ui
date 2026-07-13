@@ -37,14 +37,11 @@ If `$dashboard` is empty or not in the table below, ask the user to pick a valid
 | `build-summary` | `02-build-summary.md` |
 | `build-code-coverage` | `03-build-code-coverage/README.md` (+ component specs in same folder) |
 | `build-tests` | `04-build-tests.md` |
-| `build-changes-testing` | `05-build-changes-testing.md` |
+| `build-comparison` | `05-build-comparison.md` |
 | `apps-trends` | `07-apps-trends.md` |
 | `tests` | `08-tests.md` |
 | `tests-results` | `09-tests-results.md` |
 | `tests-code-coverage` | `10-tests-code-coverage.md` |
-| `build-impacted-tests` | `13-build-impacted-tests.md` |
-| `build-impacted-methods` | `14-build-impacted-methods.md` |
-| `build-changes` | `15-build-changes.md` |
 
 **One dashboard per run.** Do not implement other dashboards unless the user explicitly asks.
 

@@ -23,6 +23,7 @@ import * as API from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
 import { clearTestSessionsQueryParams } from "../../../../modules/metrics/query-params"
+import { clearComparisonQueryParams } from "./use-comparison-search-params"
 
 const TABS_WITH_COVERAGE_FILTERS = new Set(["summary", "coverage"])
 const TABS_WITH_SESSION_FILTERS = new Set(["tests"])
@@ -31,10 +32,7 @@ const TAB_ITEMS = [
   { key: "summary", label: "Summary", path: "" },
   { key: "tests", label: "Tests", path: "tests" },
   { key: "coverage", label: "Coverage", path: "coverage" },
-  { key: "changes", label: "Changes", path: "changes", disabled: true },
-  { key: "changes-testing", label: "Changes Testing", path: "changes-testing", disabled: true },
-  { key: "impacted-tests", label: "Impacted Tests", path: "impacted-tests", disabled: true },
-  { key: "impacted-methods", label: "Impacted Methods", path: "impacted-methods", disabled: true },
+  { key: "comparison", label: "Comparison", path: "comparison" },
 ]
 
 function resolveActiveTab(pathname, basePath) {
@@ -112,6 +110,9 @@ export const BuildDetailLayout = () => {
     }
     if (key !== "tests") {
       clearTestSessionsQueryParams(params)
+    }
+    if (key !== "comparison") {
+      clearComparisonQueryParams(params)
     }
     const search = params.toString()
     navigate({ pathname: target, search: search ? `?${search}` : "" })

@@ -13,8 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { BuildDetailLayout } from "./layout"
-export { BuildSummaryPage } from "./summary"
-export { BuildCoveragePage } from "./coverage"
-export { BuildTestsPage } from "./tests"
-export { BuildComparisonPage } from "./comparison"
+import { ComparisonRisksTable } from "./risks-table"
+
+/**
+ * @param {{
+ *   build: object,
+ *   baselineBuild: object,
+ *   coverageFilters?: { testTags?: string[], envIds?: string[], branches?: string[] },
+ *   onMethodSelect: (signature: string) => void,
+ * }} props
+ */
+export function RisksSection({ build, baselineBuild, coverageFilters, onMethodSelect }) {
+  return (
+    <ComparisonRisksTable
+      build={build}
+      baselineBuild={baselineBuild}
+      coverageFilters={coverageFilters}
+      onMethodSelect={onMethodSelect}
+    />
+  )
+}

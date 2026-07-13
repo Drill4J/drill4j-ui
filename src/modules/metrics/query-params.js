@@ -43,6 +43,13 @@ export const BUILD_DETAIL_QUERY_KEYS = [
   "methodsSortOrder",
 ]
 
+export const COMPARISON_QUERY_KEYS = [
+  "baselineBuildId",
+  "section",
+  "methodSignature",
+  ...COVERAGE_LIST_QUERY_KEYS,
+]
+
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
 
 /**
@@ -136,12 +143,42 @@ export const axiosListParamsSerializer = { indexes: null }
  */
 
 /**
+ * @typedef {{
+ *   baselineBuildId?: string,
+ *   section?: string,
+ *   methodSignature?: string,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ * }} ComparisonQueryState
+ */
+
+/**
  * @param {BuildDetailQueryState} state
  * @returns {URLSearchParams}
  */
 export function buildBuildDetailSearchParams(state) {
   const params = new URLSearchParams()
   BUILD_DETAIL_QUERY_KEYS.forEach((key) => {
+    const value = state[key]
+    if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
+      setListQueryParam(params, key, value)
+      return
+    }
+    if (value) {
+      params.set(key, value)
+    }
+  })
+  return params
+}
+
+/**
+ * @param {ComparisonQueryState} state
+ * @returns {URLSearchParams}
+ */
+export function buildComparisonSearchParams(state) {
+  const params = new URLSearchParams()
+  COMPARISON_QUERY_KEYS.forEach((key) => {
     const value = state[key]
     if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
       setListQueryParam(params, key, value)

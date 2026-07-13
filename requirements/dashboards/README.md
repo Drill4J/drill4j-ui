@@ -196,14 +196,11 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | [02-build-summary.md](./02-build-summary.md) | 2 | Build — Summary | `/metrics/:groupId/apps/:appId/builds/:buildId` | None (tab) |
 | [03-build-code-coverage/](./03-build-code-coverage/README.md) | 3 | Build — Code Coverage | `…/builds/:buildId/coverage` | None (tab) |
 | [04-build-tests.md](./04-build-tests.md) | 4 | Build — Tests (sessions for build) | `…/builds/:buildId/tests` | None (tab) |
-| [05-build-changes-testing.md](./05-build-changes-testing.md) | 5 | Build — Changes Testing | `…/builds/:buildId/changes-testing` | None (tab) |
+| [05-build-comparison.md](./05-build-comparison.md) | 5, 6, 13, 14, 15 | Build — Comparison | `…/builds/:buildId/comparison` | None (tab) |
 | [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `/metrics/:groupId/apps/:appId/trends` | None |
 | [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `/metrics/:groupId/test-sessions` | None |
 | [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `/metrics/:groupId/test-sessions/:testSessionId` | None (tab) |
 | [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/test-sessions/:testSessionId/coverage` | None (tab) |
-| [13-build-impacted-tests.md](./13-build-impacted-tests.md) | 6, 13 | Build — Impacted Tests | `…/builds/:buildId/impacted-tests` | None (tab) |
-| [14-build-impacted-methods.md](./14-build-impacted-methods.md) | 14 | Build — Impacted Methods | `…/builds/:buildId/impacted-methods` | None (tab) |
-| [15-build-changes.md](./15-build-changes.md) | 15 | Build — Changes | `…/builds/:buildId/changes` | None (tab) |
 
 All routes require `PrivateRoute roles={["user", "admin"]}`. Details per file in **Routing, auth & sidebar** sections.
 
@@ -278,7 +275,9 @@ These endpoints are referenced by multiple dashboards; implement once in `admin-
 | `GET /api/metrics/builds/:buildId` | Single build details |
 | `GET /api/metrics/builds/:buildId/coverage-by-probes` | Probe coverage pie via `get_builds_with_coverage` |
 | `GET /api/metrics/builds/:buildId/coverage-by-methods` | Method coverage pie via `get_builds_with_coverage` |
-| `GET /api/metrics/builds/:buildId/changes-summary` | Change type counts |
+| `GET /api/metrics/builds/:buildId/changes-summary` | Change type counts (`get_changes`) |
+| `GET /api/metrics/changes` | Method diff between builds (`get_changes`) |
+| `GET /api/metrics/risks` | Coverage risks report (`get_changes_with_coverage` + impacted methods join) |
 | `GET /api/metrics/builds/:buildId/similar-builds` | Baseline picker via `get_similar_builds` |
 | `GET /api/metrics/coverage/by-package` | Aggregated package coverage |
 | `GET /api/metrics/coverage/by-class` | Aggregated class coverage |
