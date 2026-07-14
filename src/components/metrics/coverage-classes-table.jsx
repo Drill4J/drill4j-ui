@@ -159,7 +159,7 @@ function buildMethodsFetchParams(coverageFilters, record, page, pageSize, sortBy
   const params = {
     ...coverageFilters,
     packageName: record.packageName,
-    className: record.className,
+    className: record.fullClassName,
     page,
     pageSize,
   }

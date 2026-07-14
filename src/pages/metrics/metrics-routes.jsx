@@ -20,7 +20,11 @@ import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPlaceholderPage } from "./groups/app-trends"
 import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
-import { TestSessionDetailPage } from "./groups/test-session-detail"
+import {
+  TestSessionLayout,
+  TestSessionResultsPage,
+  TestSessionCoveragePage,
+} from "./groups/test-session-detail"
 
 /**
  * Group is the metrics context (like Report Portal project).
@@ -56,8 +60,11 @@ export const metricsRoutes = (
         <Route
           path=":testSessionId"
           handle={{ breadcrumb: "testSessionId" }}
-          element={<TestSessionDetailPage />}
-        />
+          element={<TestSessionLayout />}
+        >
+          <Route index element={<TestSessionResultsPage />} />
+          <Route path="coverage" element={<TestSessionCoveragePage />} />
+        </Route>
       </Route>
     </Route>
   </>

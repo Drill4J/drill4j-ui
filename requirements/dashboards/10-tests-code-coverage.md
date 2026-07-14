@@ -44,10 +44,11 @@ Coverage tables scoped to a test session (dashboard 12) with optional drill-down
 ### New endpoints
 
 ```
-GET /api/metrics/test-sessions/:testSessionId/definitions?buildId=
-→ ApiResponse<TestDefinitionView[]>
+GET /api/metrics/test-sessions/:testSessionId/definitions?buildId=&query=&page=&pageSize=
+→ PagedDataResponse<TestDefinitionView[]>
 ```
 
+`query` filters by test definition id, name, or path (case-insensitive). Defaults use server page size.
 ```
 GET /api/metrics/test-sessions/:testSessionId/coverage/by-package?buildId=&testDefinitionId=
 GET /api/metrics/test-sessions/:testSessionId/coverage/by-class?buildId=&testDefinitionId=&packageName=
@@ -75,7 +76,7 @@ GET /api/metrics/coverage-treemap?buildId=&testSessionId=&testDefinitionId=
 
 - Shared test session layout (tabs)
 - `buildId` from session association or compact select (scoped to session's builds)
-- `TestDefinitionSelect` — Ant Design Select populated from definitions endpoint; "All tests" option for session-level view
+- `TestDefinitionSelect` — Ant Design Select with server-side search/pagination against definitions endpoint; "All tests" (clear) for session-level view
 - Optional: `packageName`, `className` via table drill-down (query params)
 - `CoverageTreemapCanvas` at top — see [03-build-code-coverage/treemap.md](./03-build-code-coverage/treemap.md)
 - Tables below: Packages → Classes → Methods (same drill-down pattern as build coverage)

@@ -24,7 +24,16 @@ import { Descriptions } from "antd"
  */
 export function KeyValuePanel({ title, items, column = 2 }) {
   return (
-    <Descriptions title={title} bordered size="small" column={column}>
+    <Descriptions
+      title={title}
+      bordered
+      size="small"
+      column={column}
+      styles={{
+        label: { padding: "12px 16px" },
+        content: { padding: "12px 16px" },
+      }}
+    >
       {items.map(({ label, value }) => (
         <Descriptions.Item key={label} label={label}>
           {value ?? "—"}

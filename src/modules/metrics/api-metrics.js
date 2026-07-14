@@ -319,6 +319,166 @@ export async function getTestSessionFilterOptions(groupId, buildId) {
 }
 
 /**
+ * @param {string} groupId
+ * @param {string} testSessionId
+ * @param {string} [buildId]
+ */
+export async function getTestSessionDetail(groupId, testSessionId, buildId) {
+  const key = `test-session:${groupId}:${testSessionId}:${buildId ?? ""}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/test-sessions/${encodeURIComponent(testSessionId)}`, {
+        params: { groupId, buildId },
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} testSessionId
+ * @param {string} buildId
+ */
+export async function getTestSessionCoverageSummary(
+  groupId,
+  testSessionId,
+  buildId,
+  testDefinitionId
+) {
+  const key = `test-session-coverage:${groupId}:${testSessionId}:${buildId}:${testDefinitionId ?? ""}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/coverage-summary`,
+        { params: { groupId, buildId, testDefinitionId } }
+      )
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} testSessionId
+ * @param {string} [buildId]
+ * @param {{
+ *   query?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} [params]
+ * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getTestSessionDefinitions(groupId, testSessionId, buildId, params = {}) {
+  const { query, page = 1, pageSize = 20 } = params
+  const key = [
+    "test-session-definitions",
+    groupId,
+    testSessionId,
+    buildId ?? "",
+    query ?? "",
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/test-sessions/${encodeURIComponent(testSessionId)}/definitions`, {
+        params: { groupId, buildId, query, page, pageSize },
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   path?: string,
+ *   testResults?: string[],
+ *   testTags?: string[],
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ */
+export async function getTestLaunches(params) {
+  const {
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    testResults = [],
+    testTags = [],
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = [
+    "test-launches",
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    testResults.join(","),
+    testTags.join(","),
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/test-sessions/${encodeURIComponent(testSessionId)}/launches`, {
+        params: serializeListQueryParams({
+          groupId,
+          buildId,
+          path,
+          testResults,
+          testTags,
+          page,
+          pageSize,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ */
+export async function getTestFileLaunches(params) {
+  const { groupId, testSessionId, buildId, page = 1, pageSize = 20 } = params
+  const key = ["test-file-launches", groupId, testSessionId, buildId, page, pageSize].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/file-launches`,
+        {
+          params: serializeListQueryParams({ groupId, buildId, page, pageSize }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
  * @param {object} body
  */
 export async function postImpactedTests(body) {
@@ -425,8 +585,9 @@ export async function getRisks(params) {
 }
 
 function coverageFilterKey(buildId, filters = {}) {
-  const { envIds, branches, testTags, packageName, className } = filters
-  return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}:${packageName}:${className}`
+  const { envIds, branches, testTags, packageName, className, testSessionId, testDefinitionId } =
+    filters
+  return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testTags?.join(",")}:${packageName}:${className}:${testSessionId}:${testDefinitionId}`
 }
 
 /**

@@ -136,6 +136,7 @@ export const CoverageTreemapCanvas = ({
 
   const treemapRoots = usesExternalRoots ? externalRoots : data
   const loadingState = usesExternalRoots ? Boolean(rootsLoading) : loading
+  const containerVisible = loadingState || Boolean(treemapRoots?.length)
 
   useEffect(() => {
     setDrillRootId(null)
@@ -362,10 +363,21 @@ export const CoverageTreemapCanvas = ({
   }, [])
 
   useEffect(() => {
+    if (!containerVisible) {
+      return undefined
+    }
+
     const container = containerRef.current
     if (!container) {
       return undefined
     }
+
+    const measure = () => {
+      const { width, height } = container.getBoundingClientRect()
+      setSize({ width: Math.floor(width), height: Math.floor(height) })
+    }
+
+    measure()
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0]
@@ -379,7 +391,7 @@ export const CoverageTreemapCanvas = ({
 
     observer.observe(container)
     return () => observer.disconnect()
-  }, [])
+  }, [containerVisible])
 
   return (
     <div>

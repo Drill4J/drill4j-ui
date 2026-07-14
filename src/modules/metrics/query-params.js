@@ -18,9 +18,23 @@ export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
 
 export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
 
+export const TEST_SESSION_DETAIL_LIST_QUERY_KEYS = ["testResults", "testTags"]
+
+export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
+  "testDefinitionId",
+  "packageName",
+  "className",
+  "methodId",
+  "sortBy",
+  "sortOrder",
+  "methodsSortBy",
+  "methodsSortOrder",
+]
+
 export const LIST_QUERY_PARAM_KEYS = new Set([
   ...COVERAGE_LIST_QUERY_KEYS,
   ...TEST_SESSIONS_LIST_QUERY_KEYS,
+  ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
 ])
 
 export const TEST_SESSIONS_QUERY_KEYS = [

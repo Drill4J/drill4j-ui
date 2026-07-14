@@ -13,17 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
-import { useParams } from "react-router-dom"
-
-const { Title } = Typography
-
-export const TestSessionDetailPage = () => {
-  const { groupId, testSessionId } = useParams()
-
-  return (
-    <Title level={3}>
-      Test Session — {groupId} / {testSessionId}
-    </Title>
-  )
-}
+export { TestSessionLayout } from "./layout"
+export { TestSessionResultsPage } from "./results"
+export { TestSessionCoveragePage } from "./coverage"

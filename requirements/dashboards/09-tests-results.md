@@ -47,7 +47,7 @@ GET /api/metrics/test-sessions/:testSessionId
 
 ```
 GET /api/metrics/test-sessions/:testSessionId/coverage-summary?buildId=
-→ ApiResponse<CoverageSummaryView>
+→ ApiResponse<TestSessionCoverageSummaryView>  // { probes: { slices }, methods: { slices } }
 ```
 
 ```

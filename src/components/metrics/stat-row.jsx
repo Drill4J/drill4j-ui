@@ -34,6 +34,7 @@ export function StatRow({ stats }) {
             size="small"
             hoverable={Boolean(onClick)}
             onClick={onClick}
+            styles={{ body: { padding: "12px 16px" } }}
             style={onClick ? { cursor: "pointer" } : undefined}
           >
             <Statistic title={title} value={value} loading={loading} />

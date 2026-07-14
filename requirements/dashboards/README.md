@@ -286,6 +286,6 @@ These endpoints are referenced by multiple dashboards; implement once in `admin-
 | `GET /api/metrics/test-sessions/:testSessionId/launches` | Test launches |
 | `GET /api/metrics/test-sessions/:testSessionId/file-launches` | File-level launches |
 | `GET /api/metrics/test-sessions/:testSessionId/coverage-summary` | Session coverage pie |
-| `GET /api/metrics/test-sessions/:testSessionId/definitions` | Definitions in session |
+| `GET /api/metrics/test-sessions/:testSessionId/definitions` | Paginated definitions in session (`query`, `page`, `pageSize`) |
 | `GET /api/metrics/apps/trends/coverage` | Coverage trend time-series |
 | `GET /api/metrics/apps/trends/changes` | Changes trend time-series |
