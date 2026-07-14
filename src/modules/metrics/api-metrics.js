@@ -311,7 +311,10 @@ export async function getTestSessionFilterOptions(groupId, buildId) {
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/test-sessions/filter-options", {
-        params: { groupId, buildId },
+        params: {
+          groupId,
+          ...(buildId ? { buildId } : {}),
+        },
       })
     )
     return response.data.data

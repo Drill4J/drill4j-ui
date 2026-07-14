@@ -112,7 +112,7 @@ export const TestSessionCoveragePage = () => {
   }, [resolvedBuildId, treemapFilters])
 
   useEffect(() => {
-    if (!resolvedBuildId || !testDefinitionId) {
+    if (!resolvedBuildId) {
       setDefinitionCoverage(null)
       return undefined
     }
@@ -128,7 +128,9 @@ export const TestSessionCoveragePage = () => {
       })
       .catch((error) => {
         if (!cancelled) {
-          message.error(`Failed to fetch test coverage summary. ${error?.message}`)
+          message.error(
+            `Failed to fetch ${testDefinitionId ? "test" : "session"} coverage summary. ${error?.message}`
+          )
         }
       })
       .finally(() => {
@@ -308,26 +310,24 @@ export const TestSessionCoveragePage = () => {
         </Col>
       </Row>
 
-      {testDefinitionId ? (
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} md={12}>
-            <CoveragePieChart
-              title="Code coverage (probes)"
-              slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
-              loading={definitionCoverageLoading}
-              showCenterTotal
-            />
-          </Col>
-          <Col xs={24} md={12}>
-            <CoveragePieChart
-              title="Methods coverage"
-              slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
-              loading={definitionCoverageLoading}
-              showCenterTotal
-            />
-          </Col>
-        </Row>
-      ) : null}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={12}>
+          <CoveragePieChart
+            title="Code coverage (probes)"
+            slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
+            loading={definitionCoverageLoading}
+            showCenterTotal
+          />
+        </Col>
+        <Col xs={24} md={12}>
+          <CoveragePieChart
+            title="Methods coverage"
+            slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
+            loading={definitionCoverageLoading}
+            showCenterTotal
+          />
+        </Col>
+      </Row>
 
       <CoverageTreemapCanvas
         roots={treemapRoots}

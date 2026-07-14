@@ -31,12 +31,13 @@ const TEST_SESSION_FILTER_HINTS = {
 }
 
 /**
- * Sticky session filter bar for the build Tests tab.
+ * Sticky session filter bar for build Tests tab and group Test Sessions page.
  * Same layout pattern as `BuildCoverageFiltersBar`.
+ * Omit `buildId` for group-wide filter options.
  *
  * @param {{
  *   groupId: string,
- *   buildId: string,
+ *   buildId?: string,
  *   testTaskIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],

@@ -17,10 +17,6 @@ import { useEffect, useMemo, useState } from "react"
 import { Button, Col, Row, Select, Tag, Typography, message } from "antd"
 import { ArrowLeftOutlined } from "@ant-design/icons"
 import { useOutletContext, useParams } from "react-router-dom"
-import {
-  CoveragePieChart,
-  coverageUnitSlicesToChart,
-} from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { StatRow } from "../../../../components/metrics/stat-row"
@@ -158,50 +154,14 @@ export const TestSessionResultsPage = () => {
   const resolvedBuildId = buildId ?? session?.buildId
   const showingLaunches = Boolean(selectedPath)
 
-  const [coverage, setCoverage] = useState(null)
   const [testFiles, setTestFiles] = useState([])
   const [launches, setLaunches] = useState([])
   const [testFilesTotal, setTestFilesTotal] = useState(0)
   const [launchesTotal, setLaunchesTotal] = useState(0)
   const [loading, setLoading] = useState({
-    coverage: false,
     testFiles: false,
     launches: false,
   })
-
-  useEffect(() => {
-    if (!resolvedBuildId) {
-      return undefined
-    }
-    let cancelled = false
-
-    const loadCoverage = async () => {
-      setLoading((state) => ({ ...state, coverage: true }))
-      try {
-        const data = await API.getTestSessionCoverageSummary(
-          groupId,
-          testSessionId,
-          resolvedBuildId
-        )
-        if (!cancelled) {
-          setCoverage(data)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch session coverage. ${error?.message}`)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading((state) => ({ ...state, coverage: false }))
-        }
-      }
-    }
-
-    loadCoverage()
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, testSessionId, resolvedBuildId])
 
   useEffect(() => {
     if (showingLaunches) {
@@ -365,28 +325,6 @@ export const TestSessionResultsPage = () => {
       </div>
 
       <StatRow stats={statItems} />
-
-      <Title level={5} style={{ marginBottom: 16 }}>
-        Session coverage
-      </Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
-        <Col xs={24} md={12}>
-          <CoveragePieChart
-            title="Code coverage (probes)"
-            slices={coverageUnitSlicesToChart(coverage?.probes)}
-            loading={loading.coverage}
-            showCenterTotal
-          />
-        </Col>
-        <Col xs={24} md={12}>
-          <CoveragePieChart
-            title="Methods coverage"
-            slices={coverageUnitSlicesToChart(coverage?.methods)}
-            loading={loading.coverage}
-            showCenterTotal
-          />
-        </Col>
-      </Row>
 
       {showingLaunches ? (
         <>
