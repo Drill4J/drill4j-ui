@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Col, Row, Tabs, Typography, message } from "antd"
 import { useOutletContext } from "react-router-dom"
 import {
@@ -76,6 +76,7 @@ export const BuildComparisonPage = () => {
     baseline: false,
     overview: false,
   })
+  const sectionTabsRef = useRef(null)
 
   const buildId = build?.buildId
 
@@ -204,38 +205,86 @@ export const BuildComparisonPage = () => {
         section: nextSection,
         methodSignature: nextSignature,
       })
+      sectionTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     },
     [updateQueryParams]
   )
+  // Keep overview count links stable across tab/filter URL updates (updateQueryParams identity churns).
+  const goToSectionRef = useRef(goToSection)
+  goToSectionRef.current = goToSection
 
   const impactItems = useMemo(
     () => [
       {
         label: "Impacted tests",
         value: loading.overview ? null : (
-          <Link onClick={() => goToSection("impacted-tests")}>{impactedTestsTotal}</Link>
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSectionRef.current("impacted-tests")
+            }}
+          >
+            {impactedTestsTotal}
+          </Link>
         ),
       },
       {
         label: "Impacted methods",
         value: loading.overview ? null : (
-          <Link onClick={() => goToSection("impacted-methods")}>{impactedMethodsTotal}</Link>
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSectionRef.current("impacted-methods")
+            }}
+          >
+            {impactedMethodsTotal}
+          </Link>
         ),
       },
     ],
-    [goToSection, impactedMethodsTotal, impactedTestsTotal, loading.overview]
+    [impactedMethodsTotal, impactedTestsTotal, loading.overview]
   )
 
   const changeItems = useMemo(
     () => [
-      { label: "New methods", value: loading.overview ? null : changesSummary?.newMethods },
+      {
+        label: "New methods",
+        value: loading.overview ? null : (
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSectionRef.current("changes")
+            }}
+          >
+            {changesSummary?.newMethods}
+          </Link>
+        ),
+      },
       {
         label: "Modified methods",
-        value: loading.overview ? null : changesSummary?.modifiedMethods,
+        value: loading.overview ? null : (
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSectionRef.current("changes")
+            }}
+          >
+            {changesSummary?.modifiedMethods}
+          </Link>
+        ),
       },
       {
         label: "Deleted methods",
-        value: loading.overview ? null : changesSummary?.deletedMethods,
+        value: loading.overview ? null : (
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSectionRef.current("changes")
+            }}
+          >
+            {changesSummary?.deletedMethods}
+          </Link>
+        ),
       },
     ],
     [changesSummary, loading.overview]
@@ -377,12 +426,14 @@ export const BuildComparisonPage = () => {
         </>
       )}
 
-      <Tabs
-        activeKey={section}
-        items={SECTION_ITEMS}
-        onChange={(key) => updateQueryParams({ section: key })}
-        style={{ marginBottom: 16 }}
-      />
+      <div ref={sectionTabsRef}>
+        <Tabs
+          activeKey={section}
+          items={SECTION_ITEMS}
+          onChange={(key) => updateQueryParams({ section: key })}
+          style={{ marginBottom: 16 }}
+        />
+      </div>
 
       {sectionContent}
 

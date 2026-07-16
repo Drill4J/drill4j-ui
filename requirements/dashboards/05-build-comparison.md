@@ -195,7 +195,7 @@ One scrollable page with:
 1. **Baseline picker** — `BaselineBuildFilter` + `BaselineBuildPickerDialog` (required), scoped to current `groupId`/`appId`
 2. **Optional filters** — `envId`, `branch`, `testTag` (compact inline row; affects changed-coverage overview charts **and** Risks section)
 3. **Comparison overview** — visible when `baselineBuildId` is set (persistent above section tabs):
-   - `KeyValuePanel` **Impact** — impacted tests / impacted methods counts (click → corresponding section)
+   - `   - `KeyValuePanel` **Impact** — impacted tests / impacted methods counts (click → corresponding section)
    - `KeyValuePanel` **Changes** — new / modified / deleted method counts
    - Two `CoveragePieChart`:
      - Changed code coverage (probes)
