@@ -84,6 +84,7 @@ GET /api/metrics/applications?groupId={groupId}
 - Table/list of apps with columns: `appId`
 - Each row links to `/metrics/:groupId/apps/:appId` (app dashboard — see [01-app.md](./01-app.md))
 - Prominent link/button: **Test Sessions** → `/metrics/:groupId/test-sessions`
+- Button: **Settings** → `/metrics/:groupId/settings` (see [11-group-settings.md](./11-group-settings.md))
 
 ### Components
 

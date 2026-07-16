@@ -42,6 +42,7 @@ If `$dashboard` is empty or not in the table below, ask the user to pick a valid
 | `tests` | `08-tests.md` |
 | `tests-results` | `09-tests-results.md` |
 | `tests-code-coverage` | `10-tests-code-coverage.md` |
+| `group-settings` | `11-group-settings.md` |
 
 **One dashboard per run.** Do not implement other dashboards unless the user explicitly asks.
 
