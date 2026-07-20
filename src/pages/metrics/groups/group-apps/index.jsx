@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Button, Table, Typography, message } from "antd"
+import { Button, Space, Table, Typography, message } from "antd"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import * as API from "../../../../modules/metrics/api-metrics"
 
@@ -69,12 +69,17 @@ export const GroupAppsPage = () => {
         <Title level={3} style={{ margin: 0 }}>
           {groupId}
         </Title>
-        <Button
-          type="primary"
-          onClick={() => navigate(`/metrics/${groupId}/test-sessions`)}
-        >
-          Test Sessions
-        </Button>
+        <Space>
+          <Button onClick={() => navigate(`/metrics/${groupId}/settings`)}>
+            Settings
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => navigate(`/metrics/${groupId}/test-sessions`)}
+          >
+            Test Sessions
+          </Button>
+        </Space>
       </div>
       <Table
         columns={columns}

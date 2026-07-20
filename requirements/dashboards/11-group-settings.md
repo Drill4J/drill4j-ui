@@ -30,8 +30,8 @@ DELETE /api/group-settings/{groupId}
 
 Payload fields (from `GroupSettingsPayload`):
 
-- `retentionPeriodDays` — days to retain raw ingested data (nullable → system default)
-- `metricsPeriodDays` — days of history included in metrics computation (nullable → system default)
+- `retentionPeriodDays` — days to retain raw ingested data (nullable / unset → keep **all** raw data)
+- `metricsPeriodDays` — days of history included in metrics computation (nullable / unset → compute metrics over **all** available data)
 
 ## UI (draft)
 
@@ -42,10 +42,10 @@ Payload fields (from `GroupSettingsPayload`):
 
 ### Layout (TBD)
 
+- Compact form with period presets: unset, 2 weeks, 1/2/3/6 months, or custom days
 - Load current settings via `GET`
 - Edit / save via `PUT`
-- Reset to defaults via `DELETE` (confirm before delete)
-- Compact form layout; details TBD in a follow-up pass
+- Clear (unset) via `DELETE` (confirm before delete) — restores “keep all / use all available data” behavior
 
 ### Components (suggested)
 
