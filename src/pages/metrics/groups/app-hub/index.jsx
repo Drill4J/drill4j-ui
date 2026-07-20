@@ -20,6 +20,10 @@ import dayjs from "dayjs"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { OptionalFilters } from "../../../../components/metrics/optional-filters"
+import { confirmPermanentDelete } from "../../../../components/metrics/confirm-permanent-delete"
+import { RowActionsDropdown } from "../../../../components/metrics/row-actions-dropdown"
+import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
+import * as DataManagementAPI from "../../../../modules/data-management/api-data-management"
 import * as API from "../../../../modules/metrics/api-metrics"
 import {
   getListQueryParam,
@@ -33,6 +37,7 @@ const DEFAULT_PAGE_SIZE = 20
 export const AppHubPage = () => {
   const { groupId, appId } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchString = searchParams.toString()
 
@@ -50,6 +55,8 @@ export const AppHubPage = () => {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [deletingBuildId, setDeletingBuildId] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [filterOptions, setFilterOptions] = useState({
     branches: [],
     envIds: [],
@@ -128,7 +135,31 @@ export const AppHubPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, appId, branches, envIds, page, pageSize])
+  }, [groupId, appId, branches, envIds, page, pageSize, refreshKey])
+
+  const handleDeleteBuild = useCallback(
+    async (build) => {
+      setDeletingBuildId(build.id)
+      try {
+        const successMessage = await DataManagementAPI.deleteBuild(
+          groupId,
+          appId,
+          build.id
+        )
+        message.success(successMessage)
+        if (builds.length === 1 && page > 1) {
+          setPage(page - 1)
+        } else {
+          setRefreshKey((value) => value + 1)
+        }
+      } catch (error) {
+        message.error(`Failed to delete build. ${error.message}`)
+      } finally {
+        setDeletingBuildId(null)
+      }
+    },
+    [appId, builds.length, groupId, page]
+  )
 
   const columns = useMemo(
     () => [
@@ -170,8 +201,34 @@ export const AppHubPage = () => {
         key: "envIds",
         render: (envIds) => (envIds?.length ? envIds.join(", ") : "—"),
       },
+      {
+        title: "",
+        key: "actions",
+        width: 48,
+        align: "center",
+        render: (_, build) => (
+          <RowActionsDropdown
+            ariaLabel="Build actions"
+            loading={deletingBuildId === build.id}
+            items={[
+              {
+                key: "delete",
+                label: "Delete build",
+                danger: true,
+                disabled: !isAdmin,
+                disabledTooltip: "Requires ADMIN role",
+                onClick: () =>
+                  confirmPermanentDelete({
+                    title: "Delete build?",
+                    onOk: () => handleDeleteBuild(build),
+                  }),
+              },
+            ]}
+          />
+        ),
+      },
     ],
-    []
+    [deletingBuildId, handleDeleteBuild, isAdmin]
   )
 
   const handleTableChange = (tablePagination) => {

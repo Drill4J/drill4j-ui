@@ -17,6 +17,8 @@ import { useMemo } from "react"
 import { Tag } from "antd"
 import dayjs from "dayjs"
 import { MetricsDataTable } from "./metrics-data-table"
+import { confirmPermanentDelete } from "./confirm-permanent-delete"
+import { RowActionsDropdown } from "./row-actions-dropdown"
 import { TableColumnSortHeader } from "./table-column-sort-header"
 
 const RESULT_COLORS = {
@@ -75,8 +77,18 @@ function formatSuccessRate(rate) {
  * @param {string | undefined} sortBy
  * @param {string | undefined} sortOrder
  * @param {(sort: { sortBy: string | null, sortOrder: string | null }) => void} onSortChange
+ * @param {boolean} isAdmin
+ * @param {string | null} deletingSessionId
+ * @param {(session: object) => Promise<void>} onDelete
  */
-function buildTestSessionsColumns(sortBy, sortOrder, onSortChange) {
+function buildTestSessionsColumns(
+  sortBy,
+  sortOrder,
+  onSortChange,
+  isAdmin,
+  deletingSessionId,
+  onDelete
+) {
   return [
     {
       title: (
@@ -164,6 +176,32 @@ function buildTestSessionsColumns(sortBy, sortOrder, onSortChange) {
       key: "successRate",
       render: formatSuccessRate,
     },
+    {
+      title: "",
+      key: "actions",
+      width: 48,
+      align: "center",
+      render: (_, session) => (
+        <RowActionsDropdown
+          ariaLabel="Session actions"
+          loading={deletingSessionId === session.testSessionId}
+          items={[
+            {
+              key: "delete",
+              label: "Delete session",
+              danger: true,
+              disabled: !isAdmin,
+              disabledTooltip: "Requires ADMIN role",
+              onClick: () =>
+                confirmPermanentDelete({
+                  title: "Delete session?",
+                  onOk: () => onDelete(session),
+                }),
+            },
+          ]}
+        />
+      ),
+    },
   ]
 }
 
@@ -177,6 +215,9 @@ function buildTestSessionsColumns(sortBy, sortOrder, onSortChange) {
  *   onSortChange: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
  *   onTableChange: import("antd").TableProps["onChange"],
  *   onRowClick?: (session: object) => void,
+ *   isAdmin: boolean,
+ *   deletingSessionId?: string | null,
+ *   onDelete: (session: object) => Promise<void>,
  * }} props
  */
 export function TestSessionsTable({
@@ -188,10 +229,21 @@ export function TestSessionsTable({
   onSortChange,
   onTableChange,
   onRowClick,
+  isAdmin,
+  deletingSessionId = null,
+  onDelete,
 }) {
   const columns = useMemo(
-    () => buildTestSessionsColumns(sortBy, sortOrder, onSortChange),
-    [onSortChange, sortBy, sortOrder]
+    () =>
+      buildTestSessionsColumns(
+        sortBy,
+        sortOrder,
+        onSortChange,
+        isAdmin,
+        deletingSessionId,
+        onDelete
+      ),
+    [deletingSessionId, isAdmin, onDelete, onSortChange, sortBy, sortOrder]
   )
 
   return (

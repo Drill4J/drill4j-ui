@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { message } from "antd"
 import { useNavigate, useParams } from "react-router-dom"
 import { TestSessionsTable } from "../../../../components/metrics/test-sessions-table"
+import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
+import * as DataManagementAPI from "../../../../modules/data-management/api-data-management"
 import * as API from "../../../../modules/metrics/api-metrics"
 import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
 
 export const BuildTestsPage = () => {
   const { groupId, buildId } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
   const {
     page,
     pageSize,
@@ -38,6 +41,8 @@ export const BuildTestsPage = () => {
   const [sessions, setSessions] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [deletingSessionId, setDeletingSessionId] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -85,7 +90,31 @@ export const BuildTestsPage = () => {
     sessionsSortOrder,
     page,
     pageSize,
+    refreshKey,
   ])
+
+  const handleDeleteSession = useCallback(
+    async (session) => {
+      setDeletingSessionId(session.testSessionId)
+      try {
+        const successMessage = await DataManagementAPI.deleteTestSession(
+          groupId,
+          session.testSessionId
+        )
+        message.success(successMessage)
+        if (sessions.length === 1 && page > 1) {
+          updateQueryParams({ page: page - 1 })
+        } else {
+          setRefreshKey((value) => value + 1)
+        }
+      } catch (error) {
+        message.error(`Failed to delete test session. ${error.message}`)
+      } finally {
+        setDeletingSessionId(null)
+      }
+    },
+    [groupId, page, sessions.length, updateQueryParams]
+  )
 
   const pagination = useMemo(
     () => ({ page, pageSize, total }),
@@ -113,6 +142,9 @@ export const BuildTestsPage = () => {
       onSortChange={handleSortChange}
       onTableChange={handleTableChange}
       onRowClick={handleRowClick}
+      isAdmin={isAdmin}
+      deletingSessionId={deletingSessionId}
+      onDelete={handleDeleteSession}
     />
   )
 }
