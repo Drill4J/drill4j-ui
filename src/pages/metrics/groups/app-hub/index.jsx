@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Typography, message } from "antd"
+import { Button, Space, Typography, message } from "antd"
 import { LineChartOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
@@ -262,9 +262,14 @@ export const AppHubPage = () => {
         <Title level={3} style={{ margin: 0 }}>
           {appId}
         </Title>
-        <Link to={`/metrics/${groupId}/apps/${appId}/trends`}>
-          <Button icon={<LineChartOutlined />}>Trends</Button>
-        </Link>
+        <Space>
+          <Link to={`/metrics/${groupId}/apps/${appId}/method-ignore-rules`}>
+            <Button>Exclusion rules</Button>
+          </Link>
+          <Link to={`/metrics/${groupId}/apps/${appId}/trends`}>
+            <Button icon={<LineChartOutlined />}>Trends</Button>
+          </Link>
+        </Space>
       </div>
 
       <div style={{ marginBottom: 16 }}>

@@ -28,19 +28,24 @@ export function MetricsDataTable({
   showTotal = (total) => `${total} total`,
   ...rest
 }) {
+  const paginationConfig =
+    pagination === false
+      ? false
+      : {
+          current: pagination?.page,
+          pageSize: pagination?.pageSize,
+          total: pagination?.total,
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
+          ...pagination,
+          showTotal,
+        }
+
   return (
     <Table
       rowKey={rowKey}
       size={size}
-      pagination={{
-        current: pagination?.page,
-        pageSize: pagination?.pageSize,
-        total: pagination?.total,
-        showSizeChanger: true,
-        pageSizeOptions: ["10", "20", "50", "100"],
-        ...pagination,
-        showTotal,
-      }}
+      pagination={paginationConfig}
       onChange={onTableChange}
       {...rest}
     />

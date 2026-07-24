@@ -19,6 +19,7 @@ import { GroupAppsPage } from "./groups/group-apps"
 import { GroupSettingsPage } from "./groups/group-settings"
 import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPlaceholderPage } from "./groups/app-trends"
+import { MethodIgnoreRulesPage } from "./groups/method-ignore-rules"
 import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import {
@@ -49,6 +50,11 @@ export const metricsRoutes = (
           path="trends"
           handle={{ breadcrumb: "Trends" }}
           element={<AppTrendsPlaceholderPage />}
+        />
+        <Route
+          path="method-ignore-rules"
+          handle={{ breadcrumb: "Exclusion rules" }}
+          element={<MethodIgnoreRulesPage />}
         />
         <Route
           path="builds/:buildId"

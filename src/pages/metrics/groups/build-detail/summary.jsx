@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import { useEffect, useMemo, useState } from "react"
-import { Button, Col, Row, Typography, message } from "antd"
+import { FilterOutlined } from "@ant-design/icons"
+import { Button, Col, Row, Tooltip, Typography, message } from "antd"
 import dayjs from "dayjs"
 import { useNavigate, useOutletContext, useParams } from "react-router-dom"
 import {
@@ -133,6 +134,8 @@ export const BuildSummaryPage = () => {
     [build]
   )
 
+  const methodIgnoreRulesPath = `/metrics/${groupId}/apps/${appId}/method-ignore-rules?buildId=${encodeURIComponent(buildId)}`
+
   const testActivityItems = useMemo(
     () => [
       {
@@ -162,7 +165,23 @@ export const BuildSummaryPage = () => {
           <KeyValuePanel title="Build information" items={buildInfoItems} />
         </Col>
         <Col xs={24} sm={12} xl={6}>
-          <KeyValuePanel title="Build statistics" items={buildStatsItems} column={1} />
+          <KeyValuePanel
+            title="Build statistics"
+            items={buildStatsItems}
+            column={1}
+            extra={
+              <Tooltip title="Configure exclusion rules">
+                <Button
+                  type="text"
+                  size="small"
+                  aria-label="Configure exclusion rules"
+                  onClick={() => navigate(methodIgnoreRulesPath)}
+                >
+                  Exclusions <FilterOutlined />
+                </Button>
+              </Tooltip>
+            }
+          />
         </Col>
         <Col xs={24} sm={12} xl={6}>
           <KeyValuePanel title="Test activity" items={testActivityItems} column={1} />

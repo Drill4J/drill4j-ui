@@ -20,12 +20,29 @@ import { Descriptions } from "antd"
  *   title?: string,
  *   items: { label: string, value: import("react").ReactNode }[],
  *   column?: number,
+ *   extra?: import("react").ReactNode,
  * }} props
  */
-export function KeyValuePanel({ title, items, column = 2 }) {
+export function KeyValuePanel({ title, items, column = 2, extra }) {
+  const panelTitle = extra ? (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 8,
+      }}
+    >
+      <span>{title}</span>
+      {extra}
+    </div>
+  ) : (
+    title
+  )
+
   return (
     <Descriptions
-      title={title}
+      title={panelTitle}
       bordered
       size="small"
       column={column}

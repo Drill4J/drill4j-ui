@@ -203,7 +203,7 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `/metrics/:groupId/test-sessions/:testSessionId` | None (tab) |
 | [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/test-sessions/:testSessionId/coverage` | None (tab) |
 | [11-group-settings.md](./11-group-settings.md) | — | Group Settings | `/metrics/:groupId/settings` | None — **Settings** button on group page |
-| [12-method-ignore-rules.md](./12-method-ignore-rules.md) | — | Method Ignore Rules (draft) | TBD | TBD |
+| [12-method-ignore-rules.md](./12-method-ignore-rules.md) | — | Method Ignore Rules | `/metrics/:groupId/apps/:appId/method-ignore-rules` | None — entry from app page |
 | [13-data-management.md](./13-data-management.md) | — | Data Management (row delete) | None — actions on builds / test-sessions tables | None |
 
 All routes require `PrivateRoute roles={["user", "admin"]}`. Details per file in **Routing, auth & sidebar** sections.

@@ -1,0 +1,65 @@
+.raw-methods-package-tree .ant-table,
+.raw-methods-nested-table .ant-table {
+  table-layout: fixed;
+}
+
+.raw-methods-package-tree .ant-table-cell,
+.raw-methods-nested-table .ant-table-cell {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Nested panels break out under sibling columns; cells must not clip them.
+   (Ant Design sets overflow:hidden when column.ellipsis is true.) */
+.raw-methods-package-tree td.ant-table-cell:has(.raw-methods-nested-panel),
+.raw-methods-nested-table td.ant-table-cell:has(.raw-methods-nested-panel) {
+  overflow: visible !important;
+}
+
+/*
+ * Nested panels live in the first column. Extend them under the fixed-width
+ * "Ignored methods" (140px) + actions (48px) columns + horizontal cell paddings,
+ * same idea as coverage-package-tree.css.
+ * Do not pull left or zero cell padding — keep normal alignment with the parent row.
+ */
+.raw-methods-nested-panel {
+  width: calc(100% + 204px);
+  margin-top: 8px;
+  padding: 8px 0 4px;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  background: #fff;
+}
+
+.raw-methods-nested-panel__header {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+/*
+ * Ant Design nest-table styles add ~40px margin-inline-start when a nested
+ * `.ant-table-wrapper:only-child` sits under a tbody. That extra indent is what
+ * made class/method tables look uneven vs the parent label — cancel only that,
+ * keep normal cell padding.
+ */
+.raw-methods-nested-panel .ant-table-wrapper:only-child .ant-table,
+.raw-methods-nested-table > .ant-table-wrapper .ant-table {
+  margin-block: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+}
+
+/* Pale red for ignored methods / ignored counts */
+.raw-methods-ignored-count--active {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: #ffccc7;
+}
+
+.raw-methods-row--ignored > td {
+  background: #ffccc7 !important;
+}

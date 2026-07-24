@@ -47,6 +47,20 @@ export const THRESHOLD_COLORS = {
   HIGHLIGHT: "#FF9900",
 }
 
+export const IGNORE_COLORS = {
+  /** Pale red fill for ignored methods */
+  ITEM_IGNORED: "#FFCCC7",
+  ITEM_NORMAL: "#D9D9D9",
+  /** Packages/classes always use muted fill; “contains ignored” is a border */
+  CONTAINER: "#F5F5F5",
+  BORDER_WITH_IGNORED: "#FFA39E",
+  BORDER_DEFAULT: "#ffffff",
+  // Aliases kept for any older call sites / legend copy
+  METHOD_IGNORED: "#FFCCC7",
+  METHOD_NORMAL: "#D9D9D9",
+  CONTAINER_WITH_IGNORED: "#F5F5F5",
+}
+
 export function getCoverageColor(
   coverageRatio,
   colorblindMode = "DEFAULT",
@@ -73,6 +87,32 @@ export function getCoverageColor(
   }
 
   return colorscale[colorscale.length - 1][1]
+}
+
+/**
+ * Structure / ignore-rules mode fill:
+ * - ignored methods → pale red
+ * - packages/classes → muted gray (use {@link getIgnoreBorderColor} for descendants)
+ * - other methods → muted gray
+ */
+export function getIgnoreColor(node) {
+  if (node.type === "method") {
+    return node.ignored ? IGNORE_COLORS.ITEM_IGNORED : IGNORE_COLORS.ITEM_NORMAL
+  }
+  return IGNORE_COLORS.CONTAINER
+}
+
+/**
+ * Pale red border for packages/classes that contain ignored methods down the tree.
+ */
+export function getIgnoreBorderColor(node) {
+  if (node.type === "method") {
+    return IGNORE_COLORS.BORDER_DEFAULT
+  }
+  if (node.ignored_methods > 0) {
+    return IGNORE_COLORS.BORDER_WITH_IGNORED
+  }
+  return IGNORE_COLORS.BORDER_DEFAULT
 }
 
 export function getColorscaleGradient(colorblindMode = "DEFAULT") {
