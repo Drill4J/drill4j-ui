@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 import { Button, Modal, Space, Table, Typography } from "antd"
-import { FilterOutlined } from "@ant-design/icons"
 
 const { Text } = Typography
+
+const TITLE_TEXT_STYLE = { fontSize: 20, lineHeight: 1.35 }
+const TITLE_MUTED_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 400 }
+const TITLE_DATA_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 600 }
 
 /**
  * @param {{
@@ -152,29 +155,35 @@ export function CatalogBuildPickerDialog({
  */
 export function CatalogBuildFilter({ selectedBuild, onOpenPicker, onClear }) {
   return (
-    <Space wrap>
-      <Text type="secondary">Build</Text>
-      {selectedBuild ? (
-        <Text strong>
-          {selectedBuild.buildId}
-          {selectedBuild.buildVersion != null && selectedBuild.buildVersion !== ""
-            ? ` · ${selectedBuild.buildVersion}`
-            : ""}
-          {selectedBuild.branch != null && selectedBuild.branch !== ""
-            ? ` (${selectedBuild.branch})`
-            : ""}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        flexWrap: "wrap",
+        gap: 12,
+        marginBottom: 24,
+      }}
+    >
+      <div>
+        <Text type="secondary" style={TITLE_MUTED_STYLE}>
+          Preview excluded methods
         </Text>
-      ) : (
-        <Text type="secondary">Not selected</Text>
-      )}
-      <Button icon={<FilterOutlined />} onClick={onOpenPicker}>
-        {selectedBuild ? "Change" : "Select build"}
-      </Button>
-      {selectedBuild && (
-        <Button type="link" onClick={onClear} style={{ padding: 0 }}>
-          Clear
+        {selectedBuild && (
+          <Text strong style={TITLE_DATA_STYLE}>
+            {' '}{selectedBuild.buildId}
+          </Text>
+        )}
+      </div>
+      <Space size={4}>
+        <Button size="small" onClick={onOpenPicker}>
+          {selectedBuild ? "Change" : "Select build"}
         </Button>
-      )}
-    </Space>
+        {selectedBuild && (
+          <Button size="small" type="link" onClick={onClear} style={{ padding: 0 }}>
+            Clear
+          </Button>
+        )}
+      </Space>
+    </div>
   )
 }

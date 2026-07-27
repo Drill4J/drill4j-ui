@@ -34,7 +34,7 @@ import { ImpactedTestsSection } from "./comparison/impacted-tests-section"
 import { RisksSection } from "./comparison/risks-section"
 import { useComparisonSearchParams } from "./use-comparison-search-params"
 
-const { Title, Text, Link } = Typography
+const { Link } = Typography
 
 const SECTION_ITEMS = [
   { key: "changes", label: "Changes" },
@@ -350,26 +350,6 @@ export const BuildComparisonPage = () => {
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 16,
-          flexWrap: "wrap",
-          marginBottom: 16,
-        }}
-      >
-        <Title level={5} style={{ margin: 0 }}>
-          Baseline build
-        </Title>
-        <BaselineBuildFilter
-          selectedBuild={selectedBaselineBuild}
-          onOpenPicker={handleOpenPicker}
-          onClear={() => updateQueryParams({ baselineBuildId: undefined })}
-        />
-      </div>
-
       {build?.groupId && build?.appId ? (
         <BuildCoverageFiltersBar
           sticky={false}
@@ -387,15 +367,16 @@ export const BuildComparisonPage = () => {
         />
       ) : null}
 
-      {!baselineBuildId ? (
-        <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
-          Select a baseline build to compare changes, coverage, and test impact.
-        </Text>
-      ) : loading.baseline || !baselineBuild?.buildVersion ? (
-        <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
-          Loading baseline build…
-        </Text>
-      ) : (
+      <BaselineBuildFilter
+        currentBuild={build}
+        selectedBuild={selectedBaselineBuild}
+        baselineBuildId={baselineBuildId}
+        loading={Boolean(baselineBuildId) && (loading.baseline || !baselineBuild?.buildVersion)}
+        onOpenPicker={handleOpenPicker}
+        onClear={() => updateQueryParams({ baselineBuildId: undefined })}
+      />
+
+      {baselineBuildId && baselineBuild?.buildVersion && (
         <>
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} md={12}>

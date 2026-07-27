@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 import { Button, Modal, Space, Table, Typography } from "antd"
-import { FilterOutlined } from "@ant-design/icons"
 
 const { Text } = Typography
+
+const TITLE_TEXT_STYLE = { fontSize: 20, lineHeight: 1.35 }
+const TITLE_MUTED_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 400 }
+const TITLE_DATA_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 600 }
 
 /**
  * @param {{
@@ -115,31 +118,61 @@ export function BaselineBuildPickerDialog({
 
 /**
  * @param {{
+ *   currentBuild?: { buildId: string } | null,
  *   selectedBuild?: { buildVersion?: string, buildId: string, branch?: string } | null,
+ *   baselineBuildId?: string,
  *   onOpenPicker: () => void,
  *   onClear: () => void,
+ *   loading?: boolean,
  * }} props
  */
-export function BaselineBuildFilter({ selectedBuild, onOpenPicker, onClear }) {
+export function BaselineBuildFilter({
+  currentBuild,
+  selectedBuild,
+  baselineBuildId,
+  onOpenPicker,
+  onClear,
+  loading = false,
+}) {
+  const currentLabel = currentBuild?.buildId || "…"
+  const baselineLabel = loading
+    ? "…"
+    : selectedBuild?.buildId || baselineBuildId || ""
+  const hasBaseline = Boolean(selectedBuild?.buildId || baselineBuildId)
+
   return (
-    <Space wrap>
-      <Text type="secondary">Baseline build</Text>
-      {selectedBuild ? (
-        <Text strong>
-          {selectedBuild.buildVersion || selectedBuild.buildId}
-          {selectedBuild.branch ? ` (${selectedBuild.branch})` : ""}
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        flexWrap: "wrap",
+        gap: 12,
+        marginBottom: 24,
+      }}
+    >
+      <div>
+        <Text strong style={TITLE_DATA_STYLE}>
+          {currentLabel}
         </Text>
-      ) : (
-        <Text type="secondary">Not selected</Text>
+        <Text type="secondary" style={TITLE_MUTED_STYLE}>
+          {" vs "}
+        </Text>
+        <Text strong={!loading && hasBaseline} type={hasBaseline ? undefined : "secondary"} style={TITLE_DATA_STYLE}>
+          {baselineLabel}
+        </Text>
+      </div>
+      {!loading && (
+        <Space size={4}>
+          <Button size="small" onClick={onOpenPicker}>
+            {hasBaseline ? "Change" : "Select baseline"}
+          </Button>
+          {hasBaseline && (
+            <Button size="small" type="link" onClick={onClear} style={{ padding: 0 }}>
+              Clear
+            </Button>
+          )}
+        </Space>
       )}
-      <Button icon={<FilterOutlined />} onClick={onOpenPicker}>
-        {selectedBuild ? "Change" : "Select baseline"}
-      </Button>
-      {selectedBuild && (
-        <Button type="link" onClick={onClear} style={{ padding: 0 }}>
-          Clear
-        </Button>
-      )}
-    </Space>
+    </div>
   )
 }

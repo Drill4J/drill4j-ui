@@ -457,32 +457,6 @@ export const MethodIgnoreRulesPage = () => {
         />
       </Title>
 
-      <div style={{ marginBottom: 16 }}>
-        <CatalogBuildFilter
-          selectedBuild={selectedBuild}
-          onOpenPicker={() => setPickerOpen(true)}
-          onClear={() => {
-            setSelectedBuild(null)
-            setBuildId(undefined)
-          }}
-        />
-        <CatalogBuildPickerDialog
-          open={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          builds={builds}
-          selectedBuildId={buildId}
-          loading={buildsLoading}
-          page={buildsPage}
-          pageSize={BUILDS_PAGE_SIZE}
-          total={buildsTotal}
-          onPageChange={loadBuilds}
-          onSelect={(build) => {
-            setSelectedBuild(build)
-            setBuildId(build.buildId)
-          }}
-        />
-      </div>
-
       <div
         style={{
           display: "flex",
@@ -594,11 +568,31 @@ export const MethodIgnoreRulesPage = () => {
         }}
       />
 
-      {!buildId ? (
-        <Text type="secondary">
-          Select a build to browse the app structure and see which methods are excluded.
-        </Text>
-      ) : (
+      <CatalogBuildFilter
+        selectedBuild={selectedBuild}
+        onOpenPicker={() => setPickerOpen(true)}
+        onClear={() => {
+          setSelectedBuild(null)
+          setBuildId(undefined)
+        }}
+      />
+      <CatalogBuildPickerDialog
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        builds={builds}
+        selectedBuildId={buildId}
+        loading={buildsLoading}
+        page={buildsPage}
+        pageSize={BUILDS_PAGE_SIZE}
+        total={buildsTotal}
+        onPageChange={loadBuilds}
+        onSelect={(build) => {
+          setSelectedBuild(build)
+          setBuildId(build.buildId)
+        }}
+      />
+
+      {buildId && (
         <>
           <div
             style={{
