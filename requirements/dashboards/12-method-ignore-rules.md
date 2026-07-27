@@ -248,7 +248,6 @@ GET /api/data-management/groups/{groupId}/apps/{appId}/builds/{buildId}/raw-meth
 | `returnType` | string | |
 | `probesCount` | int | |
 | `ignored` | boolean | Matches active rule set |
-| `matchingRuleIds` | int[] | Saved rule ids that match (empty if only draft matches in preview) |
 | `draftMatched` | boolean | True when only the draft rule matches (preview) |
 
 Paging: `page` / `pageSize` (default 100, max 500). Prefer stable `ORDER BY method_name, method_id`. Keyset pagination is a follow-up if deep pages are slow.

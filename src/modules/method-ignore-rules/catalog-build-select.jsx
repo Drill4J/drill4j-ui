@@ -119,7 +119,7 @@ export function CatalogBuildPickerDialog({
 }) {
   return (
     <Modal
-      title="Select catalog build"
+      title="Select build"
       open={open}
       onCancel={onClose}
       footer={null}
@@ -153,7 +153,7 @@ export function CatalogBuildPickerDialog({
 export function CatalogBuildFilter({ selectedBuild, onOpenPicker, onClear }) {
   return (
     <Space wrap>
-      <Text type="secondary">Catalog build</Text>
+      <Text type="secondary">Build</Text>
       {selectedBuild ? (
         <Text strong>
           {selectedBuild.buildId}

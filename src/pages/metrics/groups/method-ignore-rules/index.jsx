@@ -158,7 +158,7 @@ const APP_STRUCTURE_HELP = (
 const PACKAGE_TREE_HELP = (
   <div style={{ width: 420, lineHeight: 1.55 }}>
     <p style={{ margin: "0 0 8px" }}>
-      Nested tables of the same raw catalog: packages → classes → methods.
+      Nested tables of packages → classes → methods.
       Excluded methods stay visible and are highlighted.
     </p>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
