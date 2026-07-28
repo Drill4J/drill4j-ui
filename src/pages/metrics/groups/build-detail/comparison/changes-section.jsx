@@ -13,35 +13,74 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  CoveragePieChart,
-  changesSummaryToChart,
-} from "../../../../../components/charts/coverage-pie-chart"
+import { Space } from "antd"
 import { ComparisonChangesTable } from "./changes-table"
+import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
 
 /**
  * @param {{
  *   build: object,
  *   baselineBuild: object,
- *   changesSummary: object | null,
- *   summaryLoading?: boolean,
+ *   coverageFilters?: { testTags?: string[], envIds?: string[], branches?: string[] },
+ *   changeTypes?: string[],
+ *   hasImpactedTests?: boolean,
+ *   methodSignature?: string,
+ *   testDefinitionId?: string,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   onFilterChange: (updates: object) => void,
+ *   onMethodSignatureChange: (value?: string) => void,
+ *   onTestDefinitionIdChange?: (value?: string) => void,
+ *   onSortChange: (sort: { sortBy?: string, sortOrder?: string }) => void,
+ *   onViewImpactedTests: (signature: string) => void,
  * }} props
  */
-export function ChangesSection({ build, baselineBuild, changesSummary, summaryLoading }) {
+export function ChangesSection({
+  build,
+  baselineBuild,
+  coverageFilters,
+  changeTypes,
+  hasImpactedTests,
+  methodSignature,
+  testDefinitionId,
+  sortBy,
+  sortOrder,
+  onFilterChange,
+  onMethodSignatureChange,
+  onTestDefinitionIdChange,
+  onSortChange,
+  onViewImpactedTests,
+}) {
   return (
-    <>
-      <CoveragePieChart
-        title="Changes by type"
-        slices={changesSummaryToChart(changesSummary)}
-        loading={summaryLoading}
-        showCenterTotal
+    <Space direction="vertical" size={16} style={{ display: "flex" }}>
+      <ComparisonChangesFilterChips
+        changeTypes={changeTypes}
+        hasImpactedTests={hasImpactedTests}
+        onFilterChange={onFilterChange}
       />
       <ComparisonChangesTable
-        style={{ marginTop: 16 }}
         build={build}
         baselineBuild={baselineBuild}
-        includeDeleted
+        coverageFilters={coverageFilters}
+        changeTypes={changeTypes}
+        hasImpactedTests={hasImpactedTests}
+        methodSignature={methodSignature}
+        testDefinitionId={testDefinitionId}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onMethodSignatureChange={onMethodSignatureChange}
+        onTestDefinitionIdChange={onTestDefinitionIdChange}
+        onChangeTypesChange={(value) =>
+          onFilterChange({
+            changeTypes: value,
+            hasImpactedTests: undefined,
+            methodSignature: undefined,
+            testDefinitionId: undefined,
+          })
+        }
+        onSortChange={onSortChange}
+        onViewImpactedTests={onViewImpactedTests}
       />
-    </>
+    </Space>
   )
 }

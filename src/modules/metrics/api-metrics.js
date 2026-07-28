@@ -571,55 +571,14 @@ export async function postImpactedTests(body) {
 }
 
 /**
- * @param {object} body
+ * @param {object} body Same build/coverage fields as postImpactedTests
+ * @returns {Promise<{ testPaths: string[], testNames: string[], testTags: string[] }>}
  */
-export async function postImpactedMethods(body) {
-  const response = await runCatching(axios.post("/metrics/impacted-methods", body))
-  return {
-    data: response.data.data,
-    paging: response.data.paging,
-  }
-}
-
-/**
- * @param {{
- *   groupId: string,
- *   appId: string,
- *   buildVersion?: string,
- *   commitSha?: string,
- *   baselineBuildVersion?: string,
- *   includeDeleted?: boolean,
- *   includeEqual?: boolean,
- *   page?: number,
- *   pageSize?: number,
- * }} params
- */
-export async function getChanges(params) {
-  const { page = 1, pageSize = 20, ...rest } = params
-  const key = [
-    "changes",
-    rest.groupId,
-    rest.appId,
-    rest.buildVersion,
-    rest.commitSha,
-    rest.baselineBuildVersion,
-    rest.includeDeleted,
-    rest.includeEqual,
-    page,
-    pageSize,
-  ].join(":")
-  return dedupedRequest(key, async () => {
-    const response = await runCatching(
-      axios.get("/metrics/changes", {
-        params: serializeListQueryParams({ ...rest, page, pageSize }),
-        paramsSerializer: axiosListParamsSerializer,
-      })
-    )
-    return {
-      data: response.data.data,
-      paging: response.data.paging,
-    }
-  })
+export async function postImpactedTestsFilterOptions(body) {
+  const response = await runCatching(
+    axios.post("/metrics/impacted-tests/filter-options", body)
+  )
+  return response.data.data
 }
 
 /**
@@ -632,14 +591,20 @@ export async function getChanges(params) {
  *   testTags?: string[],
  *   envIds?: string[],
  *   branches?: string[],
+ *   changeTypes?: string[],
+ *   hasImpactedTests?: boolean,
+ *   methodSignature?: string,
+ *   testDefinitionId?: string,
+ *   sortBy?: string,
+ *   sortOrder?: string,
  *   page?: number,
  *   pageSize?: number,
  * }} params
  */
-export async function getRisks(params) {
+export async function getBuildChanges(params) {
   const { page = 1, pageSize = 20, ...rest } = params
   const key = [
-    "risks",
+    "build-changes",
     rest.groupId,
     rest.appId,
     rest.buildVersion,
@@ -648,12 +613,18 @@ export async function getRisks(params) {
     rest.testTags?.join(","),
     rest.envIds?.join(","),
     rest.branches?.join(","),
+    rest.changeTypes?.join(","),
+    rest.hasImpactedTests,
+    rest.methodSignature,
+    rest.testDefinitionId,
+    rest.sortBy,
+    rest.sortOrder,
     page,
     pageSize,
   ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
-      axios.get("/metrics/risks", {
+      axios.get("/metrics/build-changes", {
         params: serializeListQueryParams({ ...rest, page, pageSize }),
         paramsSerializer: axiosListParamsSerializer,
       })

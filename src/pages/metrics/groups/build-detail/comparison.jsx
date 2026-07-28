@@ -27,26 +27,22 @@ import {
 } from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import * as API from "../../../../modules/metrics/api-metrics"
-import { buildComparisonRequestBody } from "./comparison-build-params"
+import { buildComparisonQueryParams, buildComparisonRequestBody } from "./comparison-build-params"
 import { ChangesSection } from "./comparison/changes-section"
-import { ImpactedMethodsSection } from "./comparison/impacted-methods-section"
 import { ImpactedTestsSection } from "./comparison/impacted-tests-section"
-import { RisksSection } from "./comparison/risks-section"
 import { useComparisonSearchParams } from "./use-comparison-search-params"
 
 const { Link } = Typography
 
 const SECTION_ITEMS = [
   { key: "changes", label: "Changes" },
-  { key: "risks", label: "Risks" },
-  { key: "impacted-methods", label: "Impacted Methods" },
   { key: "impacted-tests", label: "Impacted Tests" },
 ]
 
 const COMPARISON_FILTER_HINTS = {
-  branches: "Applies to changed-coverage overview charts and the Risks table.",
-  envIds: "Applies to changed-coverage overview charts and the Risks table.",
-  testTags: "Applies to changed-coverage overview charts and the Risks table.",
+  branches: "Applies to changed-coverage overview charts and the Changes table.",
+  envIds: "Applies to changed-coverage overview charts and the Changes table.",
+  testTags: "Applies to changed-coverage overview charts and the Changes table.",
 }
 
 export const BuildComparisonPage = () => {
@@ -55,6 +51,11 @@ export const BuildComparisonPage = () => {
     baselineBuildId,
     section,
     methodSignature,
+    testDefinitionId,
+    hasImpactedTests,
+    sortBy,
+    sortOrder,
+    changeTypes,
     branches,
     envIds,
     testTags,
@@ -64,19 +65,19 @@ export const BuildComparisonPage = () => {
   } = useComparisonSearchParams()
 
   const [similarBuilds, setSimilarBuilds] = useState([])
-  const [baselineBuild, setBaselineBuild] = useState(null)
+  const [baselineBuild, setBaselineBuild] = useState()
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [changeProbesCoverage, setChangeProbesCoverage] = useState(null)
-  const [changeMethodsCoverage, setChangeMethodsCoverage] = useState(null)
-  const [changesSummary, setChangesSummary] = useState(null)
-  const [impactedTestsTotal, setImpactedTestsTotal] = useState(null)
-  const [impactedMethodsTotal, setImpactedMethodsTotal] = useState(null)
+  const [changeProbesCoverage, setChangeProbesCoverage] = useState()
+  const [changeMethodsCoverage, setChangeMethodsCoverage] = useState()
+  const [changesSummary, setChangesSummary] = useState()
+  const [impactedTestsTotal, setImpactedTestsTotal] = useState()
+  const [impactedMethodsTotal, setImpactedMethodsTotal] = useState()
   const [loading, setLoading] = useState({
     similar: false,
     baseline: false,
     overview: false,
   })
-  const sectionTabsRef = useRef(null)
+  const sectionTabsRef = useRef()
 
   const buildId = build?.buildId
 
@@ -102,7 +103,7 @@ export const BuildComparisonPage = () => {
 
   useEffect(() => {
     if (!baselineBuildId) {
-      setBaselineBuild(null)
+      setBaselineBuild(undefined)
       return undefined
     }
 
@@ -146,11 +147,11 @@ export const BuildComparisonPage = () => {
 
   useEffect(() => {
     if (!baselineBuild?.buildVersion || !build?.buildVersion || !buildId) {
-      setChangeProbesCoverage(null)
-      setChangeMethodsCoverage(null)
-      setChangesSummary(null)
-      setImpactedTestsTotal(null)
-      setImpactedMethodsTotal(null)
+      setChangeProbesCoverage(undefined)
+      setChangeMethodsCoverage(undefined)
+      setChangesSummary(undefined)
+      setImpactedTestsTotal(undefined)
+      setImpactedMethodsTotal(undefined)
       return undefined
     }
 
@@ -161,12 +162,16 @@ export const BuildComparisonPage = () => {
       try {
         const changeCoverageFilters = { ...coverageFilters, baselineBuildId }
         const impactedBody = buildComparisonRequestBody(build, baselineBuild, { pageSize: 1 })
+        const buildChangesQuery = buildComparisonQueryParams(build, baselineBuild, {
+          hasImpactedTests: true,
+          pageSize: 1,
+        })
         const [probes, methods, summary, impactedTests, impactedMethods] = await Promise.all([
           API.getBuildCoverageByProbes(buildId, changeCoverageFilters),
           API.getBuildCoverageByMethods(buildId, changeCoverageFilters),
           API.getBuildChangesSummary(buildId, baselineBuildId),
           API.postImpactedTests(impactedBody),
-          API.postImpactedMethods(impactedBody),
+          API.getBuildChanges(buildChangesQuery),
         ])
         if (!cancelled) {
           setChangeProbesCoverage(probes)
@@ -200,28 +205,40 @@ export const BuildComparisonPage = () => {
   }
 
   const goToSection = useCallback(
-    (nextSection, nextSignature) => {
+    (updates) => {
+      updateQueryParams({ section: "changes", ...updates })
+      sectionTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    },
+    [updateQueryParams]
+  )
+
+  const goToImpactedTests = useCallback(
+    (signature) => {
       updateQueryParams({
-        section: nextSection,
-        methodSignature: nextSignature,
+        section: "impacted-tests",
+        methodSignature: signature,
+        testDefinitionId: undefined,
       })
       sectionTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     },
     [updateQueryParams]
   )
-  // Keep overview count links stable across tab/filter URL updates (updateQueryParams identity churns).
+
   const goToSectionRef = useRef(goToSection)
   goToSectionRef.current = goToSection
+
+  const goToImpactedTestsRef = useRef(goToImpactedTests)
+  goToImpactedTestsRef.current = goToImpactedTests
 
   const impactItems = useMemo(
     () => [
       {
         label: "Impacted tests",
-        value: loading.overview ? null : (
+        value: loading.overview ? undefined : (
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current("impacted-tests")
+              updateQueryParams({ section: "impacted-tests" })
             }}
           >
             {impactedTestsTotal}
@@ -230,11 +247,16 @@ export const BuildComparisonPage = () => {
       },
       {
         label: "Impacted methods",
-        value: loading.overview ? null : (
+        value: loading.overview ? undefined : (
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current("impacted-methods")
+              goToSectionRef.current({
+                hasImpactedTests: true,
+                methodSignature: undefined,
+                testDefinitionId: undefined,
+                changeTypes: undefined,
+              })
             }}
           >
             {impactedMethodsTotal}
@@ -242,18 +264,23 @@ export const BuildComparisonPage = () => {
         ),
       },
     ],
-    [impactedMethodsTotal, impactedTestsTotal, loading.overview]
+    [impactedMethodsTotal, impactedTestsTotal, loading.overview, updateQueryParams]
   )
 
   const changeItems = useMemo(
     () => [
       {
         label: "New methods",
-        value: loading.overview ? null : (
+        value: loading.overview ? undefined : (
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current("changes")
+              goToSectionRef.current({
+                changeTypes: ["new"],
+                hasImpactedTests: undefined,
+                methodSignature: undefined,
+                testDefinitionId: undefined,
+              })
             }}
           >
             {changesSummary?.newMethods}
@@ -262,11 +289,16 @@ export const BuildComparisonPage = () => {
       },
       {
         label: "Modified methods",
-        value: loading.overview ? null : (
+        value: loading.overview ? undefined : (
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current("changes")
+              goToSectionRef.current({
+                changeTypes: ["modified"],
+                hasImpactedTests: undefined,
+                methodSignature: undefined,
+                testDefinitionId: undefined,
+              })
             }}
           >
             {changesSummary?.modifiedMethods}
@@ -275,11 +307,16 @@ export const BuildComparisonPage = () => {
       },
       {
         label: "Deleted methods",
-        value: loading.overview ? null : (
+        value: loading.overview ? undefined : (
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current("changes")
+              goToSectionRef.current({
+                changeTypes: ["deleted"],
+                hasImpactedTests: undefined,
+                methodSignature: undefined,
+                testDefinitionId: undefined,
+              })
             }}
           >
             {changesSummary?.deletedMethods}
@@ -292,59 +329,57 @@ export const BuildComparisonPage = () => {
 
   const sectionContent = useMemo(() => {
     if (!build?.buildVersion || !baselineBuild?.buildVersion) {
-      return null
+      return undefined
     }
-    switch (section) {
-      case "risks":
-        return (
-          <RisksSection
-            build={build}
-            baselineBuild={baselineBuild}
-            coverageFilters={coverageFilters}
-            onMethodSelect={(signature) => goToSection("impacted-tests", signature)}
-          />
-        )
-      case "impacted-methods":
-        return (
-          <ImpactedMethodsSection
-            build={build}
-            baselineBuild={baselineBuild}
-            methodSignature={methodSignature}
-            onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
-            onViewTests={(signature) => goToSection("impacted-tests", signature)}
-          />
-        )
-      case "impacted-tests":
-        return (
-          <ImpactedTestsSection
-            build={build}
-            baselineBuild={baselineBuild}
-            methodSignature={methodSignature}
-            coverageFilters={coverageFilters}
-            onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
-          />
-        )
-      case "changes":
-      default:
-        return (
-          <ChangesSection
-            build={build}
-            baselineBuild={baselineBuild}
-            changesSummary={changesSummary}
-            summaryLoading={loading.overview}
-          />
-        )
+    if (section === "impacted-tests") {
+      return (
+        <ImpactedTestsSection
+          build={build}
+          baselineBuild={baselineBuild}
+          methodSignature={methodSignature}
+          coverageFilters={coverageFilters}
+          onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
+          onViewMethodsForTest={(testDefinitionIdValue) =>
+            updateQueryParams({
+              section: "changes",
+              testDefinitionId: testDefinitionIdValue,
+              methodSignature: undefined,
+            })
+          }
+        />
+      )
     }
+    return (
+      <ChangesSection
+        build={build}
+        baselineBuild={baselineBuild}
+        coverageFilters={coverageFilters}
+        changeTypes={changeTypes}
+        hasImpactedTests={hasImpactedTests}
+        methodSignature={methodSignature}
+        testDefinitionId={testDefinitionId}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onFilterChange={updateQueryParams}
+        onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
+        onTestDefinitionIdChange={(value) => updateQueryParams({ testDefinitionId: value })}
+        onSortChange={({ sortBy: nextSortBy, sortOrder: nextSortOrder }) =>
+          updateQueryParams({ sortBy: nextSortBy, sortOrder: nextSortOrder })
+        }
+        onViewImpactedTests={(signature) => goToImpactedTestsRef.current(signature)}
+      />
+    )
   }, [
     baselineBuild,
     build,
+    changeTypes,
     coverageFilters,
-    changesSummary,
-    coverageFilters,
-    goToSection,
-    loading.overview,
+    hasImpactedTests,
     methodSignature,
     section,
+    sortBy,
+    sortOrder,
+    testDefinitionId,
     updateQueryParams,
   ])
 
@@ -358,14 +393,14 @@ export const BuildComparisonPage = () => {
           branches={branches}
           envIds={envIds}
           testTags={testTags}
-          scopeHint="Applies to changed-coverage charts only."
+          scopeHint="Applies to changed-coverage charts and the Changes table."
           filterHints={COMPARISON_FILTER_HINTS}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
           onClear={clearCoverageFilters}
         />
-      ) : null}
+      ) : undefined}
 
       <BaselineBuildFilter
         currentBuild={build}

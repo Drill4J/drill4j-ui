@@ -280,8 +280,7 @@ These endpoints are referenced by multiple dashboards; implement once in `admin-
 | `GET /api/metrics/builds/:buildId/coverage-by-probes` | Probe coverage pie via `get_builds_with_coverage` |
 | `GET /api/metrics/builds/:buildId/coverage-by-methods` | Method coverage pie via `get_builds_with_coverage` |
 | `GET /api/metrics/builds/:buildId/changes-summary` | Change type counts (`get_changes`) |
-| `GET /api/metrics/changes` | Method diff between builds (`get_changes`) |
-| `GET /api/metrics/risks` | Coverage risks report (`get_changes_with_coverage` + impacted methods join) |
+| `GET /api/metrics/build-changes` | Build comparison changes table — diff + coverage + impacted tests (`get_changes` LEFT JOIN coverage + `get_impacted_methods_v2`); see [05-build-comparison.md](./05-build-comparison.md) |
 | `GET /api/metrics/builds/:buildId/similar-builds` | Baseline picker via `get_similar_builds` |
 | `GET /api/metrics/coverage/by-package` | Aggregated package coverage |
 | `GET /api/metrics/coverage/by-class` | Aggregated class coverage |

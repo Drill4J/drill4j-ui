@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-export const COMPARISON_SECTIONS = [
-  "changes",
-  "risks",
-  "impacted-methods",
-  "impacted-tests",
-]
+export const COMPARISON_SECTIONS = ["changes", "impacted-tests"]
 
 /**
  * @param {{ groupId: string, appId: string, buildVersion: string }} build

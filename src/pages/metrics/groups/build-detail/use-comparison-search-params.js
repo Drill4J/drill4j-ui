@@ -33,6 +33,10 @@ export function useComparisonSearchParams() {
 
   const baselineBuildId = searchParams.get("baselineBuildId") || undefined
   const methodSignature = searchParams.get("methodSignature") || undefined
+  const testDefinitionId = searchParams.get("testDefinitionId") || undefined
+  const hasImpactedTests = searchParams.get("hasImpactedTests") === "true"
+  const sortBy = searchParams.get("sortBy") || undefined
+  const sortOrder = searchParams.get("sortOrder") || undefined
   const rawSection = searchParams.get("section")
   const section = COMPARISON_SECTIONS.includes(rawSection) ? rawSection : "changes"
 
@@ -42,6 +46,10 @@ export function useComparisonSearchParams() {
   )
   const envIds = useMemo(() => getListQueryParam(searchParams, "envIds"), [searchParams])
   const testTags = useMemo(() => getListQueryParam(searchParams, "testTags"), [searchParams])
+  const changeTypes = useMemo(
+    () => getListQueryParam(searchParams, "changeTypes"),
+    [searchParams]
+  )
 
   const coverageFilters = useMemo(
     () => ({ branches, envIds, testTags, baselineBuildId }),
@@ -54,6 +62,11 @@ export function useComparisonSearchParams() {
         baselineBuildId,
         section,
         methodSignature,
+        testDefinitionId,
+        hasImpactedTests: hasImpactedTests || undefined,
+        sortBy,
+        sortOrder,
+        changeTypes,
         branches,
         envIds,
         testTags,
@@ -75,6 +88,11 @@ export function useComparisonSearchParams() {
       baselineBuildId,
       section,
       methodSignature,
+      testDefinitionId,
+      hasImpactedTests,
+      sortBy,
+      sortOrder,
+      changeTypes,
       branches,
       envIds,
       testTags,
@@ -91,6 +109,11 @@ export function useComparisonSearchParams() {
     baselineBuildId,
     section,
     methodSignature,
+    testDefinitionId,
+    hasImpactedTests,
+    sortBy,
+    sortOrder,
+    changeTypes,
     branches,
     envIds,
     testTags,
@@ -104,7 +127,16 @@ export function useComparisonSearchParams() {
  * @param {URLSearchParams} params
  */
 export function clearComparisonQueryParams(params) {
-  ;["section", "methodSignature", "baselineBuildId"].forEach((key) => {
+  ;[
+    "section",
+    "methodSignature",
+    "testDefinitionId",
+    "hasImpactedTests",
+    "sortBy",
+    "sortOrder",
+    "changeTypes",
+    "baselineBuildId",
+  ].forEach((key) => {
     params.delete(key)
   })
 }

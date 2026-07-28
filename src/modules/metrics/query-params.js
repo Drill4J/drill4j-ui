@@ -31,10 +31,13 @@ export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
   "methodsSortOrder",
 ]
 
+export const COMPARISON_LIST_QUERY_KEYS = ["changeTypes"]
+
 export const LIST_QUERY_PARAM_KEYS = new Set([
   ...COVERAGE_LIST_QUERY_KEYS,
   ...TEST_SESSIONS_LIST_QUERY_KEYS,
   ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
+  ...COMPARISON_LIST_QUERY_KEYS,
 ])
 
 export const TEST_SESSIONS_QUERY_KEYS = [
@@ -61,6 +64,11 @@ export const COMPARISON_QUERY_KEYS = [
   "baselineBuildId",
   "section",
   "methodSignature",
+  "testDefinitionId",
+  "hasImpactedTests",
+  "sortBy",
+  "sortOrder",
+  "changeTypes",
   ...COVERAGE_LIST_QUERY_KEYS,
 ]
 
@@ -161,6 +169,11 @@ export const axiosListParamsSerializer = { indexes: null }
  *   baselineBuildId?: string,
  *   section?: string,
  *   methodSignature?: string,
+ *   testDefinitionId?: string,
+ *   hasImpactedTests?: boolean,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   changeTypes?: string[],
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
@@ -186,6 +199,8 @@ export function buildBuildDetailSearchParams(state) {
   return params
 }
 
+const COMPARISON_LIST_QUERY_KEY_SET = new Set(COMPARISON_LIST_QUERY_KEYS)
+
 /**
  * @param {ComparisonQueryState} state
  * @returns {URLSearchParams}
@@ -194,8 +209,14 @@ export function buildComparisonSearchParams(state) {
   const params = new URLSearchParams()
   COMPARISON_QUERY_KEYS.forEach((key) => {
     const value = state[key]
-    if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
+    if (COVERAGE_LIST_QUERY_KEY_SET.has(key) || COMPARISON_LIST_QUERY_KEY_SET.has(key)) {
       setListQueryParam(params, key, value)
+      return
+    }
+    if (key === "hasImpactedTests") {
+      if (value === true) {
+        params.set(key, "true")
+      }
       return
     }
     if (value) {

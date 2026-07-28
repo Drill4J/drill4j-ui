@@ -6,9 +6,9 @@
 
 ## Summary
 
-Single unified dashboard for everything inferred from comparing the **target build** (route `buildId`) to a **baseline build** (`baselineBuildId` query param): impact counts, change counts, changed-coverage charts, change-type breakdown, method-level diff, coverage risks, impacted methods, and impacted tests.
+Single unified dashboard for everything inferred from comparing the **target build** (route `buildId`) to a **baseline build** (`baselineBuildId` query param): impact counts, change counts, changed-coverage charts, a **unified changes table** (diff + coverage + test impact in one view), and a separate **impacted tests** table.
 
-Replaces the former Summary **baseline comparison** section and four legacy Metabase dashboards (5, 6, 13, 14, 15).
+Replaces the Summary **baseline comparison** section and Metabase dashboards 5, 6, 13, 14, 15.
 
 Do **not** use `GET /api/metrics/recommended-tests` or `metrics.get_recommended_tests_v2`.
 
@@ -28,18 +28,102 @@ Build detail tab bar: **Summary** | **Tests** | **Coverage** | **Comparison**
 | Param | Scope | Notes |
 |-------|-------|-------|
 | `baselineBuildId` | Whole page | **Required** for meaningful data; never auto-selected |
-| `section` | In-page navigation | `changes` (default), `risks`, `impacted-methods`, `impacted-tests` |
-| `envId`, `branch`, `testTag` | Overview charts + **Risks** section | Optional contextual filters (camelCase query params) |
-| `methodSignature` | `impacted-methods`, `impacted-tests` | Filter impacted data; set when selecting a method row on Risks |
+| `section` | In-page navigation | `changes` (default), `impacted-tests` |
+| `envId`, `branch`, `testTag` | Overview charts + **Changes** table | Optional contextual filters (camelCase query params) |
+| `methodSignature` | Both sections | Bidirectional drill-down filter; set when navigating between Changes and Impacted Tests |
+| `testDefinitionId` | Changes table (reverse drill-down) | Set when navigating from Impacted Tests → Changes; filters to methods that caused the test to appear as impacted |
+| `changeTypes` | Changes table | Optional multi-value filter: `new`, `modified`, `deleted` |
+| `hasImpactedTests` | Changes table | Optional boolean — when `true`, show only rows with `impactedTests > 0` |
+| `sortBy` | Changes table | `changeType`, `coverageRatioInOtherBuilds`, `impactedTests`, `aggregatedMissedProbes`, `signature` |
+| `sortOrder` | Changes table | `asc` or `desc` |
 
-Switching in-page sections updates `section` in the query string and preserves `baselineBuildId` + filters.
+Switching in-page sections updates `section` in the query string and preserves `baselineBuildId` + shared filters.
 
 ### Baseline selection rules
 
 - **Never** auto-select a baseline on navigation or page load.
 - `baselineBuildId` is set **only** when the user confirms a pick in the baseline dialog.
 - Similar builds are fetched when the picker dialog opens (not on page load).
-- Coverage filters (`branch`, `envId`, `testTag`) apply to changed-coverage overview charts **and** the Risks section table. They do **not** affect impact counts, changes summary, or the Changes section table.
+- Coverage filters (`branch`, `envId`, `testTag`) apply to changed-coverage overview charts **and** the Changes table. They do **not** affect the overview change-count KPIs (`changes-summary`).
+
+## Unified changes table — design
+
+One **Changes** table replaces the separate diff, risks, and impacted-methods views. One row per method in the build diff; the user assesses the full state of each change without switching tabs.
+
+### Row model
+
+Every row represents one entry from the build diff (`metrics.get_changes` with `include_deleted => true`).
+
+| Concept | Meaning in the unified table |
+|---------|------------------------------|
+| **Change (basis)** | Row exists because the method is `new`, `modified`, or `deleted` between target and baseline builds |
+| **At-risk highlight** | `new` and `modified` rows are visually emphasized — changed code that may need attention. `deleted` rows are not risk-highlighted |
+| **Impacted** | `impactedTests > 0` — the method has associated test-to-code mappings. Display count in column; use row/cell styling to distinguish from zero |
+| **Coverage** | Probe coverage columns apply to **all** row types where data exists (`new`, `modified`, `deleted`). Deleted methods may have null coverage |
+
+### Columns
+
+| Column | Source | Notes |
+|--------|--------|-------|
+| Change type | `get_changes.change_type` | `new` / `modified` / `deleted`; sortable; filterable |
+| Impacted tests | `get_impacted_methods_v2` (LEFT JOIN) | Count; `0` when no mappings. Clickable → Impacted Tests section with `methodSignature` filter |
+| Class | `get_changes` | |
+| Method | `get_changes` | |
+| Params | `get_changes` | |
+| Return type | `get_changes` | |
+| Coverage % | aggregated probes coverage ratio | Color-banded (red / yellow / green). Sortable |
+| Probes | `get_changes_with_coverage` | |
+| Covered (build) | isolated covered probes | |
+| Covered (aggregated) | aggregated covered probes | |
+| Not covered (aggregated) | aggregated missed probes | Sortable (default server sort) |
+
+### Sorting & filtering
+
+**Sortable columns** (client may request via `sortBy` / `sortOrder`; server must honour for paginated data):
+
+- `changeType` — entry type (`new`, `modified`, `deleted`)
+- `coverageRatioInOtherBuilds` — aggregated coverage %
+- `impactedTests` — impacted test count
+- `aggregatedMissedProbes` — default sort, descending (surfaces highest-risk changes first)
+- `signature` — stable tie-breaker
+
+**Filters:**
+
+- `changeTypes` — restrict to one or more change types
+- `hasImpactedTests` — show only methods with test impact
+- `methodSignature` — single-method drill-down (from Impacted Tests reverse navigation)
+- `testDefinitionId` — show only methods linked to a specific test (reverse drill-down from Impacted Tests)
+- `envId`, `branch`, `testTag` — coverage context filters (apply to coverage join and impacted-methods join)
+
+**Quick-filter chips** (optional UX, map to query params above):
+
+- All changes (default)
+- At risk (`new` + `modified`)
+- With impacted tests (`hasImpactedTests=true`)
+- New / Modified / Deleted (individual `changeTypes`)
+
+### Bidirectional navigation with Impacted Tests
+
+The Changes table and Impacted Tests table are linked in both directions:
+
+```
+Changes table                          Impacted Tests table
+─────────────────                      ────────────────────
+Click impacted-tests count/cell    →     section=impacted-tests
+                                       &methodSignature=<sig>
+
+Click test row / impacted-methods  →   section=changes
+count on test row                      &testDefinitionId=<id>
+                                       (shows methods that caused
+                                        this test to be impacted)
+```
+
+- Navigating **Changes → Impacted Tests** sets `methodSignature` and clears `testDefinitionId`.
+- Navigating **Impacted Tests → Changes** sets `testDefinitionId` and clears `methodSignature`.
+- Overview KPI links:
+  - **Impacted tests** count → `section=impacted-tests`
+  - **Impacted methods** count → `section=changes&hasImpactedTests=true`
+  - **New / Modified / Deleted** counts → `section=changes&changeTypes=<type>`
 
 ## Metabase source
 
@@ -49,28 +133,31 @@ Switching in-page sections updates `section` in the query string and preserves `
 | 156 | 2 | Impacted Tests | scalar | Overview — impact KPI |
 | 175 | 2 | Impacted Methods | scalar | Overview — impact KPI |
 | 160 | 2 | Baseline Coverage | pie | Overview — changed coverage |
-| 182 | 15 | Baseline Changes | `metrics.get_changes` (pie) | Changes section pie |
-| 183 | 15 | Baseline Changes Number | `metrics.get_changes` (scalar) | Overview + Changes counts |
-| 2 | 5 | Risks Report | `metrics.get_changes_with_coverage` LEFT JOIN `metrics.get_impacted_methods_v2` | Risks section |
-| 166 | 5, 13 | Impacted Tests - Table | `metrics.get_impacted_tests_v2` | Impacted Tests |
+| 182 | 15 | Baseline Changes | `metrics.get_changes` (pie) | Overview changes pie |
+| 183 | 15 | Baseline Changes Number | `metrics.get_changes` (scalar) | Overview change counts |
+| 2 | 5 | Risks Report | `get_changes_with_coverage` LEFT JOIN `get_impacted_methods_v2` | **Unified Changes table** (merged) |
+| 166 | 5, 13 | Impacted Tests - Table | `metrics.get_impacted_tests_v2` | Impacted Tests section |
 | 68 | 6 | Table - Recommended Tests | `metrics.get_recommended_tests_v2` | **Not used in new UI** |
-| 177 | 14 | Impacted Methods - Table | `metrics.get_impacted_methods_v2` | Impacted Methods |
+| 177 | 14 | Impacted Methods - Table | `metrics.get_impacted_methods_v2` | **Unified Changes table** (merged) |
 
-### Changes vs Risks — do not conflate
+### SQL composition for unified table
 
-These are **different Metabase dashboards** with **different SQL**. The new UI must mirror that split.
+The unified endpoint composes three concerns onto the diff as the row spine:
 
-| | **Changes** (dashboard 15) | **Risks** (dashboard 5, card 2) |
-|--|------------------------------|----------------------------------|
-| **SQL** | `metrics.get_changes` | `metrics.get_changes_with_coverage` + LEFT JOIN `get_impacted_methods_v2` |
-| **Purpose** | Method diff (new / modified / deleted) | Changed methods with coverage gaps and test impact |
-| **Coverage columns** | No | Yes (isolated + aggregated probes) |
-| **Impacted tests column** | No | Yes (`COALESCE(i.impacted_tests, 0)`) |
-| **include_deleted** | `true` (pie card 182; table in new UI) | `false` (SQL default — not passed in card 2) |
-| **Default sort** | `signature` | `aggregated_missed_probes DESC` |
-| **“Risk flags”** | N/A | Metabase **conditional formatting** on coverage % (red / yellow / green). Not a SQL filter or `risk_level` column. |
+```sql
+FROM metrics.get_changes(
+    input_build_id => ?,
+    input_baseline_build_id => ?,
+    include_deleted => true,
+    include_equal => false
+) c
+LEFT JOIN metrics.get_methods_with_coverage(...) cov ON c.signature = cov.signature
+LEFT JOIN metrics.get_impacted_methods_v2(...) im ON c.signature = im.signature
+```
 
-Metabase dashboard 15 had **no method table** — only pie (182) and scalars (183). The Changes section table in the new UI is an addition, but it must use **`get_changes`**, not `get_changes_with_coverage`.
+Metabase cards 2 and 177 are merged into this single query shape. The diff is the authoritative row set; coverage and impact data are left-joined.
+
+**Do not** invent a `riskLevel` SQL column — render coverage % with client-side color bands (Metabase conditional formatting). "At risk" is a **presentation** rule on `new`/`modified` rows, not a server filter.
 
 ## API
 
@@ -101,41 +188,49 @@ GET /api/metrics/builds/:buildId/changes-summary?baselineBuildId=
 Backed by `metrics.get_changes` with `include_deleted => true` (same as card 183 counts, excluding equal methods from overview KPIs).
 
 ```
-POST /api/metrics/impacted-tests   { ..., "pageSize": 1 }  → paging.total
-POST /api/metrics/impacted-methods { ..., "pageSize": 1 }  → paging.total
+POST /api/metrics/impacted-tests { ..., "pageSize": 1 } → paging.total
+GET  /api/metrics/build-changes  { ..., "hasImpactedTests": true, "pageSize": 1 } → paging.total
 ```
+Overview impact KPI totals. Impacted-methods count is the `paging.total` from `build-changes` with `hasImpactedTests=true`.
 
-### Changes section
-
-Method-level diff only — **`metrics.get_changes`**, no coverage join.
-
-```
-GET /api/metrics/changes?groupId=&appId=&...&baselineBuildVersion=&includeDeleted=true&includeEqual=&page=&pageSize=
-→ PagedDataResponse<ChangeView>
-```
-
-Response fields: `signature`, `className`, `name`, `params`, `returnType`, `changeType`.
-
-**Do not** return probe/coverage fields from this endpoint. Pagination total must respect `includeDeleted` / `includeEqual`.
-
-### Risks section
-
-Risks report — **`metrics.get_changes_with_coverage`** LEFT JOIN **`metrics.get_impacted_methods_v2`** (Metabase card 2).
+### Changes table
 
 ```
-GET /api/metrics/risks?groupId=&appId=&...&baselineBuildVersion=&testTag=&envId=&branch=&page=&pageSize=
-→ PagedDataResponse<RiskReportView>
+GET /api/metrics/build-changes?groupId=&appId=&...&baselineBuildVersion=
+    &testTags=&envIds=&branches=
+    &changeTypes=&hasImpactedTests=&methodSignature=&testDefinitionId=
+    &sortBy=&sortOrder=&page=&pageSize=
+→ PagedDataResponse<BuildChangeView>
 ```
 
-Default server sort: `aggregated_missed_probes DESC` (matches Metabase card 2).
+Default server sort: `aggregatedMissedProbes DESC`.
 
-Response fields: `changeType`, `signature`, `className`, `name`, `params`, `returnType`, `probesCount`, `coveredProbes` (isolated), `missedProbes` (isolated), `coverageRatio` (isolated %), `coveredProbesInOtherBuilds` (aggregated), `missedProbesInOtherBuilds` (aggregated), `coverageRatioInOtherBuilds` (aggregated %), `impactedTests`.
+Response fields (`BuildChangeView`):
 
-Coverage filters (`testTag`, `envId`, `branch`) apply to both the changes-with-coverage side and the impacted-methods join (same as Metabase optional `[[...]]` clauses on card 2).
+| Field | Type | Notes |
+|-------|------|-------|
+| `changeType` | string | `new`, `modified`, `deleted` |
+| `signature` | string | Row key |
+| `className` | string | |
+| `name` | string | Method name |
+| `params` | string | |
+| `returnType` | string | |
+| `probesCount` | int? | Null when no coverage data |
+| `coveredProbes` | int? | Isolated — current build |
+| `missedProbes` | int? | Isolated |
+| `coverageRatio` | float? | Isolated % |
+| `coveredProbesInOtherBuilds` | int? | Aggregated |
+| `missedProbesInOtherBuilds` | int? | Aggregated |
+| `coverageRatioInOtherBuilds` | float? | Aggregated % — used for color banding |
+| `impactedTests` | int | `COALESCE` from impacted-methods join; `0` when none |
 
-**Do not** use `GET /api/metrics/changes` for the Risks section. **Do not** invent a `riskLevel` field — render coverage % with client-side color bands (Metabase conditional formatting).
+Coverage filters (`testTags`, `envIds`, `branches`) apply to both the coverage join and the impacted-methods join.
 
-### Impacted Tests section (primary: POST)
+`testDefinitionId` filter: return only changed methods that appear in `test_to_code_mapping` for the given test definition (reverse drill-down from Impacted Tests).
+
+Pagination total must respect all active filters.
+
+### Impacted Tests section
 
 ```
 POST /api/metrics/impacted-tests
@@ -173,18 +268,18 @@ Use POST (not GET) so filters such as `excludeMethodSignatures`, `coverageBranch
 
 Response fields: `groupId`, `testDefinitionId`, `testPath`, `testName`, `testTags`, `testMetadata`, `testRunner`, `impactedMethods`.
 
-**Not used:** `GET /api/metrics/recommended-tests`; `GET /api/metrics/impacted-tests` only for trivial reads without body filters.
+### Removed endpoints
 
-### Impacted Methods section
+Remove from `admin-metrics` and `openapi.yml` — the Comparison UI does not call these:
 
-```
-GET /api/metrics/impacted-methods?groupId=&appId=&...&baselineBuildId=&methodSignature=&methodName=&testTag=&envId=&branch=&page=&pageSize=
-→ PagedDataResponse<MethodView>
-```
-
-Response fields: `groupId`, `appId`, `signature`, `className`, `methodName`, `methodParams`, `returnType`, `impactedTests`.
-
-Also available as `POST /api/metrics/impacted-methods` (same pattern as impacted-tests for complex filter bodies).
+| Endpoint | Replaced by |
+|----------|-------------|
+| `GET /api/metrics/changes` | `GET /api/metrics/build-changes` |
+| `GET /api/metrics/risks` | `GET /api/metrics/build-changes` |
+| `GET /api/metrics/impacted-methods` | `GET /api/metrics/build-changes` |
+| `POST /api/metrics/impacted-methods` | `GET /api/metrics/build-changes` |
+| `GET /api/metrics/recommended-tests` | not used |
+| `GET /api/metrics/impacted-tests` | `POST /api/metrics/impacted-tests` |
 
 ## UI
 
@@ -193,33 +288,42 @@ Also available as `POST /api/metrics/impacted-methods` (same pattern as impacted
 One scrollable page with:
 
 1. **Baseline picker** — `BaselineBuildFilter` + `BaselineBuildPickerDialog` (required), scoped to current `groupId`/`appId`
-2. **Optional filters** — `envId`, `branch`, `testTag` (compact inline row; affects changed-coverage overview charts **and** Risks section)
+2. **Optional filters** — `envId`, `branch`, `testTag` (compact inline row; affects changed-coverage overview charts **and** Changes table)
 3. **Comparison overview** — visible when `baselineBuildId` is set (persistent above section tabs):
-   - `   - `KeyValuePanel` **Impact** — impacted tests / impacted methods counts (click → corresponding section)
-   - `KeyValuePanel` **Changes** — new / modified / deleted method counts
-   - Two `CoveragePieChart`:
-     - Changed code coverage (probes)
-     - Changed methods coverage
+   - `KeyValuePanel` **Impact** — impacted tests / impacted methods counts (click → corresponding section/filter)
+   - `KeyValuePanel` **Changes** — new / modified / deleted method counts (click → Changes table with `changeTypes` filter)
+   - `CoveragePieChart` — changed code coverage (probes)
+   - `CoveragePieChart` — changed methods coverage
+   - Changes-by-type pie (from `changes-summary`)
 4. **In-page section tabs** (Ant Design `Tabs`, **not** router tabs) — controlled by `section` query param:
 
 | Section key | Label | Content | API |
 |-------------|-------|---------|-----|
-| `changes` | Changes | Change-type pie + paginated diff table (no coverage columns) | `GET /changes` |
-| `risks` | Risks | Coverage risks table; row click → Impacted Tests with `methodSignature` | `GET /risks` |
-| `impacted-methods` | Impacted Methods | Paginated table; optional `methodSignature` filter | `POST /impacted-methods` |
-| `impacted-tests` | Impacted Tests | Filter panel + `MetricsDataTable` | `POST /impacted-tests` |
+| `changes` | Changes | Unified changes table (diff + coverage + impact) | `GET /build-changes` |
+| `impacted-tests` | Impacted Tests | Filter panel + `MetricsDataTable`; bidirectional link to Changes | `POST /impacted-tests` |
 
 Show an empty state prompting baseline selection when `baselineBuildId` is missing.
 
 ### Section details
 
-**Changes** — pie from `changes-summary` (`get_changes`) + table from `GET /changes` (`get_changes`, `includeDeleted=true`). Columns: change type, class, method, params, return type. No probe/coverage columns.
+**Changes (unified table)**
 
-**Risks** — `GET /risks` only. Columns match Metabase card 2: change type, impacted tests, class, method, params, return type, aggregated coverage % (color-banded), probes, covered (current build), covered (aggregated), not covered (aggregated). Server-sorted by aggregated missed probes descending.
+- Data: `GET /build-changes` with `include_deleted` semantics baked in
+- Toolbar: quick-filter chips + `methodSignature` search
+- Table: columns per [Unified changes table — design](#unified-changes-table--design)
+- Row styling: emphasize `new` and `modified` rows (at-risk)
+- Cell styling: highlight `impactedTests > 0`
+- Coverage % column: client-side color bands (0% red, &lt;50% dark red, 50–99% yellow, 100% green)
+- Click impacted-tests count → `section=impacted-tests&methodSignature=<sig>`
+- Sorting: server-side via `sortBy` / `sortOrder` query params
+- Filtering: `changeTypes`, `hasImpactedTests`, coverage filters from page bar
 
-**Impacted Tests** — filter panel maps to POST body: `testPath`, `testName`, `testTag`, `packageName`, `className`, `methodName`, `methodSignature`, `coverageBranches`, `coverageAppEnvIds`, `excludeMethodSignatures`.
+**Impacted Tests**
 
-**Impacted Methods** — filters: `methodSignature`, `envId`, `branch`, `testTag`. Table columns: class, method, params, return type, impacted tests.
+- Filter panel maps to POST body: `testPath`, `testName`, `testTag`, `packageName`, `className`, `methodName`, `methodSignature`, `coverageBranches`, `coverageAppEnvIds`, `excludeMethodSignatures`
+- `methodSignature` pre-filled when navigating from Changes table
+- Click `impactedMethods` count or test row action → `section=changes&testDefinitionId=<id>` (reverse drill-down)
+- Click method link (if shown) → `section=changes&methodSignature=<sig>`
 
 ### Entry from Summary
 
@@ -228,11 +332,13 @@ Summary tab shows a **Compare builds** link → `…/comparison` (no baseline pr
 ### Components
 
 - `pages/metrics/.../builds/[buildId]/comparison.jsx` — page shell, baseline picker, overview, section tabs
-- `pages/metrics/.../builds/[buildId]/comparison/` — `changes-section.jsx`, `changes-table.jsx`, `risks-section.jsx`, `risks-table.jsx`, `impacted-methods-section.jsx`, `impacted-tests-section.jsx`
-- `pages/metrics/.../builds/[buildId]/use-comparison-search-params.js` — `baselineBuildId`, `section`, comparison filters
+- `pages/metrics/.../builds/[buildId]/comparison/` — `changes-section.jsx`, `changes-table.jsx`, `impacted-tests-section.jsx`
+- `pages/metrics/.../builds/[buildId]/use-comparison-search-params.js` — `baselineBuildId`, `section`, comparison filters, sort, drill-down params
 - `components/metrics/baseline-build-select.jsx` — `BaselineBuildFilter`, `BaselineBuildPickerDialog`, `BaselineBuildTable`
-- `modules/metrics/api-metrics.js` — `getChanges`, `getRisks`, `postImpactedTests`, `postImpactedMethods`, summary/coverage helpers
+- `modules/metrics/api-metrics.js` — `getBuildChanges`, `postImpactedTests`, summary/coverage helpers
 - Reuse `CoveragePieChart`, `KeyValuePanel`, `MetricsDataTable`
+
+Delete `risks-section.jsx`, `risks-table.jsx`, `impacted-methods-section.jsx`, `changes-table.jsx` (replaced by unified `changes-table.jsx`), and all client code calling `getChanges`, `getRisks`, `postImpactedMethods`.
 
 ## Metabase export
 
