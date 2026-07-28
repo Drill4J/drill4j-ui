@@ -16,9 +16,7 @@
 import { useEffect, useState } from "react"
 import { message, Tabs } from "antd"
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
-import { TestSessionContextBar } from "../../../../components/metrics/test-session-context-bar"
 import * as API from "../../../../modules/metrics/api-metrics"
-import { useTestSessionSearchParams } from "./use-test-session-search-params"
 
 const TAB_ITEMS = [
   { key: "results", label: "Results", path: "" },
@@ -34,14 +32,13 @@ function resolveActiveTab(pathname, basePath) {
   return match?.key ?? "results"
 }
 
-export const TestSessionLayout = () => {
-  const { groupId, testSessionId } = useParams()
+export const TestSessionBuildLayout = () => {
+  const { groupId, testSessionId, buildId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const sessionBasePath = `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}`
-  const { buildId } = useTestSessionSearchParams()
+  const sessionBuildBasePath = `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}/builds/${encodeURIComponent(buildId)}`
 
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -71,27 +68,19 @@ export const TestSessionLayout = () => {
     }
   }, [groupId, testSessionId, buildId])
 
-  const activeKey = resolveActiveTab(location.pathname, sessionBasePath)
+  const activeKey = resolveActiveTab(location.pathname, sessionBuildBasePath)
 
   const handleTabChange = (key) => {
     const tab = TAB_ITEMS.find((item) => item.key === key)
     if (!tab) {
       return
     }
-    const target = tab.path ? `${sessionBasePath}/${tab.path}` : sessionBasePath
+    const target = tab.path ? `${sessionBuildBasePath}/${tab.path}` : sessionBuildBasePath
     navigate({ pathname: target, search: location.search })
   }
 
   return (
     <>
-      <TestSessionContextBar
-        testSessionId={session?.testSessionId ?? testSessionId}
-        sessionStartedAt={session?.sessionStartedAt}
-        testTaskId={session?.testTaskId}
-        buildVersion={session?.buildVersion}
-        branch={session?.branch}
-        result={session?.result}
-      />
       <Tabs
         activeKey={activeKey}
         items={TAB_ITEMS.map(({ key, label }) => ({ key, label }))}

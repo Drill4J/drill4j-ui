@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Button, Col, Row, Select, Tag, Typography, message } from "antd"
 import { ArrowLeftOutlined } from "@ant-design/icons"
-import { useOutletContext, useParams } from "react-router-dom"
+import { Link, useOutletContext, useParams } from "react-router-dom"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { StatRow } from "../../../../components/metrics/stat-row"
@@ -138,10 +138,9 @@ const TEST_LAUNCH_COLUMNS = [
 ]
 
 export const TestSessionResultsPage = () => {
-  const { groupId, testSessionId } = useParams()
+  const { groupId, testSessionId, buildId } = useParams()
   const { session, sessionLoading } = useOutletContext() ?? {}
   const {
-    buildId,
     path: selectedPath,
     testResults,
     testTags,
@@ -151,7 +150,6 @@ export const TestSessionResultsPage = () => {
     clearSelectedPath,
   } = useTestSessionSearchParams()
 
-  const resolvedBuildId = buildId ?? session?.buildId
   const showingLaunches = Boolean(selectedPath)
 
   const [testFiles, setTestFiles] = useState([])
@@ -175,7 +173,7 @@ export const TestSessionResultsPage = () => {
         const { data, paging } = await API.getTestFileLaunches({
           groupId,
           testSessionId,
-          buildId: resolvedBuildId,
+          buildId,
           page,
           pageSize,
         })
@@ -198,7 +196,7 @@ export const TestSessionResultsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, resolvedBuildId, page, pageSize, showingLaunches])
+  }, [groupId, testSessionId, buildId, page, pageSize, showingLaunches])
 
   useEffect(() => {
     if (!showingLaunches) {
@@ -212,7 +210,7 @@ export const TestSessionResultsPage = () => {
         const { data, paging } = await API.getTestLaunches({
           groupId,
           testSessionId,
-          buildId: resolvedBuildId,
+          buildId,
           path: selectedPath,
           testResults,
           testTags,
@@ -241,7 +239,7 @@ export const TestSessionResultsPage = () => {
   }, [
     groupId,
     testSessionId,
-    resolvedBuildId,
+    buildId,
     selectedPath,
     testResults,
     testTags,
@@ -250,24 +248,43 @@ export const TestSessionResultsPage = () => {
     showingLaunches,
   ])
 
-  const sessionInfoItems = useMemo(
-    () => [
-      { label: "Session ID", value: session?.testSessionId },
+  const sessionInfoItems = useMemo(() => {
+    const buildHref =
+      groupId && session?.appId && session?.buildId
+        && `/metrics/${groupId}/apps/${encodeURIComponent(session.appId)}/builds/${encodeURIComponent(session.buildId)}`
+    const sessionHref =
+      groupId && session?.testSessionId
+        && `/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}`
+
+    return [
+      {
+        label: "Session ID",
+        value: session?.testSessionId && (
+          sessionHref
+            ? <Link to={sessionHref}>{session.testSessionId}</Link>
+            : session.testSessionId
+        ),
+      },
       { label: "Test task", value: session?.testTaskId },
       {
         label: "Started at",
         value: session?.sessionStartedAt
-          ? new Date(session.sessionStartedAt).toLocaleString()
-          : null,
+          && new Date(session.sessionStartedAt).toLocaleString(),
       },
       { label: "Created by", value: session?.createdBy },
-      { label: "Result", value: session?.result ? renderResultTag(session.result) : null },
+      { label: "Result", value: session?.result && renderResultTag(session.result) },
       { label: "App", value: session?.appId },
-      { label: "Build", value: session?.buildVersion },
+      {
+        label: "Build",
+        value: session?.buildId && (
+          buildHref
+            ? <Link to={buildHref}>{session.buildId}</Link>
+            : session.buildId
+        ),
+      },
       { label: "Branch", value: session?.branch },
-    ],
-    [session]
-  )
+    ]
+  }, [groupId, session])
 
   const statItems = useMemo(
     () => [

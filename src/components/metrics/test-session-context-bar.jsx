@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import dayjs from "dayjs"
+import { Link } from "react-router-dom"
 import { Space, Typography } from "antd"
 
 const { Text } = Typography
@@ -28,27 +29,44 @@ function formatSessionDate(value) {
 
 /**
  * @param {{
- *   testSessionId?: string | null,
- *   sessionStartedAt?: string | null,
- *   testTaskId?: string | null,
- *   buildVersion?: string | null,
- *   branch?: string | null,
- *   result?: string | null,
+ *   testSessionId?: string,
+ *   sessionStartedAt?: string,
+ *   testTaskId?: string,
+ *   branch?: string,
+ *   result?: string,
+ *   groupId?: string,
+ *   appId?: string,
+ *   buildId?: string,
  * }} props
  */
 export function TestSessionContextBar({
   testSessionId,
   sessionStartedAt,
   testTaskId,
-  buildVersion,
   branch,
   result,
+  groupId,
+  appId,
+  buildId,
 }) {
+  const buildHref =
+    groupId && appId && buildId
+      && `/metrics/${groupId}/apps/${encodeURIComponent(appId)}/builds/${encodeURIComponent(buildId)}`
+  const sessionHref =
+    groupId && testSessionId
+      && `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}`
+
   return (
     <Space wrap size="large" style={{ marginBottom: 16 }}>
       <Text>
         <Text type="secondary">Session </Text>
-        <Text strong>{testSessionId || "—"}</Text>
+        {sessionHref ? (
+          <Link to={sessionHref}>
+            <Text strong>{testSessionId}</Text>
+          </Link>
+        ) : (
+          <Text strong>{testSessionId || "—"}</Text>
+        )}
       </Text>
       <Text>
         <Text type="secondary">Created </Text>
@@ -58,14 +76,24 @@ export function TestSessionContextBar({
         <Text type="secondary">Test task </Text>
         <Text strong>{testTaskId || "—"}</Text>
       </Text>
-      <Text>
-        <Text type="secondary">Build </Text>
-        <Text strong>{buildVersion || "—"}</Text>
-      </Text>
-      <Text>
-        <Text type="secondary">Branch </Text>
-        <Text strong>{branch || "—"}</Text>
-      </Text>
+      {buildId && (
+        <Text>
+          <Text type="secondary">Build </Text>
+          {buildHref ? (
+            <Link to={buildHref}>
+              <Text strong>{buildId}</Text>
+            </Link>
+          ) : (
+            <Text strong>{buildId}</Text>
+          )}
+        </Text>
+      )}
+      {branch && (
+        <Text>
+          <Text type="secondary">Branch </Text>
+          <Text strong>{branch}</Text>
+        </Text>
+      )}
       <Text>
         <Text type="secondary">Result </Text>
         <Text strong>{result || "—"}</Text>

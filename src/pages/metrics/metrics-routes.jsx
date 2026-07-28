@@ -23,7 +23,8 @@ import { MethodIgnoreRulesPage } from "./groups/method-ignore-rules"
 import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import {
-  TestSessionLayout,
+  TestSessionBuildLayout,
+  TestSessionBuildsPage,
   TestSessionResultsPage,
   TestSessionCoveragePage,
 } from "./groups/test-session-detail"
@@ -72,10 +73,13 @@ export const metricsRoutes = (
         <Route
           path=":testSessionId"
           handle={{ breadcrumb: "testSessionId" }}
-          element={<TestSessionLayout />}
+          element={<Outlet />}
         >
-          <Route index element={<TestSessionResultsPage />} />
-          <Route path="coverage" element={<TestSessionCoveragePage />} />
+          <Route index element={<TestSessionBuildsPage />} />
+          <Route path="builds/:buildId" handle={{ breadcrumb: "buildId" }} element={<TestSessionBuildLayout />}>
+            <Route index element={<TestSessionResultsPage />} />
+            <Route path="coverage" element={<TestSessionCoveragePage />} />
+          </Route>
         </Route>
       </Route>
     </Route>

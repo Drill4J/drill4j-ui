@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Alert, Col, Row, message } from "antd"
-import { useOutletContext, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import {
   CoveragePieChart,
   coverageUnitSlicesToChart,
@@ -28,7 +28,6 @@ import {
   getTestSessionCoverageSummary,
 } from "../../../../modules/metrics/api-metrics"
 import { useTestSessionCoverageSearchParams } from "./use-test-session-coverage-search-params"
-import { useTestSessionSearchParams } from "./use-test-session-search-params"
 
 function buildClassKey(packageName, className) {
   if (!className) {
@@ -38,9 +37,7 @@ function buildClassKey(packageName, className) {
 }
 
 export const TestSessionCoveragePage = () => {
-  const { groupId, testSessionId } = useParams()
-  const { session } = useOutletContext() ?? {}
-  const { buildId } = useTestSessionSearchParams()
+  const { groupId, testSessionId, buildId } = useParams()
   const {
     testDefinitionId,
     packageName,
@@ -52,8 +49,6 @@ export const TestSessionCoveragePage = () => {
     methodsSortOrder,
     updateCoverageParams,
   } = useTestSessionCoverageSearchParams()
-
-  const resolvedBuildId = buildId ?? session?.buildId
 
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
@@ -80,7 +75,7 @@ export const TestSessionCoveragePage = () => {
   )
 
   useEffect(() => {
-    if (!resolvedBuildId) {
+    if (!buildId) {
       setTreemapRoots([])
       setTreemapLoading(false)
       return undefined
@@ -89,7 +84,7 @@ export const TestSessionCoveragePage = () => {
     let cancelled = false
     setTreemapLoading(true)
 
-    getCoverageTreemap(resolvedBuildId, treemapFilters)
+    getCoverageTreemap(buildId, treemapFilters)
       .then((data) => {
         if (!cancelled) {
           setTreemapRoots(data)
@@ -109,10 +104,10 @@ export const TestSessionCoveragePage = () => {
     return () => {
       cancelled = true
     }
-  }, [resolvedBuildId, treemapFilters])
+  }, [buildId, treemapFilters])
 
   useEffect(() => {
-    if (!resolvedBuildId) {
+    if (!buildId) {
       setDefinitionCoverage(null)
       return undefined
     }
@@ -120,7 +115,7 @@ export const TestSessionCoveragePage = () => {
     let cancelled = false
     setDefinitionCoverageLoading(true)
 
-    getTestSessionCoverageSummary(groupId, testSessionId, resolvedBuildId, testDefinitionId)
+    getTestSessionCoverageSummary(groupId, testSessionId, buildId, testDefinitionId)
       .then((data) => {
         if (!cancelled) {
           setDefinitionCoverage(data)
@@ -142,7 +137,7 @@ export const TestSessionCoveragePage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, resolvedBuildId, testDefinitionId])
+  }, [groupId, testSessionId, buildId, testDefinitionId])
 
   useEffect(() => {
     if (treemapLoading || !treemapRoots.length) {
@@ -284,13 +279,13 @@ export const TestSessionCoveragePage = () => {
     [updateCoverageParams]
   )
 
-  if (!resolvedBuildId) {
+  if (!buildId) {
     return (
       <Alert
         type="info"
         showIcon
         message="Build context is required"
-        description="Open this session from a build or add buildId to the URL to view coverage."
+        description="This page requires a build in the URL path."
       />
     )
   }
@@ -302,7 +297,7 @@ export const TestSessionCoveragePage = () => {
           <TestDefinitionSelect
             groupId={groupId}
             testSessionId={testSessionId}
-            buildId={resolvedBuildId}
+            buildId={buildId}
             value={testDefinitionId}
             onChange={handleDefinitionChange}
             style={{ width: "100%" }}
@@ -342,7 +337,7 @@ export const TestSessionCoveragePage = () => {
 
       <div style={{ marginTop: 24 }}>
         <CoverageTables
-          buildId={resolvedBuildId}
+          buildId={buildId}
           coverageFilters={coverageFilters}
           treemapRoots={treemapRoots}
           treemapLoading={treemapLoading}

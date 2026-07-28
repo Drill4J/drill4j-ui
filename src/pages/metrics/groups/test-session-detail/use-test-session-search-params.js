@@ -28,12 +28,12 @@ const DEFAULT_PAGE_SIZE = 20
  * URL state for test session detail (results tab filters and table pagination).
  *
  * `path` — selected test file; when set, the launches table is shown for that path.
+ * Build identity comes from the route (`/builds/:buildId`), not query params.
  */
 export function useTestSessionSearchParams() {
   const [searchParams, setSearchParams] = useSearchParams()
   const searchString = searchParams.toString()
 
-  const buildId = useMemo(() => searchParams.get("buildId") ?? undefined, [searchString])
   const path = useMemo(() => searchParams.get("path") ?? undefined, [searchString])
   const testResults = useMemo(
     () => getListQueryParam(searchParams, "testResults"),
@@ -47,13 +47,6 @@ export function useTestSessionSearchParams() {
     (next) => {
       const params = new URLSearchParams(searchParams)
 
-      if ("buildId" in next) {
-        if (next.buildId) {
-          params.set("buildId", next.buildId)
-        } else {
-          params.delete("buildId")
-        }
-      }
       if ("path" in next) {
         if (next.path) {
           params.set("path", next.path)
@@ -85,7 +78,6 @@ export function useTestSessionSearchParams() {
       }
 
       const filtersChanged =
-        "buildId" in next ||
         "path" in next ||
         TEST_SESSION_DETAIL_LIST_QUERY_KEYS.some((key) => key in next)
       if (filtersChanged && next.page == null) {
@@ -107,7 +99,6 @@ export function useTestSessionSearchParams() {
   }, [updateQueryParams])
 
   return {
-    buildId,
     path,
     testResults,
     testTags,

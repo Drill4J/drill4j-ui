@@ -243,7 +243,6 @@ export async function getBuildTestSessionStats(buildId) {
 /**
  * @param {{
  *   groupId: string,
- *   buildId?: string,
  *   testTaskIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
@@ -254,10 +253,9 @@ export async function getBuildTestSessionStats(buildId) {
  * }} params
  * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
  */
-export async function getTestSessions(params) {
+export async function getGroupTestSessions(params) {
   const {
     groupId,
-    buildId,
     testTaskIds = [],
     createdBys = [],
     results = [],
@@ -267,9 +265,8 @@ export async function getTestSessions(params) {
     pageSize = 20,
   } = params
   const key = [
-    "test-sessions",
+    "group-test-sessions",
     groupId,
-    buildId,
     testTaskIds.join(","),
     createdBys.join(","),
     results.join(","),
@@ -283,7 +280,66 @@ export async function getTestSessions(params) {
       axios.get("/metrics/test-sessions", {
         params: serializeListQueryParams({
           groupId,
-          buildId,
+          testTaskIds,
+          createdBys,
+          results,
+          page,
+          pageSize,
+          ...(sortBy ? { sortBy, sortOrder } : {}),
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   buildId: string,
+ *   testTaskIds?: string[],
+ *   createdBys?: string[],
+ *   results?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getBuildTestSessions(params) {
+  const {
+    groupId,
+    buildId,
+    testTaskIds = [],
+    createdBys = [],
+    results = [],
+    sortBy,
+    sortOrder,
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = [
+    "build-test-sessions",
+    groupId,
+    buildId,
+    testTaskIds.join(","),
+    createdBys.join(","),
+    results.join(","),
+    sortBy,
+    sortOrder,
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/test-sessions`, {
+        params: serializeListQueryParams({
+          groupId,
           testTaskIds,
           createdBys,
           results,
@@ -335,6 +391,28 @@ export async function getTestSessionDetail(groupId, testSessionId, buildId) {
       })
     )
     return response.data.data
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {string} testSessionId
+ * @param {{ page?: number, pageSize?: number }} [params]
+ * @returns {Promise<{ data: object[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getTestSessionBuilds(groupId, testSessionId, params = {}) {
+  const { page = 1, pageSize = 20 } = params
+  const key = `test-session-builds:${groupId}:${testSessionId}:${page}:${pageSize}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(`/metrics/test-sessions/${encodeURIComponent(testSessionId)}/builds`, {
+        params: { groupId, page, pageSize },
+      })
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 

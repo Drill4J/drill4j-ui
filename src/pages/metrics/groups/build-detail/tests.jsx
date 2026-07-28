@@ -13,138 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { message } from "antd"
 import { useNavigate, useParams } from "react-router-dom"
-import { TestSessionsTable } from "../../../../components/metrics/test-sessions-table"
-import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
-import * as DataManagementAPI from "../../../../modules/data-management/api-data-management"
-import * as API from "../../../../modules/metrics/api-metrics"
-import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
+import { TestSessionsListView } from "../../../../components/metrics/test-sessions-list-view"
 
 export const BuildTestsPage = () => {
   const { groupId, buildId } = useParams()
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
-  const {
-    page,
-    pageSize,
-    testTaskIds,
-    createdBys,
-    results,
-    sessionsSortBy,
-    sessionsSortOrder,
-    updateQueryParams,
-    handleSortChange,
-  } = useTestSessionsSearchParams()
-
-  const [sessions, setSessions] = useState([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [deletingSessionId, setDeletingSessionId] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadSessions = async () => {
-      setLoading(true)
-      try {
-        const { data, paging } = await API.getTestSessions({
-          groupId,
-          buildId,
-          testTaskIds,
-          createdBys,
-          results,
-          sortBy: sessionsSortBy,
-          sortOrder: sessionsSortOrder,
-          page,
-          pageSize,
-        })
-        if (!cancelled) {
-          setSessions(data)
-          setTotal(paging.total)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch test sessions. ${error?.message}`)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadSessions()
-    return () => {
-      cancelled = true
-    }
-  }, [
-    groupId,
-    buildId,
-    testTaskIds,
-    createdBys,
-    results,
-    sessionsSortBy,
-    sessionsSortOrder,
-    page,
-    pageSize,
-    refreshKey,
-  ])
-
-  const handleDeleteSession = useCallback(
-    async (session) => {
-      setDeletingSessionId(session.testSessionId)
-      try {
-        const successMessage = await DataManagementAPI.deleteTestSession(
-          groupId,
-          session.testSessionId
-        )
-        message.success(successMessage)
-        if (sessions.length === 1 && page > 1) {
-          updateQueryParams({ page: page - 1 })
-        } else {
-          setRefreshKey((value) => value + 1)
-        }
-      } catch (error) {
-        message.error(`Failed to delete test session. ${error.message}`)
-      } finally {
-        setDeletingSessionId(null)
-      }
-    },
-    [groupId, page, sessions.length, updateQueryParams]
-  )
-
-  const pagination = useMemo(
-    () => ({ page, pageSize, total }),
-    [page, pageSize, total]
-  )
-
-  const handleTableChange = (tablePagination) => {
-    updateQueryParams({
-      page: tablePagination.current,
-      pageSize: tablePagination.pageSize,
-    })
-  }
 
   const handleRowClick = (session) => {
-    navigate(`/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}`)
+    navigate(
+      `/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}/builds/${encodeURIComponent(buildId)}`
+    )
   }
 
   return (
-    <TestSessionsTable
-      sessions={sessions}
-      loading={loading}
-      pagination={pagination}
-      sortBy={sessionsSortBy}
-      sortOrder={sessionsSortOrder}
-      onSortChange={handleSortChange}
-      onTableChange={handleTableChange}
-      onRowClick={handleRowClick}
-      isAdmin={isAdmin}
-      deletingSessionId={deletingSessionId}
-      onDelete={handleDeleteSession}
-    />
+    <TestSessionsListView groupId={groupId} buildId={buildId} onRowClick={handleRowClick} />
   )
 }
