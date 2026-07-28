@@ -3,9 +3,9 @@ name: review-changes
 description: >-
   Review git changes in the current working directory for data-loading rules:
   no client-side sort/filter on large lists, no API fallbacks or legacy compat,
-  and paginated list endpoints only. Use when reviewing a PR, diff, staged
-  changes, or when the user asks to review changes against server-side data
-  rules.
+  paginated list endpoints only, and no null in JS/JSX. Use when reviewing a PR,
+  diff, staged changes, or when the user asks to review changes against
+  server-side data rules.
 disable-model-invocation: true
 argument-hint: "[base-ref]"
 arguments: "[base-ref]"
@@ -13,7 +13,7 @@ arguments: "[base-ref]"
 
 # Review Changes (data-loading rules)
 
-Review **only what changed** in the working tree against three non-negotiable rules.
+Review **only what changed** in the working tree against four non-negotiable rules.
 
 ## Invocation
 
@@ -185,7 +185,39 @@ rg -n 'fun get.*\): (List|PagedList)' CHANGED_FILES
 
 ---
 
-## Step 5 — Report
+## Step 5 — Rule 4: No `null` in JS/JSX
+
+Do not use `null` in JavaScript or JSX. It is unnecessary — use `undefined`, omit the value, or rely on short-circuit expressions.
+
+### Fail
+
+| Pattern | Example |
+|---------|---------|
+| Ternary else `null` | `value: foo ? bar : null` |
+| Explicit `null` assignment | `const href = condition ? path : null` |
+| `return null` in helpers | `if (!x) return null` (use `return undefined` or early exit without return) |
+| `useState(null)` for empty | prefer `useState()` / `useState(undefined)` when no initial value |
+
+### Pass
+
+| Pattern | Example |
+|---------|---------|
+| Omit / undefined | `{ label: "Build", value: buildLabel }` — `KeyValuePanel` already renders `value ?? "—"` |
+| Short-circuit | `value: session?.result && renderResultTag(session.result)` |
+| Conditional string | `const href = groupId && buildId && \`/metrics/...\`` |
+| React “render nothing” | `condition && <Component />` instead of `condition ? <Component /> : null` |
+
+### Grep
+
+```bash
+rg -n '\bnull\b' CHANGED_FILES
+```
+
+Triage each hit: flag new/changed `null` in UI code. Pre-existing `null` in untouched lines → note only.
+
+---
+
+## Step 6 — Report
 
 Use this template. **Do not** fix code unless the user asks — review only.
 
@@ -202,6 +234,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 | 1. No client-side sort/filter on large lists | PASS / FAIL | N |
 | 2. No API fallbacks | PASS / FAIL | N |
 | 3. Paginated list data | PASS / FAIL | N |
+| 4. No `null` in JS/JSX | PASS / FAIL | N |
 
 ## Violations
 
@@ -226,7 +259,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 
 Severity:
 
-- **Blocker** — any Rule 1–3 violation in new/changed list or table flow
+- **Blocker** — any Rule 1–4 violation in new/changed list or table flow
 - **Note** — pre-existing code touched but not worsened; optional cleanup
 
 ---
@@ -243,5 +276,6 @@ Copy while reviewing:
 - [ ] No client-computed business fields that belong on API
 - [ ] New/changed list endpoints use PagedDataResponse + SQL LIMIT
 - [ ] Count queries match list filters
+- [ ] No `null` in changed JS/JSX (use undefined, omit, or short-circuit)
 - [ ] Report written with file:line references
 ```
