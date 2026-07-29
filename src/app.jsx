@@ -38,6 +38,7 @@ import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { MyAccount } from "./pages/account/my-account"
+import { NotFoundPage } from "./pages/not-found"
 import { SiderMenu } from "./components/sider-menu"
 import { MetricsLayout } from "./pages/metrics/metrics-layout"
 import { metricsRoutes } from "./pages/metrics/metrics-routes"
@@ -147,15 +148,6 @@ const BaseRouter = () => {
 
   return (
     <Routes>
-      <Route
-        path="/not-found"
-        element={
-          <ErrorLayout
-            errorTitle={"Not Found"}
-            errorText={"The requested resource was not found"}
-          />
-        }
-      />
       <Route path="/iframe/*" element={<IframeRouter />} />
       <Route path="/*" element={<AppContent location={location} />} />
     </Routes>
@@ -229,7 +221,8 @@ const AppContent = ({location}) => {
               <Route path="/metrics" element={<PrivateRoute roles={userRoles} />}>
                 <Route element={<MetricsLayout />}>{metricsRoutes}</Route>
               </Route>
-              <Route path="*" element={<Navigate to="/not-found" />} />
+              <Route path="/not-found" element={<NotFoundPage />} />
+              <Route path="*" element={<Navigate to="/not-found" replace />} />
             </Routes>
           </div>
         </Content>
