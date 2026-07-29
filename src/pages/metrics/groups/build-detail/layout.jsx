@@ -35,20 +35,20 @@ const TAB_ITEMS = [
   { key: "comparison", label: "Comparison", path: "comparison" },
 ]
 
-function resolveActiveTab(pathname, basePath) {
-  const suffix = pathname.slice(basePath.length).replace(/^\//, "")
-  if (!suffix) {
-    return "summary"
-  }
-  const match = TAB_ITEMS.find((tab) => tab.path === suffix)
-  return match?.key ?? "summary"
+/** Segment-based so percent-encoded build ids still resolve. */
+function resolveActiveTab(pathname) {
+  const segments = pathname.split("/").filter(Boolean)
+  const buildsIndex = segments.lastIndexOf("builds")
+  const suffix =
+    buildsIndex === -1 ? "" : segments.slice(buildsIndex + 2).join("/")
+  return TAB_ITEMS.find((tab) => tab.path === suffix)?.key ?? "summary"
 }
 
 export const BuildDetailLayout = () => {
   const { groupId, appId, buildId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const buildBasePath = `/metrics/${groupId}/apps/${appId}/builds/${buildId}`
+  const buildBasePath = `/metrics/${groupId}/apps/${appId}/builds/${encodeURIComponent(buildId)}`
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -89,7 +89,7 @@ export const BuildDetailLayout = () => {
     }
   }, [buildId])
 
-  const activeKey = resolveActiveTab(location.pathname, buildBasePath)
+  const activeKey = resolveActiveTab(location.pathname)
 
   useEffect(() => {
     if (activeKey !== "coverage" && (packageName || className)) {

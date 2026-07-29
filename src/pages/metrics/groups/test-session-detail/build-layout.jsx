@@ -23,13 +23,13 @@ const TAB_ITEMS = [
   { key: "coverage", label: "Coverage", path: "coverage" },
 ]
 
-function resolveActiveTab(pathname, basePath) {
-  const suffix = pathname.slice(basePath.length).replace(/^\//, "")
-  if (!suffix) {
-    return "results"
-  }
-  const match = TAB_ITEMS.find((tab) => tab.path === suffix)
-  return match?.key ?? "results"
+/** Segment-based so percent-encoded ids still resolve. */
+function resolveActiveTab(pathname) {
+  const segments = pathname.split("/").filter(Boolean)
+  const buildsIndex = segments.lastIndexOf("builds")
+  const suffix =
+    buildsIndex === -1 ? "" : segments.slice(buildsIndex + 2).join("/")
+  return TAB_ITEMS.find((tab) => tab.path === suffix)?.key ?? "results"
 }
 
 export const TestSessionBuildLayout = () => {
@@ -68,7 +68,7 @@ export const TestSessionBuildLayout = () => {
     }
   }, [groupId, testSessionId, buildId])
 
-  const activeKey = resolveActiveTab(location.pathname, sessionBuildBasePath)
+  const activeKey = resolveActiveTab(location.pathname)
 
   const handleTabChange = (key) => {
     const tab = TAB_ITEMS.find((item) => item.key === key)
