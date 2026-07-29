@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Button, Col, Row, Select, Space, Tag, message } from "antd"
+import { Button, Space, Tag, message } from "antd"
 import { MetricsDataTable } from "../../../../../components/metrics/metrics-data-table"
+import { TableColumnFilterHeader } from "../../../../../components/metrics/table-column-filter-header"
 import * as API from "../../../../../modules/metrics/api-metrics"
 import { buildComparisonRequestBody } from "../comparison-build-params"
 
@@ -44,17 +45,80 @@ export function ImpactedTestsSection({
   const [loading, setLoading] = useState(false)
   const [testPath, setTestPath] = useState()
   const [testName, setTestName] = useState()
+  const [testRunner, setTestRunner] = useState()
   const [testTag, setTestTag] = useState()
   const [filterOptions, setFilterOptions] = useState({
     testPaths: [],
     testNames: [],
+    testRunners: [],
     testTags: [],
   })
 
+  const toColumnFilterOptions = (options) =>
+    options.map((value) => ({ key: value, label: value, value: [value] }))
+
   const testColumns = [
-    { title: "Path", dataIndex: "testPath", key: "testPath", ellipsis: true },
-    { title: "Name", dataIndex: "testName", key: "testName", ellipsis: true },
-    { title: "Runner", dataIndex: "testRunner", key: "testRunner", width: 120 },
+    {
+      title: (
+        <TableColumnFilterHeader
+          searchable
+          title="Path"
+          placeholder="Test path"
+          options={toColumnFilterOptions(filterOptions.testPaths)}
+          value={testPath ? [testPath] : undefined}
+          onChange={(value) => setTestPath(value?.[0])}
+        />
+      ),
+      dataIndex: "testPath",
+      key: "testPath",
+      ellipsis: true,
+    },
+    {
+      title: (
+        <TableColumnFilterHeader
+          searchable
+          title="Name"
+          placeholder="Test name"
+          options={toColumnFilterOptions(filterOptions.testNames)}
+          value={testName ? [testName] : undefined}
+          onChange={(value) => setTestName(value?.[0])}
+        />
+      ),
+      dataIndex: "testName",
+      key: "testName",
+      ellipsis: true,
+    },
+    {
+      title: (
+        <TableColumnFilterHeader
+          searchable
+          title="Runner"
+          placeholder="Test runner"
+          options={toColumnFilterOptions(filterOptions.testRunners)}
+          value={testRunner ? [testRunner] : undefined}
+          onChange={(value) => setTestRunner(value?.[0])}
+        />
+      ),
+      dataIndex: "testRunner",
+      key: "testRunner",
+      width: 140,
+    },
+    {
+      title: (
+        <TableColumnFilterHeader
+          searchable
+          title="Tags"
+          placeholder="Test tag"
+          options={toColumnFilterOptions(filterOptions.testTags)}
+          value={testTag ? [testTag] : undefined}
+          onChange={(value) => setTestTag(value?.[0])}
+        />
+      ),
+      dataIndex: "tags",
+      key: "tags",
+      render: (tags) =>
+        tags?.length ? tags.map((tag) => <Tag key={tag}>{tag}</Tag>) : "—",
+    },
     {
       title: "Impacted methods",
       dataIndex: "impactedMethods",
@@ -81,7 +145,7 @@ export function ImpactedTestsSection({
 
   useEffect(() => {
     setPage(1)
-  }, [testPath, testName, testTag, methodSignature, coverageFilters])
+  }, [testPath, testName, testRunner, testTag, methodSignature, coverageFilters])
 
   useEffect(() => {
     let cancelled = false
@@ -97,6 +161,7 @@ export function ImpactedTestsSection({
           setFilterOptions({
             testPaths: options.testPaths ?? [],
             testNames: options.testNames ?? [],
+            testRunners: options.testRunners ?? [],
             testTags: options.testTags ?? [],
           })
         }
@@ -123,6 +188,7 @@ export function ImpactedTestsSection({
           methodSignature: methodSignature ?? undefined,
           testPath: testPath || undefined,
           testName: testName || undefined,
+          testRunner: testRunner || undefined,
           testTag: testTag || undefined,
           coverageBranches: coverageFilters.branches ?? [],
           coverageAppEnvIds: coverageFilters.envIds ?? [],
@@ -155,6 +221,7 @@ export function ImpactedTestsSection({
     methodSignature,
     testPath,
     testName,
+    testRunner,
     testTag,
     coverageFilters,
     page,
@@ -163,57 +230,20 @@ export function ImpactedTestsSection({
 
   return (
     <>
-      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={8}>
-          <Select
-            allowClear
-            showSearch
-            placeholder="Test path"
-            style={{ width: "100%" }}
-            value={testPath}
-            options={filterOptions.testPaths.map((value) => ({ value, label: value }))}
-            onChange={(value) => setTestPath(value)}
-          />
-        </Col>
-        <Col xs={24} md={8}>
-          <Select
-            allowClear
-            showSearch
-            placeholder="Test name"
-            style={{ width: "100%" }}
-            value={testName}
-            options={filterOptions.testNames.map((value) => ({ value, label: value }))}
-            onChange={(value) => setTestName(value)}
-          />
-        </Col>
-        <Col xs={24} md={8}>
-          <Select
-            allowClear
-            showSearch
-            placeholder="Test tag"
-            style={{ width: "100%" }}
-            value={testTag}
-            options={filterOptions.testTags.map((value) => ({ value, label: value }))}
-            onChange={(value) => setTestTag(value)}
-          />
-        </Col>
-        {methodSignature && (
-          <Col xs={24}>
-            <Space wrap>
-              <Tag
-                color="blue"
-                closable
-                onClose={(event) => {
-                  event.preventDefault()
-                  onMethodSignatureChange(undefined)
-                }}
-              >
-                Method signature: {methodSignature}
-              </Tag>
-            </Space>
-          </Col>
-        )}
-      </Row>
+      {methodSignature && (
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Tag
+            color="blue"
+            closable
+            onClose={(event) => {
+              event.preventDefault()
+              onMethodSignatureChange(undefined)
+            }}
+          >
+            Method signature: {methodSignature}
+          </Tag>
+        </Space>
+      )}
       <MetricsDataTable
         rowKey="testDefinitionId"
         loading={loading}

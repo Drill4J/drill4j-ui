@@ -572,7 +572,7 @@ export async function postImpactedTests(body) {
 
 /**
  * @param {object} body Same build/coverage fields as postImpactedTests
- * @returns {Promise<{ testPaths: string[], testNames: string[], testTags: string[] }>}
+ * @returns {Promise<{ testPaths: string[], testNames: string[], testRunners: string[], testTags: string[] }>}
  */
 export async function postImpactedTestsFilterOptions(body) {
   const response = await runCatching(
