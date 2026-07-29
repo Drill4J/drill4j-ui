@@ -281,6 +281,8 @@ export const BuildComparisonPage = () => {
         section: "impacted-tests",
         methodSignature: signature,
         testDefinitionId: undefined,
+        changeTypes: undefined,
+        hasImpactedTests: undefined,
       })
       sectionTabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     },

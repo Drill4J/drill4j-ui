@@ -48,8 +48,6 @@ function activeChipKey(changeTypes, hasImpactedTests) {
  *   onFilterChange: (updates: {
  *     changeTypes?: string[],
  *     hasImpactedTests?: boolean,
- *     methodSignature?: string,
- *     testDefinitionId?: string,
  *   }) => void,
  * }} props
  */
@@ -61,35 +59,27 @@ export function ComparisonChangesFilterChips({
   const activeKey = activeChipKey(changeTypes, hasImpactedTests)
 
   const applyChip = (chip) => {
-    const clearDrillDown = {
-      methodSignature: undefined,
-      testDefinitionId: undefined,
-    }
     switch (chip.key) {
       case "all":
         onFilterChange({
-          ...clearDrillDown,
           changeTypes: undefined,
           hasImpactedTests: undefined,
         })
         break
       case "at-risk":
         onFilterChange({
-          ...clearDrillDown,
           changeTypes: ["new", "modified"],
           hasImpactedTests: undefined,
         })
         break
       case "impacted":
         onFilterChange({
-          ...clearDrillDown,
           changeTypes: undefined,
           hasImpactedTests: true,
         })
         break
       default:
         onFilterChange({
-          ...clearDrillDown,
           changeTypes: chip.changeTypes,
           hasImpactedTests: undefined,
         })
