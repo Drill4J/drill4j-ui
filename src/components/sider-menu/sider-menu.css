@@ -3,7 +3,16 @@
 }
 
 .sider-menu-metrics-root .ant-menu-item {
+  height: 36px;
+  line-height: 36px;
+  margin-block: 1px;
   overflow: hidden;
+}
+
+.sider-menu-metrics-root .ant-menu-item-group-title {
+  line-height: 20px;
+  padding-top: 4px;
+  padding-bottom: 2px;
 }
 
 .sider-menu-context-label {
@@ -11,5 +20,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 140px;
+  max-width: 160px;
+}
+
+.sider-menu-context-divider {
+  margin: 2px 16px !important;
+  width: auto !important;
 }

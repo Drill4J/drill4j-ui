@@ -110,19 +110,29 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
   }
 }
 
-function contextLabel(text) {
-  return (
-    <span className="sider-menu-context-label" title={text}>
-      {text}
-    </span>
-  )
-}
-
 function linkItem(to, label, icon) {
   return {
     key: to,
     icon,
     label: <Link to={to}>{label}</Link>,
+  }
+}
+
+function divider(key) {
+  return { type: "divider", key, className: "sider-menu-context-divider" }
+}
+
+function contextSection(key, label, children) {
+  return {
+    type: "group",
+    key,
+    className: "sider-menu-context-section",
+    label: (
+      <span className="sider-menu-context-label" title={label}>
+        {label}
+      </span>
+    ),
+    children,
   }
 }
 
@@ -177,56 +187,53 @@ export function getMetricsMenuItems(location) {
     ]
   } else {
     children = [
-      {
-        type: "group",
-        key: `group-${groupId}`,
-        label: contextLabel(groupId),
-        children: [
-          linkItem(p.group, "Apps", <AppstoreOutlined />),
-          linkItem(p.sessions, "Test Sessions", <ExperimentOutlined />),
-          linkItem(p.settings, "Settings", <SettingOutlined />),
-        ],
-      },
+      contextSection(`group-${groupId}`, groupId, [
+        linkItem(p.group, "Apps", <AppstoreOutlined />),
+        linkItem(p.sessions, "Test Sessions", <ExperimentOutlined />),
+        linkItem(p.settings, "Settings", <SettingOutlined />),
+      ]),
     ]
 
     if (level === "app") {
-      const appChildren = [
-        linkItem(p.app, "Builds", <ApartmentOutlined />),
-        linkItem(p.exclusionRules, "Exclusion rules", <StopOutlined />),
-        linkItem(p.trends, "Trends", <LineChartOutlined />),
-      ]
+      children.push(
+        divider("group-app-divider"),
+        contextSection(`app-${appId}`, appId, [
+          linkItem(p.app, "Builds", <ApartmentOutlined />),
+          linkItem(p.exclusionRules, "Exclusion rules", <StopOutlined />),
+          linkItem(p.trends, "Trends", <LineChartOutlined />),
+        ])
+      )
+
       if (buildId) {
-        appChildren.push(
-          linkItem(p.build, "Summary"),
-          linkItem(p.buildTests, "Tests"),
-          linkItem(p.buildCoverage, "Coverage"),
-          linkItem(p.buildComparison, "Comparison")
+        children.push(
+          divider("app-build-divider"),
+          contextSection(`build-${buildId}`, "Build", [
+            linkItem(p.build, "Summary"),
+            linkItem(p.buildTests, "Tests"),
+            linkItem(p.buildCoverage, "Coverage"),
+            linkItem(p.buildComparison, "Comparison"),
+          ])
         )
       }
-      children.push({
-        type: "group",
-        key: `app-${appId}`,
-        label: contextLabel(appId),
-        children: appChildren,
-      })
     }
 
     if (level === "test-sessions" && testSessionId) {
-      const sessionChildren = [
-        linkItem(p.session, contextLabel(testSessionId), <FileSearchOutlined />),
-      ]
+      children.push(
+        divider("group-session-divider"),
+        contextSection(`session-${testSessionId}`, "Test Session", [
+          linkItem(p.session, "Affected Builds", <FileSearchOutlined />),
+        ])
+      )
+
       if (buildId) {
-        sessionChildren.push(
-          linkItem(p.sessionResults, "Results"),
-          linkItem(p.sessionCoverage, "Coverage")
+        children.push(
+          divider("session-build-divider"),
+          contextSection(`session-build-${buildId}`, "Build", [
+            linkItem(p.sessionResults, "Results"),
+            linkItem(p.sessionCoverage, "Coverage"),
+          ])
         )
       }
-      children.push({
-        type: "group",
-        key: `session-${testSessionId}`,
-        label: "Session",
-        children: sessionChildren,
-      })
     }
   }
 
