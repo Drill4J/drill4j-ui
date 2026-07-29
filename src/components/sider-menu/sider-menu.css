@@ -1,3 +1,7 @@
 .sider-menu-metrics-root > .ant-menu-submenu-title .ant-menu-submenu-arrow {
   display: none;
 }
+
+.sider-menu-metrics-root .ant-menu-item {
+  overflow: hidden;
+}
