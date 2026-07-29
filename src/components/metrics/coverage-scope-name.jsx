@@ -20,13 +20,16 @@ import "./coverage-scope-name.css"
 /**
  * Plain-text scope name with a chainlink icon that appears on hover.
  * Clicking the icon copies a link to this scope (and applies its filters).
+ * Pass no `name` to render an icon-only cell (e.g. a dedicated table column).
  *
- * @param {{ name: React.ReactNode, onCopyLink?: () => void, ellipsis?: boolean }} props
+ * @param {{ name?: React.ReactNode, onCopyLink?: () => void, ellipsis?: boolean }} props
  */
 export function CoverageScopeName({ name, onCopyLink, ellipsis }) {
   return (
     <span className={`coverage-scope-name${ellipsis ? " coverage-scope-name--ellipsis" : ""}`}>
-      <span className="coverage-scope-name__text">{name}</span>
+      {name != null && name !== "" ? (
+        <span className="coverage-scope-name__text">{name}</span>
+      ) : undefined}
       <Tooltip title="Copy link">
         <LinkOutlined
           className="coverage-scope-name__link"

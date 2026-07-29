@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { message } from "antd"
-import { buildBuildDetailSearchParams } from "./query-params"
+import { buildBuildDetailSearchParams, buildComparisonSearchParams } from "./query-params"
 
 /**
  * @param {string} pathname
@@ -23,6 +23,16 @@ import { buildBuildDetailSearchParams } from "./query-params"
  */
 export function buildCoverageScopeUrl(pathname, state) {
   const search = buildBuildDetailSearchParams(state).toString()
+  return `${window.location.origin}${pathname}${search ? `?${search}` : ""}`
+}
+
+/**
+ * @param {string} pathname
+ * @param {import("./query-params").ComparisonQueryState} state
+ * @returns {string}
+ */
+export function buildComparisonScopeUrl(pathname, state) {
+  const search = buildComparisonSearchParams(state).toString()
   return `${window.location.origin}${pathname}${search ? `?${search}` : ""}`
 }
 

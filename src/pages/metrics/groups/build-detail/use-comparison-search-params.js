@@ -33,10 +33,13 @@ export function useComparisonSearchParams() {
 
   const baselineBuildId = searchParams.get("baselineBuildId") || undefined
   const methodSignature = searchParams.get("methodSignature") || undefined
+  const methodId = searchParams.get("methodId") || undefined
   const testDefinitionId = searchParams.get("testDefinitionId") || undefined
   const hasImpactedTests = searchParams.get("hasImpactedTests") === "true"
   const sortBy = searchParams.get("sortBy") || undefined
   const sortOrder = searchParams.get("sortOrder") || undefined
+  const page = Number(searchParams.get("page")) || undefined
+  const pageSize = Number(searchParams.get("pageSize")) || undefined
   const rawSection = searchParams.get("section")
   const section = COMPARISON_SECTIONS.includes(rawSection) ? rawSection : "changes"
 
@@ -62,11 +65,14 @@ export function useComparisonSearchParams() {
         baselineBuildId,
         section,
         methodSignature,
+        methodId,
         testDefinitionId,
         hasImpactedTests: hasImpactedTests || undefined,
         sortBy,
         sortOrder,
         changeTypes,
+        page,
+        pageSize,
         branches,
         envIds,
         testTags,
@@ -88,11 +94,14 @@ export function useComparisonSearchParams() {
       baselineBuildId,
       section,
       methodSignature,
+      methodId,
       testDefinitionId,
       hasImpactedTests,
       sortBy,
       sortOrder,
       changeTypes,
+      page,
+      pageSize,
       branches,
       envIds,
       testTags,
@@ -109,11 +118,14 @@ export function useComparisonSearchParams() {
     baselineBuildId,
     section,
     methodSignature,
+    methodId,
     testDefinitionId,
     hasImpactedTests,
     sortBy,
     sortOrder,
     changeTypes,
+    page,
+    pageSize,
     branches,
     envIds,
     testTags,
@@ -130,11 +142,14 @@ export function clearComparisonQueryParams(params) {
   ;[
     "section",
     "methodSignature",
+    "methodId",
     "testDefinitionId",
     "hasImpactedTests",
     "sortBy",
     "sortOrder",
     "changeTypes",
+    "page",
+    "pageSize",
     "baselineBuildId",
   ].forEach((key) => {
     params.delete(key)

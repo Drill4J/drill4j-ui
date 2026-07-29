@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Col, Row, Tabs, Typography, message } from "antd"
-import { useOutletContext } from "react-router-dom"
+import { useLocation, useOutletContext } from "react-router-dom"
 import {
   BaselineBuildFilter,
   BaselineBuildPickerDialog,
@@ -27,6 +27,10 @@ import {
 } from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import * as API from "../../../../modules/metrics/api-metrics"
+import {
+  buildComparisonScopeUrl,
+  copyScopeLinkToClipboard,
+} from "../../../../modules/metrics/copy-scope-link"
 import { buildComparisonQueryParams, buildComparisonRequestBody } from "./comparison-build-params"
 import { ChangesSection } from "./comparison/changes-section"
 import { ImpactedTestsSection } from "./comparison/impacted-tests-section"
@@ -47,15 +51,19 @@ const COMPARISON_FILTER_HINTS = {
 
 export const BuildComparisonPage = () => {
   const { build } = useOutletContext() ?? {}
+  const location = useLocation()
   const {
     baselineBuildId,
     section,
     methodSignature,
+    methodId,
     testDefinitionId,
     hasImpactedTests,
     sortBy,
     sortOrder,
     changeTypes,
+    page: urlPage,
+    pageSize: urlPageSize,
     branches,
     envIds,
     testTags,
@@ -80,6 +88,61 @@ export const BuildComparisonPage = () => {
   const sectionTabsRef = useRef()
 
   const buildId = build?.buildId
+
+  const queryState = useMemo(
+    () => ({
+      baselineBuildId,
+      section,
+      methodSignature,
+      methodId,
+      testDefinitionId,
+      hasImpactedTests: hasImpactedTests || undefined,
+      sortBy,
+      sortOrder,
+      changeTypes,
+      page: urlPage,
+      pageSize: urlPageSize,
+      branches,
+      envIds,
+      testTags,
+    }),
+    [
+      baselineBuildId,
+      branches,
+      changeTypes,
+      envIds,
+      hasImpactedTests,
+      methodId,
+      methodSignature,
+      section,
+      sortBy,
+      sortOrder,
+      testDefinitionId,
+      testTags,
+      urlPage,
+      urlPageSize,
+    ]
+  )
+
+  const copyMethodLink = useCallback(
+    (scopeUpdates) => {
+      const url = buildComparisonScopeUrl(location.pathname, { ...queryState, ...scopeUpdates })
+      copyScopeLinkToClipboard(url)
+    },
+    [location.pathname, queryState]
+  )
+
+  const handleCopyMethodLink = useCallback(
+    ({ signature, page, pageSize }) => {
+      copyMethodLink({
+        methodId: signature,
+        section: "changes",
+        page,
+        pageSize,
+      })
+    },
+    [copyMethodLink]
+  )
 
   const selectedBaselineBuild = useMemo(
     () => similarBuilds.find((item) => item.buildId === baselineBuildId) ?? baselineBuild,
@@ -357,9 +420,12 @@ export const BuildComparisonPage = () => {
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}
         methodSignature={methodSignature}
+        methodId={methodId}
         testDefinitionId={testDefinitionId}
         sortBy={sortBy}
         sortOrder={sortOrder}
+        initialPage={urlPage}
+        initialPageSize={urlPageSize}
         onFilterChange={updateQueryParams}
         onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
         onTestDefinitionIdChange={(value) => updateQueryParams({ testDefinitionId: value })}
@@ -367,6 +433,7 @@ export const BuildComparisonPage = () => {
           updateQueryParams({ sortBy: nextSortBy, sortOrder: nextSortOrder })
         }
         onViewImpactedTests={(signature) => goToImpactedTestsRef.current(signature)}
+        onCopyMethodLink={handleCopyMethodLink}
       />
     )
   }, [
@@ -374,13 +441,17 @@ export const BuildComparisonPage = () => {
     build,
     changeTypes,
     coverageFilters,
+    handleCopyMethodLink,
     hasImpactedTests,
+    methodId,
     methodSignature,
     section,
     sortBy,
     sortOrder,
     testDefinitionId,
     updateQueryParams,
+    urlPage,
+    urlPageSize,
   ])
 
   return (

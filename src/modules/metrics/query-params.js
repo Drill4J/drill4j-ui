@@ -64,11 +64,14 @@ export const COMPARISON_QUERY_KEYS = [
   "baselineBuildId",
   "section",
   "methodSignature",
+  "methodId",
   "testDefinitionId",
   "hasImpactedTests",
   "sortBy",
   "sortOrder",
   "changeTypes",
+  "page",
+  "pageSize",
   ...COVERAGE_LIST_QUERY_KEYS,
 ]
 
@@ -169,11 +172,14 @@ export const axiosListParamsSerializer = { indexes: null }
  *   baselineBuildId?: string,
  *   section?: string,
  *   methodSignature?: string,
+ *   methodId?: string,
  *   testDefinitionId?: string,
  *   hasImpactedTests?: boolean,
  *   sortBy?: string,
  *   sortOrder?: string,
  *   changeTypes?: string[],
+ *   page?: number,
+ *   pageSize?: number,
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
@@ -216,6 +222,16 @@ export function buildComparisonSearchParams(state) {
     if (key === "hasImpactedTests") {
       if (value === true) {
         params.set(key, "true")
+      }
+      return
+    }
+    if (key === "page" || key === "pageSize") {
+      if (value != null && value !== "" && Number(value) > 0) {
+        // Omit default page=1 so everyday URLs stay clean; keep pageSize when set.
+        if (key === "page" && Number(value) === 1) {
+          return
+        }
+        params.set(key, String(value))
       }
       return
     }

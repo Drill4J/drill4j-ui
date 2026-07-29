@@ -25,14 +25,18 @@ import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
  *   methodSignature?: string,
+ *   methodId?: string,
  *   testDefinitionId?: string,
  *   sortBy?: string,
  *   sortOrder?: string,
+ *   initialPage?: number,
+ *   initialPageSize?: number,
  *   onFilterChange: (updates: object) => void,
  *   onMethodSignatureChange: (value?: string) => void,
  *   onTestDefinitionIdChange?: (value?: string) => void,
  *   onSortChange: (sort: { sortBy?: string, sortOrder?: string }) => void,
  *   onViewImpactedTests: (signature: string) => void,
+ *   onCopyMethodLink?: (payload: { signature: string, page: number, pageSize: number }) => void,
  * }} props
  */
 export function ChangesSection({
@@ -42,14 +46,18 @@ export function ChangesSection({
   changeTypes,
   hasImpactedTests,
   methodSignature,
+  methodId,
   testDefinitionId,
   sortBy,
   sortOrder,
+  initialPage,
+  initialPageSize,
   onFilterChange,
   onMethodSignatureChange,
   onTestDefinitionIdChange,
   onSortChange,
   onViewImpactedTests,
+  onCopyMethodLink,
 }) {
   return (
     <Space direction="vertical" size={16} style={{ display: "flex" }}>
@@ -65,9 +73,12 @@ export function ChangesSection({
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}
         methodSignature={methodSignature}
+        methodId={methodId}
         testDefinitionId={testDefinitionId}
         sortBy={sortBy}
         sortOrder={sortOrder}
+        initialPage={initialPage}
+        initialPageSize={initialPageSize}
         onMethodSignatureChange={onMethodSignatureChange}
         onTestDefinitionIdChange={onTestDefinitionIdChange}
         onChangeTypesChange={(value) =>
@@ -80,6 +91,7 @@ export function ChangesSection({
         }
         onSortChange={onSortChange}
         onViewImpactedTests={onViewImpactedTests}
+        onCopyMethodLink={onCopyMethodLink}
       />
     </Space>
   )
