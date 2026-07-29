@@ -5,3 +5,11 @@
 .sider-menu-metrics-root .ant-menu-item {
   overflow: hidden;
 }
+
+.sider-menu-context-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}

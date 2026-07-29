@@ -25,338 +25,149 @@ import {
 import { Link } from "react-router-dom"
 
 const METRICS_SUBMENU_KEY = "metrics-submenu"
-const metricsTitleLinkStyle = { color: "inherit" }
-const contextLabelStyle = {
-  display: "block",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  maxWidth: 140,
+
+/** Relative to `/metrics/:groupId`. More specific first. */
+const PATH_ROUTES = {
+  "apps/:appId/builds/:buildId/tests": { level: "app", page: "tests" },
+  "apps/:appId/builds/:buildId/coverage": { level: "app", page: "coverage" },
+  "apps/:appId/builds/:buildId/comparison": { level: "app", page: "comparison" },
+  "apps/:appId/builds/:buildId": { level: "app", page: "summary" },
+  "apps/:appId/trends": { level: "app", page: "trends" },
+  "apps/:appId/method-ignore-rules": { level: "app", page: "exclusion-rules" },
+  "apps/:appId": { level: "app", page: "builds" },
+  "test-sessions/:testSessionId/builds/:buildId/coverage": {
+    level: "test-sessions",
+    page: "session-coverage",
+  },
+  "test-sessions/:testSessionId/builds/:buildId": {
+    level: "test-sessions",
+    page: "session-results",
+  },
+  "test-sessions/:testSessionId": { level: "test-sessions", page: "test-session" },
+  "test-sessions": { level: "test-sessions", page: "test-sessions" },
+  settings: { level: "group", page: "settings" },
+  "": { level: "group", page: "apps" },
 }
 
-/**
- * @param {string} value
- * @returns {import("react").ReactNode}
- */
-function ContextLabel({ children }) {
+function matchPattern(pattern, segments) {
+  const keys = pattern === "" ? [] : pattern.split("/")
+  if (keys.length !== segments.length) return null
+  const params = {}
+  for (let i = 0; i < keys.length; i += 1) {
+    if (keys[i].startsWith(":")) {
+      params[keys[i].slice(1)] = decodeURIComponent(segments[i])
+    } else if (keys[i] !== segments[i]) {
+      return null
+    }
+  }
+  return params
+}
+
+function parseMetricsPath(pathname) {
+  const empty = {
+    level: "root",
+    page: "root",
+    groupId: null,
+    appId: null,
+    buildId: null,
+    testSessionId: null,
+  }
+  if (!pathname.startsWith("/metrics")) return empty
+
+  const [, groupSeg, ...rest] = pathname.split("/").filter(Boolean)
+  if (!groupSeg || groupSeg === "groups") return empty
+
+  const groupId = decodeURIComponent(groupSeg)
+  for (const [pattern, meta] of Object.entries(PATH_ROUTES)) {
+    const params = matchPattern(pattern, rest)
+    if (params) return { groupId, appId: null, buildId: null, testSessionId: null, ...params, ...meta }
+  }
+  return empty
+}
+
+function metricsPaths({ groupId, appId, buildId, testSessionId }) {
+  const group = groupId ? `/metrics/${groupId}` : "/metrics"
+  const sessions = groupId && `${group}/test-sessions`
+  const app = groupId && appId && `${group}/apps/${appId}`
+  const build = app && buildId && `${app}/builds/${encodeURIComponent(buildId)}`
+  const session = sessions && testSessionId && `${sessions}/${encodeURIComponent(testSessionId)}`
+  const sessionBuild = session && buildId && `${session}/builds/${encodeURIComponent(buildId)}`
+
+  return {
+    group,
+    sessions,
+    settings: groupId && `${group}/settings`,
+    app,
+    exclusionRules: app && `${app}/method-ignore-rules`,
+    trends: app && `${app}/trends`,
+    build,
+    buildTests: build && `${build}/tests`,
+    buildCoverage: build && `${build}/coverage`,
+    buildComparison: build && `${build}/comparison`,
+    session,
+    sessionResults: sessionBuild,
+    sessionCoverage: sessionBuild && `${sessionBuild}/coverage`,
+  }
+}
+
+function contextLabel(text) {
   return (
-    <span style={contextLabelStyle} title={typeof children === "string" ? children : undefined}>
-      {children}
+    <span className="sider-menu-context-label" title={text}>
+      {text}
     </span>
   )
 }
 
-/**
- * Parse metrics URL into navigation context.
- * Levels: root | group | app | test-sessions
- *
- * @param {string} pathname
- * @returns {{
- *   level: 'root' | 'group' | 'app' | 'test-sessions',
- *   groupId: string | null,
- *   appId: string | null,
- *   buildId: string | null,
- *   testSessionId: string | null,
- *   page: string,
- * }}
- */
-export function parseMetricsPath(pathname) {
-  if (!pathname.startsWith("/metrics")) {
-    return {
-      level: "root",
-      groupId: null,
-      appId: null,
-      buildId: null,
-      testSessionId: null,
-      page: "root",
-    }
-  }
-
-  const parts = pathname.split("/").filter(Boolean)
-  // ["metrics"] or ["metrics", groupId, ...]
-  if (parts.length < 2 || parts[1] === "groups") {
-    return {
-      level: "root",
-      groupId: null,
-      appId: null,
-      buildId: null,
-      testSessionId: null,
-      page: "root",
-    }
-  }
-
-  const groupId = decodeURIComponent(parts[1])
-  const base = {
-    groupId,
-    appId: null,
-    buildId: null,
-    testSessionId: null,
-    page: "apps",
-    level: "group",
-  }
-
-  if (parts[2] === "settings") {
-    return { ...base, page: "settings" }
-  }
-
-  if (parts[2] === "apps" && parts[3]) {
-    const appId = decodeURIComponent(parts[3])
-    const appBase = { ...base, level: "app", appId, page: "builds" }
-
-    if (parts[4] === "trends") {
-      return { ...appBase, page: "trends" }
-    }
-    if (parts[4] === "method-ignore-rules") {
-      return { ...appBase, page: "exclusion-rules" }
-    }
-    if (parts[4] === "builds" && parts[5]) {
-      const buildId = decodeURIComponent(parts[5])
-      const tab = parts[6] || "summary"
-      return { ...appBase, buildId, page: tab }
-    }
-    return appBase
-  }
-
-  if (parts[2] === "test-sessions") {
-    const sessionBase = {
-      ...base,
-      level: "test-sessions",
-      page: "test-sessions",
-    }
-    if (!parts[3]) {
-      return sessionBase
-    }
-    const testSessionId = decodeURIComponent(parts[3])
-    if (parts[4] === "builds" && parts[5]) {
-      const buildId = decodeURIComponent(parts[5])
-      const page = parts[6] === "coverage" ? "session-coverage" : "session-results"
-      return { ...sessionBase, testSessionId, buildId, page }
-    }
-    return { ...sessionBase, testSessionId, page: "test-session" }
-  }
-
-  return base
-}
-
-/**
- * @param {{ pathname: string }} location
- * @returns {string[]}
- */
-export function getMetricsSelectedKeys(location) {
-  const ctx = parseMetricsPath(location.pathname)
-
-  if (ctx.level === "root") {
-    return ["/metrics"]
-  }
-
-  const groupBase = `/metrics/${ctx.groupId}`
-
-  if (ctx.level === "app") {
-    const appBase = `${groupBase}/apps/${ctx.appId}`
-    if (ctx.buildId) {
-      const buildBase = `${appBase}/builds/${encodeURIComponent(ctx.buildId)}`
-      if (ctx.page === "summary") {
-        return [buildBase]
-      }
-      return [`${buildBase}/${ctx.page}`]
-    }
-    if (ctx.page === "trends") {
-      return [`${appBase}/trends`]
-    }
-    if (ctx.page === "exclusion-rules") {
-      return [`${appBase}/method-ignore-rules`]
-    }
-    return [appBase]
-  }
-
-  if (ctx.level === "test-sessions") {
-    const sessionsBase = `${groupBase}/test-sessions`
-    if (ctx.testSessionId && ctx.buildId) {
-      const sessionBuildBase = `${sessionsBase}/${encodeURIComponent(ctx.testSessionId)}/builds/${encodeURIComponent(ctx.buildId)}`
-      if (ctx.page === "session-coverage") {
-        return [`${sessionBuildBase}/coverage`]
-      }
-      return [sessionBuildBase]
-    }
-    if (ctx.testSessionId) {
-      return [`${sessionsBase}/${encodeURIComponent(ctx.testSessionId)}`]
-    }
-    return [sessionsBase]
-  }
-
-  if (ctx.page === "settings") {
-    return [`${groupBase}/settings`]
-  }
-
-  return [groupBase]
-}
-
-/** Metrics submenu is always expanded. */
-export function getMetricsOpenKeys() {
-  return [METRICS_SUBMENU_KEY]
-}
-
-/**
- * @param {string[]} keys
- * @returns {string[]}
- */
-export function mergeMenuOpenKeys(keys) {
-  return [...new Set([METRICS_SUBMENU_KEY, ...keys])]
-}
-
-/**
- * @param {string} to
- * @param {import("react").ReactNode} label
- * @param {import("react").ReactNode} [icon]
- */
-function linkItem(key, to, label, icon) {
+function linkItem(to, label, icon) {
   return {
-    key,
+    key: to,
     icon,
     label: <Link to={to}>{label}</Link>,
   }
 }
 
-/**
- * Group-level nav: context group name + primary group destinations.
- * @param {ReturnType<typeof parseMetricsPath>} ctx
- */
-function getGroupLevelItems(ctx) {
-  const groupBase = `/metrics/${ctx.groupId}`
-  const items = [
-    {
-      type: "group",
-      key: `group-ctx-${ctx.groupId}`,
-      label: <ContextLabel>{ctx.groupId}</ContextLabel>,
-      children: [
-        linkItem(groupBase, groupBase, "Apps", <AppstoreOutlined />),
-        linkItem(
-          `${groupBase}/test-sessions`,
-          `${groupBase}/test-sessions`,
-          "Test Sessions",
-          <ExperimentOutlined />
-        ),
-        linkItem(
-          `${groupBase}/settings`,
-          `${groupBase}/settings`,
-          "Settings",
-          <SettingOutlined />
-        ),
-      ],
-    },
-  ]
-
-  if (ctx.level === "test-sessions" && ctx.testSessionId) {
-    const sessionPath = `${groupBase}/test-sessions/${encodeURIComponent(ctx.testSessionId)}`
-    const sessionChildren = [
-      linkItem(
-        sessionPath,
-        sessionPath,
-        <ContextLabel>{ctx.testSessionId}</ContextLabel>,
-        <FileSearchOutlined />
-      ),
-    ]
-
-    if (ctx.buildId) {
-      const sessionBuildBase = `${sessionPath}/builds/${encodeURIComponent(ctx.buildId)}`
-      sessionChildren.push(
-        linkItem(sessionBuildBase, sessionBuildBase, "Results"),
-        linkItem(
-          `${sessionBuildBase}/coverage`,
-          `${sessionBuildBase}/coverage`,
-          "Coverage"
-        )
-      )
-    }
-
-    items.push({
-      type: "group",
-      key: `session-ctx-${ctx.testSessionId}`,
-      label: "Session",
-      children: sessionChildren,
-    })
+/** @param {{ pathname: string }} location */
+export function getMetricsSelectedKeys(location) {
+  const ctx = parseMetricsPath(location.pathname)
+  const p = metricsPaths(ctx)
+  const byPage = {
+    root: "/metrics",
+    apps: p.group,
+    settings: p.settings,
+    "test-sessions": p.sessions,
+    "test-session": p.session,
+    "session-results": p.sessionResults,
+    "session-coverage": p.sessionCoverage,
+    builds: p.app,
+    "exclusion-rules": p.exclusionRules,
+    trends: p.trends,
+    summary: p.build,
+    tests: p.buildTests,
+    coverage: p.buildCoverage,
+    comparison: p.buildComparison,
   }
-
-  return items
+  const key = byPage[ctx.page]
+  return key ? [key] : []
 }
 
-/**
- * App-level nav: group + app context, app pages, optional build tabs, group escapes.
- * @param {ReturnType<typeof parseMetricsPath>} ctx
- */
-function getAppLevelItems(ctx) {
-  const groupBase = `/metrics/${ctx.groupId}`
-  const appBase = `${groupBase}/apps/${ctx.appId}`
-  const appChildren = [
-    linkItem(appBase, appBase, "Builds", <ApartmentOutlined />),
-    linkItem(
-      `${appBase}/method-ignore-rules`,
-      `${appBase}/method-ignore-rules`,
-      "Exclusion rules",
-      <StopOutlined />
-    ),
-    linkItem(
-      `${appBase}/trends`,
-      `${appBase}/trends`,
-      "Trends",
-      <LineChartOutlined />
-    ),
-  ]
-
-  if (ctx.buildId) {
-    const buildBase = `${appBase}/builds/${encodeURIComponent(ctx.buildId)}`
-    appChildren.push(
-      linkItem(buildBase, buildBase, "Summary"),
-      linkItem(`${buildBase}/tests`, `${buildBase}/tests`, "Tests"),
-      linkItem(`${buildBase}/coverage`, `${buildBase}/coverage`, "Coverage"),
-      linkItem(
-        `${buildBase}/comparison`,
-        `${buildBase}/comparison`,
-        "Comparison"
-      )
-    )
-  }
-
-  return [
-    {
-      type: "group",
-      key: `group-ctx-${ctx.groupId}`,
-      label: <ContextLabel>{ctx.groupId}</ContextLabel>,
-      children: [
-        linkItem(groupBase, groupBase, "Apps", <AppstoreOutlined />),
-        linkItem(
-          `${groupBase}/test-sessions`,
-          `${groupBase}/test-sessions`,
-          "Test Sessions",
-          <ExperimentOutlined />
-        ),
-        linkItem(
-          `${groupBase}/settings`,
-          `${groupBase}/settings`,
-          "Settings",
-          <SettingOutlined />
-        ),
-      ],
-    },
-    {
-      type: "group",
-      key: `app-ctx-${ctx.appId}`,
-      label: <ContextLabel>{ctx.appId}</ContextLabel>,
-      children: appChildren,
-    },
-  ]
+export function getMetricsOpenKeys() {
+  return [METRICS_SUBMENU_KEY]
 }
 
-/**
- * @param {{ pathname: string }} location
- * @returns {import("antd").MenuProps["items"]}
- */
+/** @param {string[]} keys */
+export function mergeMenuOpenKeys(keys) {
+  return [...new Set([METRICS_SUBMENU_KEY, ...keys])]
+}
+
+/** @returns {import("antd").MenuProps["items"]} */
 export function getMetricsMenuItems(location) {
   const ctx = parseMetricsPath(location.pathname)
-  const onGroupSelection = ctx.level === "root"
+  const { level, groupId, appId, buildId, testSessionId } = ctx
+  const p = metricsPaths(ctx)
+
   let children = []
 
-  if (ctx.level === "root") {
+  if (level === "root") {
     children = [
       {
         key: "/metrics",
@@ -364,24 +175,73 @@ export function getMetricsMenuItems(location) {
         label: <Link to="/metrics">Select group</Link>,
       },
     ]
-  } else if (ctx.level === "app") {
-    children = getAppLevelItems(ctx)
   } else {
-    // group home, settings, or test-sessions branch
-    children = getGroupLevelItems(ctx)
+    children = [
+      {
+        type: "group",
+        key: `group-${groupId}`,
+        label: contextLabel(groupId),
+        children: [
+          linkItem(p.group, "Apps", <AppstoreOutlined />),
+          linkItem(p.sessions, "Test Sessions", <ExperimentOutlined />),
+          linkItem(p.settings, "Settings", <SettingOutlined />),
+        ],
+      },
+    ]
+
+    if (level === "app") {
+      const appChildren = [
+        linkItem(p.app, "Builds", <ApartmentOutlined />),
+        linkItem(p.exclusionRules, "Exclusion rules", <StopOutlined />),
+        linkItem(p.trends, "Trends", <LineChartOutlined />),
+      ]
+      if (buildId) {
+        appChildren.push(
+          linkItem(p.build, "Summary"),
+          linkItem(p.buildTests, "Tests"),
+          linkItem(p.buildCoverage, "Coverage"),
+          linkItem(p.buildComparison, "Comparison")
+        )
+      }
+      children.push({
+        type: "group",
+        key: `app-${appId}`,
+        label: contextLabel(appId),
+        children: appChildren,
+      })
+    }
+
+    if (level === "test-sessions" && testSessionId) {
+      const sessionChildren = [
+        linkItem(p.session, contextLabel(testSessionId), <FileSearchOutlined />),
+      ]
+      if (buildId) {
+        sessionChildren.push(
+          linkItem(p.sessionResults, "Results"),
+          linkItem(p.sessionCoverage, "Coverage")
+        )
+      }
+      children.push({
+        type: "group",
+        key: `session-${testSessionId}`,
+        label: "Session",
+        children: sessionChildren,
+      })
+    }
   }
 
   return [
     {
       key: METRICS_SUBMENU_KEY,
       icon: <LineChartOutlined />,
-      className: onGroupSelection
-        ? "ant-menu-submenu-selected sider-menu-metrics-root"
-        : "sider-menu-metrics-root",
+      className:
+        level === "root"
+          ? "ant-menu-submenu-selected sider-menu-metrics-root"
+          : "sider-menu-metrics-root",
       label: (
         <Link
           to="/metrics"
-          style={metricsTitleLinkStyle}
+          style={{ color: "inherit" }}
           onClick={(event) => event.stopPropagation()}
         >
           Metrics
