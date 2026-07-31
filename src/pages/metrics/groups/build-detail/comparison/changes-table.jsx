@@ -76,20 +76,6 @@ const SORT_OPTIONS = {
       sortOrder: "ASC",
     },
   ],
-  aggregatedMissedProbes: [
-    {
-      key: "missed-desc",
-      label: "Not covered (high→low)",
-      sortBy: "aggregatedMissedProbes",
-      sortOrder: "DESC",
-    },
-    {
-      key: "missed-asc",
-      label: "Not covered (low→high)",
-      sortBy: "aggregatedMissedProbes",
-      sortOrder: "ASC",
-    },
-  ],
 }
 
 /**
@@ -516,31 +502,6 @@ export function ComparisonChangesTable({
             includeOtherBuilds={includeOtherBuilds}
           />
         ),
-      },
-      {
-        title: "Probes",
-        dataIndex: "probesCount",
-        key: "probesCount",
-        width: 80,
-        align: "right",
-      },
-      {
-        title: (
-          <TableColumnSortHeader
-            title="Not covered"
-            options={SORT_OPTIONS.aggregatedMissedProbes}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
-          />
-        ),
-        key: "missedProbes",
-        width: 110,
-        align: "right",
-        render: (_, row) =>
-          includeOtherBuilds
-            ? (row.missedProbesInOtherBuilds ?? "—")
-            : (row.missedProbes ?? "—"),
       },
     ],
     [
