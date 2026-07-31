@@ -32,7 +32,7 @@ export const BuildSummaryPage = () => {
   const { groupId, appId, buildId } = useParams()
   const navigate = useNavigate()
   const { build } = useOutletContext() ?? {}
-  const { coverageFilters } = useBuildDetailSearchParams()
+  const { coverageFilters, includeOtherBuilds } = useBuildDetailSearchParams()
 
   const [buildProbesCoverage, setBuildProbesCoverage] = useState(null)
   const [buildMethodsCoverage, setBuildMethodsCoverage] = useState(null)
@@ -195,7 +195,9 @@ export const BuildSummaryPage = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Code coverage (probes)"
-            slices={coverageUnitSlicesToChart(buildProbesCoverage)}
+            slices={coverageUnitSlicesToChart(buildProbesCoverage, {
+              includeOtherBuilds,
+            })}
             loading={loading.coverage}
             showCenterTotal
           />
@@ -203,7 +205,9 @@ export const BuildSummaryPage = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Methods coverage"
-            slices={coverageUnitSlicesToChart(buildMethodsCoverage)}
+            slices={coverageUnitSlicesToChart(buildMethodsCoverage, {
+              includeOtherBuilds,
+            })}
             loading={loading.coverage}
             showCenterTotal
           />

@@ -40,6 +40,7 @@ import { CoveragePackageTree } from "./coverage-package-tree"
  *   methodsSortBy?: string,
  *   methodsSortOrder?: string,
  *   onMethodsSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   includeOtherBuilds?: boolean,
  * }} props
  */
 export function CoverageTables({
@@ -66,6 +67,7 @@ export function CoverageTables({
   methodsSortBy,
   methodsSortOrder,
   onMethodsSortChange,
+  includeOtherBuilds = true,
 }) {
   return (
     <CoveragePackageTree
@@ -92,6 +94,7 @@ export function CoverageTables({
       methodsSortBy={methodsSortBy}
       methodsSortOrder={methodsSortOrder}
       onMethodsSortChange={onMethodsSortChange}
+      includeOtherBuilds={includeOtherBuilds}
     />
   )
 }

@@ -24,7 +24,7 @@ import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 function buildClassKey(packageName, className) {
   if (!className) {
-    return null
+    return undefined
   }
   return packageName ? `${packageName}/${className}` : className
 }
@@ -35,6 +35,7 @@ export const BuildCoveragePage = () => {
   const {
     baselineBuildId,
     coverageFilters,
+    includeOtherBuilds,
     branches,
     envIds,
     testTags,
@@ -50,11 +51,14 @@ export const BuildCoveragePage = () => {
 
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
-  const [scrollToPackageKey, setScrollToPackageKey] = useState(null)
-  const [scrollToClassKey, setScrollToClassKey] = useState(null)
-  const [scrollToMethod, setScrollToMethod] = useState(null)
+  const [scrollToPackageKey, setScrollToPackageKey] = useState()
+  const [scrollToClassKey, setScrollToClassKey] = useState()
+  const [scrollToMethod, setScrollToMethod] = useState()
 
-  const treemapFilters = useMemo(() => ({ ...coverageFilters }), [coverageFilters])
+  const treemapFilters = useMemo(
+    () => ({ ...coverageFilters, includeOtherBuilds }),
+    [coverageFilters, includeOtherBuilds]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -111,7 +115,7 @@ export const BuildCoveragePage = () => {
   }, [])
 
   const handleScrollToPackageHandled = useCallback(() => {
-    setScrollToPackageKey(null)
+    setScrollToPackageKey(undefined)
   }, [])
 
   const handleClassNavigate = useCallback((classKey) => {
@@ -119,7 +123,7 @@ export const BuildCoveragePage = () => {
   }, [])
 
   const handleScrollToClassHandled = useCallback(() => {
-    setScrollToClassKey(null)
+    setScrollToClassKey(undefined)
   }, [])
 
   const handleMethodNavigate = useCallback(({ methodId, classKey }) => {
@@ -127,7 +131,7 @@ export const BuildCoveragePage = () => {
   }, [])
 
   const handleScrollToMethodHandled = useCallback(() => {
-    setScrollToMethod(null)
+    setScrollToMethod(undefined)
   }, [])
 
   const queryState = useMemo(
@@ -136,6 +140,7 @@ export const BuildCoveragePage = () => {
       branches,
       envIds,
       testTags,
+      includeOtherBuilds,
       packageName,
       className,
       methodId,
@@ -144,7 +149,20 @@ export const BuildCoveragePage = () => {
       methodsSortBy,
       methodsSortOrder,
     }),
-    [baselineBuildId, branches, className, envIds, methodId, methodsSortBy, methodsSortOrder, packageName, sortBy, sortOrder, testTags]
+    [
+      baselineBuildId,
+      branches,
+      className,
+      envIds,
+      includeOtherBuilds,
+      methodId,
+      methodsSortBy,
+      methodsSortOrder,
+      packageName,
+      sortBy,
+      sortOrder,
+      testTags,
+    ]
   )
 
   const copyScopeLink = useCallback(
@@ -291,6 +309,7 @@ export const BuildCoveragePage = () => {
           methodsSortBy={methodsSortBy}
           methodsSortOrder={methodsSortOrder}
           onMethodsSortChange={handleMethodsSortChange}
+          includeOtherBuilds={includeOtherBuilds}
         />
       </div>
     </>

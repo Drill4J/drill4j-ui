@@ -16,6 +16,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageScopeName } from "./coverage-scope-name"
+import { CoverageStackedBar } from "./coverage-stacked-bar"
 import { TableColumnSortHeader } from "./table-column-sort-header"
 
 const HIGHLIGHT_DURATION_MS = 3000
@@ -34,9 +35,6 @@ const COVERAGE_SORT_OPTIONS = [
     sortBy: "coverageRatio",
     sortOrder: "ASC",
   },
-]
-
-const PROBES_SORT_OPTIONS = [
   {
     key: "probesCount-DESC",
     label: "Total probes, high to low",
@@ -62,13 +60,6 @@ const PROBES_SORT_OPTIONS = [
     sortOrder: "ASC",
   },
 ]
-
-function formatPercent(ratio) {
-  if (ratio == null) {
-    return "—"
-  }
-  return `${(ratio * 100).toFixed(1)}%`
-}
 
 function formatMethodParams(params) {
   if (!params?.length) {
@@ -98,7 +89,15 @@ function methodRowId(methodId) {
   return `coverage-method-row-${encodeURIComponent(methodId)}`
 }
 
-function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder, onSortChange) {
+function methodColumns(
+  packageName,
+  className,
+  onMethodSelect,
+  sortBy,
+  sortOrder,
+  onSortChange,
+  includeOtherBuilds
+) {
   return [
     {
       title: "Method",
@@ -135,20 +134,6 @@ function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder
   {
     title: (
       <TableColumnSortHeader
-        title="Probes"
-        options={PROBES_SORT_OPTIONS}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={onSortChange}
-      />
-    ),
-    key: "probes",
-    width: 100,
-    render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
-  },
-  {
-    title: (
-      <TableColumnSortHeader
         title="Coverage"
         options={COVERAGE_SORT_OPTIONS}
         sortBy={sortBy}
@@ -156,10 +141,16 @@ function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder
         onSortChange={onSortChange}
       />
     ),
-    dataIndex: "coverageRatio",
-    key: "coverageRatio",
-    width: 100,
-    render: formatPercent,
+    key: "coverage",
+    width: 180,
+    render: (_, row) => (
+      <CoverageStackedBar
+        probesCount={row.probesCount}
+        coveredProbes={row.coveredProbes}
+        coveredProbesAggregated={row.coveredProbesInOtherBuilds}
+        includeOtherBuilds={includeOtherBuilds}
+      />
+    ),
   },
   ]
 }
@@ -178,6 +169,7 @@ function methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder
  *   sortBy?: string | null,
  *   sortOrder?: string | null,
  *   onSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   includeOtherBuilds?: boolean,
  * }} props
  */
 export function CoverageMethodsTable({
@@ -193,6 +185,7 @@ export function CoverageMethodsTable({
   sortBy = null,
   sortOrder = null,
   onSortChange,
+  includeOtherBuilds = true,
 }) {
   const [pendingScrollKey, setPendingScrollKey] = useState(null)
   const [highlightedKey, setHighlightedKey] = useState(null)
@@ -283,8 +276,17 @@ export function CoverageMethodsTable({
   )
 
   const columns = useMemo(
-    () => methodColumns(packageName, className, onMethodSelect, sortBy, sortOrder, onSortChange),
-    [className, onMethodSelect, onSortChange, packageName, sortBy, sortOrder]
+    () =>
+      methodColumns(
+        packageName,
+        className,
+        onMethodSelect,
+        sortBy,
+        sortOrder,
+        onSortChange,
+        includeOtherBuilds
+      ),
+    [className, includeOtherBuilds, onMethodSelect, onSortChange, packageName, sortBy, sortOrder]
   )
 
   return (

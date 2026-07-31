@@ -16,31 +16,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { message, Typography } from "antd"
 import * as API from "../../modules/metrics/api-metrics"
+import { buildCoverageSegments } from "../../modules/metrics/coverage-segments"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageMethodsTable } from "./coverage-methods-table"
 import { CoverageScopeName } from "./coverage-scope-name"
+import { CoverageStackedBar } from "./coverage-stacked-bar"
 import { TableColumnSortHeader } from "./table-column-sort-header"
+import "./coverage-package-tree.css"
 
 const { Link, Text } = Typography
 
 const HIGHLIGHT_DURATION_MS = 3000
 const SCROLL_RETRY_MAX_FRAMES = 120
 const DEFAULT_PAGE_SIZE = 10
-
-const METHOD_COV_SORT_OPTIONS = [
-  {
-    key: "methodsCoverageRatio-DESC",
-    label: "Coverage, high to low",
-    sortBy: "methodsCoverageRatio",
-    sortOrder: "DESC",
-  },
-  {
-    key: "methodsCoverageRatio-ASC",
-    label: "Coverage, low to high",
-    sortBy: "methodsCoverageRatio",
-    sortOrder: "ASC",
-  },
-]
 
 const METHODS_SORT_OPTIONS = [
   {
@@ -69,7 +57,7 @@ const METHODS_SORT_OPTIONS = [
   },
 ]
 
-const PROBE_COV_SORT_OPTIONS = [
+const COVERAGE_SORT_OPTIONS = [
   {
     key: "probesCoverageRatio-DESC",
     label: "Coverage, high to low",
@@ -82,9 +70,6 @@ const PROBE_COV_SORT_OPTIONS = [
     sortBy: "probesCoverageRatio",
     sortOrder: "ASC",
   },
-]
-
-const PROBES_SORT_OPTIONS = [
   {
     key: "probesCount-DESC",
     label: "Total probes, high to low",
@@ -112,7 +97,6 @@ const PROBES_SORT_OPTIONS = [
 ]
 
 const VALID_CLASS_SORT_ORDERS = {
-  methodsCoverageRatio: new Set(["ASC", "DESC"]),
   methodsCount: new Set(["ASC", "DESC"]),
   coveredMethods: new Set(["ASC", "DESC"]),
   probesCoverageRatio: new Set(["ASC", "DESC"]),
@@ -144,13 +128,6 @@ function parseMethodsTableSort(sortBy, sortOrder) {
 
 function classRowId(classKey) {
   return `coverage-class-row-${encodeURIComponent(classKey)}`
-}
-
-function formatPercent(ratio) {
-  if (ratio == null) {
-    return "—"
-  }
-  return `${(ratio * 100).toFixed(1)}%`
 }
 
 const DEFAULT_METHODS_PAGING = { page: 1, pageSize: 10, total: 0 }
@@ -185,13 +162,18 @@ function classColumns(
   methodsSortOrder,
   sortBy,
   sortOrder,
-  onSortChange
+  onSortChange,
+  includeOtherBuilds
 ) {
   return [
     {
       title: "Class",
       dataIndex: "className",
       key: "className",
+      onCell: (record) => ({
+        colSpan: expandedMethodsKey === record.fullClassName ? 3 : 1,
+        style: { verticalAlign: "top" },
+      }),
       render: (value, record) => {
         const isExpanded = expandedMethodsKey === record.fullClassName
         const methodsLabel = record.methodsCount === 1 ? "method" : "methods"
@@ -204,19 +186,59 @@ function classColumns(
           record.className === scopedClassName
             ? { sortBy: methodsSortBy, sortOrder: methodsSortOrder }
             : { sortBy: null, sortOrder: null }
+        const methodSegments = buildCoverageSegments({
+          probesCount: record.methodsCount,
+          coveredProbes: record.coveredMethods,
+          coveredProbesAggregated: record.coveredMethodsInOtherBuilds,
+          includeOtherBuilds,
+        })
+        const coveredMethods = methodSegments?.covered ?? record.coveredMethods ?? 0
 
         return (
           <div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-              <CoverageScopeName name={value} onCopyLink={() => handleClassNameClick(record)} />
-              {record.methodsCount > 0 && (
-                <Link
-                  type="secondary"
-                  onClick={() => toggleMethodsPanel(record)}
-                  style={{ fontSize: 12 }}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <CoverageScopeName name={value} onCopyLink={() => handleClassNameClick(record)} />
+                {record.methodsCount > 0 && (
+                  <Link
+                    type="secondary"
+                    onClick={() => toggleMethodsPanel(record)}
+                    style={{ fontSize: 12 }}
+                  >
+                    {record.methodsCount} {methodsLabel} ({isExpanded ? "hide" : "show"})
+                  </Link>
+                )}
+              </div>
+              {isExpanded && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    flexShrink: 0,
+                    marginLeft: "auto",
+                  }}
                 >
-                  {record.methodsCount} {methodsLabel} ({isExpanded ? "hide" : "show"})
-                </Link>
+                  <span style={{ width: 110, textAlign: "left" }}>
+                    {`${coveredMethods} / ${record.methodsCount}`}
+                  </span>
+                  <div style={{ width: 180 }}>
+                    <CoverageStackedBar
+                      probesCount={record.probesCount}
+                      coveredProbes={record.coveredProbes}
+                      coveredProbesAggregated={record.coveredProbesInOtherBuilds}
+                      includeOtherBuilds={includeOtherBuilds}
+                    />
+                  </div>
+                </div>
               )}
             </div>
             {isExpanded && (
@@ -239,6 +261,7 @@ function classColumns(
                   packageName={record.packageName}
                   className={record.className}
                   onMethodSelect={onMethodSelect}
+                  includeOtherBuilds={includeOtherBuilds}
                 />
               </div>
             )}
@@ -258,55 +281,43 @@ function classColumns(
       ),
       key: "methods",
       width: 110,
-      onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: (_, row) => `${row.coveredMethods} / ${row.methodsCount}`,
+      onCell: (record) => ({
+        colSpan: expandedMethodsKey === record.fullClassName ? 0 : 1,
+      }),
+      render: (_, row) => {
+        const segments = buildCoverageSegments({
+          probesCount: row.methodsCount,
+          coveredProbes: row.coveredMethods,
+          coveredProbesAggregated: row.coveredMethodsInOtherBuilds,
+          includeOtherBuilds,
+        })
+        const covered = segments?.covered ?? row.coveredMethods ?? 0
+        return `${covered} / ${row.methodsCount}`
+      },
     },
     {
       title: (
         <TableColumnSortHeader
-          title="Method cov."
-          options={METHOD_COV_SORT_OPTIONS}
+          title="Coverage"
+          options={COVERAGE_SORT_OPTIONS}
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortChange={onSortChange}
         />
       ),
-      dataIndex: "methodsCoverageRatio",
-      key: "methodsCoverageRatio",
+      key: "probesCoverage",
       width: 180,
-      onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: formatPercent,
-    },
-    {
-      title: (
-        <TableColumnSortHeader
-          title="Probes"
-          options={PROBES_SORT_OPTIONS}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
+      onCell: (record) => ({
+        colSpan: expandedMethodsKey === record.fullClassName ? 0 : 1,
+      }),
+      render: (_, row) => (
+        <CoverageStackedBar
+          probesCount={row.probesCount}
+          coveredProbes={row.coveredProbes}
+          coveredProbesAggregated={row.coveredProbesInOtherBuilds}
+          includeOtherBuilds={includeOtherBuilds}
         />
       ),
-      key: "probes",
-      width: 110,
-      onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: (_, row) => `${row.coveredProbes} / ${row.probesCount}`,
-    },
-    {
-      title: (
-        <TableColumnSortHeader
-          title="Probe cov."
-          options={PROBE_COV_SORT_OPTIONS}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
-        />
-      ),
-      dataIndex: "probesCoverageRatio",
-      key: "probesCoverageRatio",
-      width: 180,
-      onCell: () => ({ style: { verticalAlign: "top" } }),
-      render: formatPercent,
     },
   ]
 }
@@ -331,6 +342,7 @@ function classColumns(
  *   methodsSortBy?: string,
  *   methodsSortOrder?: string,
  *   onMethodsSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   includeOtherBuilds?: boolean,
  * }} props
  */
 export function CoverageClassesTable({
@@ -352,6 +364,7 @@ export function CoverageClassesTable({
   onMethodsToggle,
   onClassSelect,
   onMethodSelect,
+  includeOtherBuilds = true,
 }) {
   const [expandedMethodsKey, setExpandedMethodsKey] = useState(null)
   const [methodsByClass, setMethodsByClass] = useState({})
@@ -862,7 +875,8 @@ export function CoverageClassesTable({
         methodsSortOrder,
         sortBy,
         sortOrder,
-        handleSortChange
+        handleSortChange,
+        includeOtherBuilds
       ),
     [
       expandedMethodsKey,
@@ -871,6 +885,7 @@ export function CoverageClassesTable({
       handleMethodsTableChange,
       handleMethodsSortChange,
       handleSortChange,
+      includeOtherBuilds,
       methodsByClass,
       methodsSortBy,
       methodsSortOrder,

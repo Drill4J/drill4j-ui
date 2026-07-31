@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { Space, Tag, Typography, message } from "antd"
 import { CoverageScopeName } from "../../../../../components/metrics/coverage-scope-name"
 import "../../../../../components/metrics/coverage-package-tree.css"
+import { CoverageStackedBar } from "../../../../../components/metrics/coverage-stacked-bar"
 import { MetricsDataTable } from "../../../../../components/metrics/metrics-data-table"
 import { TableColumnFilterHeader } from "../../../../../components/metrics/table-column-filter-header"
 import { TableColumnSortHeader } from "../../../../../components/metrics/table-column-sort-header"
@@ -41,22 +42,6 @@ const CHANGE_TYPE_FILTER_OPTIONS = [
   { key: "modified", label: "Modified", value: ["modified"] },
   { key: "deleted", label: "Deleted", value: ["deleted"] },
 ]
-
-function coverageRiskStyle(ratio) {
-  if (ratio == null) {
-    return undefined
-  }
-  if (ratio === 0) {
-    return { backgroundColor: "#EF8C8C" }
-  }
-  if (ratio >= 1) {
-    return { backgroundColor: "#84BB4C" }
-  }
-  if (ratio >= 0.5) {
-    return { backgroundColor: "#F9CF48" }
-  }
-  return { backgroundColor: "#ED6E6E" }
-}
 
 function changeRowId(signature) {
   return `comparison-change-row-${encodeURIComponent(signature)}`
@@ -112,6 +97,7 @@ const SORT_OPTIONS = {
  *   build: object,
  *   baselineBuild: object,
  *   coverageFilters?: { testTags?: string[], envIds?: string[], branches?: string[] },
+ *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
  *   methodSignature?: string,
@@ -133,6 +119,7 @@ export function ComparisonChangesTable({
   build,
   baselineBuild,
   coverageFilters = {},
+  includeOtherBuilds = true,
   changeTypes,
   hasImpactedTests,
   methodSignature,
@@ -519,36 +506,22 @@ export function ComparisonChangesTable({
             onSortChange={onSortChange}
           />
         ),
-        key: "coverageRatioInOtherBuilds",
-        width: 100,
-        align: "right",
-        onCell: (row) => ({
-          style: coverageRiskStyle(row.coverageRatioInOtherBuilds),
-        }),
-        render: (_, row) =>
-          row.coverageRatioInOtherBuilds != null
-            ? `${Math.round(row.coverageRatioInOtherBuilds * 100)}%`
-            : "—",
+        key: "coverage",
+        width: 160,
+        render: (_, row) => (
+          <CoverageStackedBar
+            probesCount={row.probesCount}
+            coveredProbes={row.coveredProbes}
+            coveredProbesAggregated={row.coveredProbesInOtherBuilds}
+            includeOtherBuilds={includeOtherBuilds}
+          />
+        ),
       },
       {
         title: "Probes",
         dataIndex: "probesCount",
         key: "probesCount",
         width: 80,
-        align: "right",
-      },
-      {
-        title: "Covered (build)",
-        dataIndex: "coveredProbes",
-        key: "coveredProbes",
-        width: 120,
-        align: "right",
-      },
-      {
-        title: "Covered",
-        dataIndex: "coveredProbesInOtherBuilds",
-        key: "coveredProbesInOtherBuilds",
-        width: 90,
         align: "right",
       },
       {
@@ -561,14 +534,18 @@ export function ComparisonChangesTable({
             onSortChange={onSortChange}
           />
         ),
-        dataIndex: "missedProbesInOtherBuilds",
-        key: "missedProbesInOtherBuilds",
+        key: "missedProbes",
         width: 110,
         align: "right",
+        render: (_, row) =>
+          includeOtherBuilds
+            ? (row.missedProbesInOtherBuilds ?? "—")
+            : (row.missedProbes ?? "—"),
       },
     ],
     [
       changeTypes,
+      includeOtherBuilds,
       onChangeTypesChange,
       onCopyMethodLink,
       onSortChange,

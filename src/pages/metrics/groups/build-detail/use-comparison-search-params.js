@@ -19,6 +19,7 @@ import {
   COMPARISON_QUERY_KEYS,
   buildComparisonSearchParams,
   getListQueryParam,
+  parseIncludeOtherBuilds,
 } from "../../../../modules/metrics/query-params"
 import { COMPARISON_SECTIONS } from "./comparison-build-params"
 
@@ -42,6 +43,9 @@ export function useComparisonSearchParams() {
   const pageSize = Number(searchParams.get("pageSize")) || undefined
   const rawSection = searchParams.get("section")
   const section = COMPARISON_SECTIONS.includes(rawSection) ? rawSection : "changes"
+  const includeOtherBuilds = parseIncludeOtherBuilds(
+    searchParams.get("includeOtherBuilds")
+  )
 
   const branches = useMemo(
     () => getListQueryParam(searchParams, "branches"),
@@ -76,6 +80,7 @@ export function useComparisonSearchParams() {
         branches,
         envIds,
         testTags,
+        includeOtherBuilds,
       }
       const merged = { ...current }
       QUERY_KEYS.forEach((key) => {
@@ -105,13 +110,19 @@ export function useComparisonSearchParams() {
       branches,
       envIds,
       testTags,
+      includeOtherBuilds,
       searchString,
       setSearchParams,
     ]
   )
 
   const clearCoverageFilters = useCallback(() => {
-    updateQueryParams({ branches: undefined, envIds: undefined, testTags: undefined })
+    updateQueryParams({
+      branches: undefined,
+      envIds: undefined,
+      testTags: undefined,
+      includeOtherBuilds: undefined,
+    })
   }, [updateQueryParams])
 
   return {
@@ -129,6 +140,7 @@ export function useComparisonSearchParams() {
     branches,
     envIds,
     testTags,
+    includeOtherBuilds,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,

@@ -21,8 +21,7 @@ Tree is built client-side: `normalizeTreemapRoots` → package rows with nested 
 | Column | Content |
 |--------|---------|
 | Package | Clickable name — triggers `onPackageSelect` |
-| Probes | `covered / total` |
-| Probe cov. | Percentage |
+| Coverage | Stacked coverage bar and percentage |
 
 Method-level nodes (`type === "method"`) are excluded from the tree. Package rows use `node.type === "package"` from the API — see [treemap.md § TreemapNode](./treemap.md#treemapnode-api).
 

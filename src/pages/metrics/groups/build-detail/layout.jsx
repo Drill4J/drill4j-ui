@@ -52,7 +52,7 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { branches, envIds, testTags, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
+  const { branches, envIds, testTags, includeOtherBuilds, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
     useBuildDetailSearchParams()
   const {
     testTaskIds,
@@ -142,9 +142,13 @@ export const BuildDetailLayout = () => {
           branches={branches}
           envIds={envIds}
           testTags={testTags}
+          includeOtherBuilds={includeOtherBuilds}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
+          onIncludeOtherBuildsChange={(value) =>
+            updateQueryParams({ includeOtherBuilds: value })
+          }
           onClear={clearCoverageFilters}
         />
       ) : null}

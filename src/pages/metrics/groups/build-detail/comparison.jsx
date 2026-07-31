@@ -67,6 +67,7 @@ export const BuildComparisonPage = () => {
     branches,
     envIds,
     testTags,
+    includeOtherBuilds,
     coverageFilters,
     updateQueryParams,
     clearCoverageFilters,
@@ -105,6 +106,7 @@ export const BuildComparisonPage = () => {
       branches,
       envIds,
       testTags,
+      includeOtherBuilds,
     }),
     [
       baselineBuildId,
@@ -112,6 +114,7 @@ export const BuildComparisonPage = () => {
       changeTypes,
       envIds,
       hasImpactedTests,
+      includeOtherBuilds,
       methodId,
       methodSignature,
       section,
@@ -419,6 +422,7 @@ export const BuildComparisonPage = () => {
         build={build}
         baselineBuild={baselineBuild}
         coverageFilters={coverageFilters}
+        includeOtherBuilds={includeOtherBuilds}
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}
         methodSignature={methodSignature}
@@ -445,6 +449,7 @@ export const BuildComparisonPage = () => {
     coverageFilters,
     handleCopyMethodLink,
     hasImpactedTests,
+    includeOtherBuilds,
     methodId,
     methodSignature,
     section,
@@ -466,11 +471,15 @@ export const BuildComparisonPage = () => {
           branches={branches}
           envIds={envIds}
           testTags={testTags}
+          includeOtherBuilds={includeOtherBuilds}
           scopeHint="Applies to changed-coverage charts and the Changes table."
           filterHints={COMPARISON_FILTER_HINTS}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
+          onIncludeOtherBuildsChange={(value) =>
+            updateQueryParams({ includeOtherBuilds: value })
+          }
           onClear={clearCoverageFilters}
         />
       ) : undefined}
@@ -498,7 +507,9 @@ export const BuildComparisonPage = () => {
             <Col xs={24} md={12}>
               <CoveragePieChart
                 title="Changed code coverage (probes)"
-                slices={coverageUnitSlicesToChart(changeProbesCoverage)}
+                slices={coverageUnitSlicesToChart(changeProbesCoverage, {
+                  includeOtherBuilds,
+                })}
                 loading={loading.overview}
                 showCenterTotal
               />
@@ -506,7 +517,9 @@ export const BuildComparisonPage = () => {
             <Col xs={24} md={12}>
               <CoveragePieChart
                 title="Changed methods coverage"
-                slices={coverageUnitSlicesToChart(changeMethodsCoverage)}
+                slices={coverageUnitSlicesToChart(changeMethodsCoverage, {
+                  includeOtherBuilds,
+                })}
                 loading={loading.overview}
                 showCenterTotal
               />

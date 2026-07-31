@@ -20,6 +20,7 @@ import { normalizeTreemapRoots } from "../charts/treemap-canvas/layout"
 import { MetricsDataTable } from "./metrics-data-table"
 import { CoverageClassesTable } from "./coverage-classes-table"
 import { CoverageScopeName } from "./coverage-scope-name"
+import { CoverageStackedBar } from "./coverage-stacked-bar"
 import "./coverage-package-tree.css"
 
 const HIGHLIGHT_DURATION_MS = 3000
@@ -29,13 +30,6 @@ const { Link, Text } = Typography
 
 function formatPackageLabel(packageName) {
   return packageName || "(default package)"
-}
-
-function formatPercent(ratio) {
-  if (ratio == null) {
-    return "—"
-  }
-  return `${(ratio * 100).toFixed(1)}%`
 }
 
 function packageRowId(packageKey) {
@@ -85,16 +79,16 @@ function mapClassNodeToTableRow(node) {
     packageName: node.package_name ?? "",
     methodsCount,
     coveredMethods,
-    methodsCoverageRatio: methodsCount > 0 ? coveredMethods / methodsCount : null,
     probesCount,
     coveredProbes,
-    probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+    probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : undefined,
   }
 }
 
 function mapNodeToTableRow(node) {
   const probesCount = node.probes_count ?? 0
-  const coveredProbes = node.covered_probes ?? 0
+  const coveredProbes = node.isolated_covered_probes ?? node.covered_probes ?? 0
+  const coveredProbesAggregated = node.aggregated_covered_probes
   const childNodes = node.children ?? []
 
   const classes = childNodes
@@ -113,7 +107,8 @@ function mapNodeToTableRow(node) {
     packageName: node.package_name ?? "",
     probesCount,
     coveredProbes,
-    probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+    coveredProbesAggregated,
+    probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : undefined,
     classesCount: classes.length,
     classes,
     children: children.length ? children : undefined,
@@ -145,7 +140,11 @@ function buildTableTree(treemapRoots) {
       .sort((a, b) => a.className.localeCompare(b.className))
     const probesCount = defaultPackageClasses.reduce((sum, node) => sum + (node.probes_count ?? 0), 0)
     const coveredProbes = defaultPackageClasses.reduce(
-      (sum, node) => sum + (node.covered_probes ?? 0),
+      (sum, node) => sum + (node.isolated_covered_probes ?? node.covered_probes ?? 0),
+      0
+    )
+    const coveredProbesAggregated = defaultPackageClasses.reduce(
+      (sum, node) => sum + (node.aggregated_covered_probes ?? 0),
       0
     )
     rows.unshift({
@@ -154,7 +153,8 @@ function buildTableTree(treemapRoots) {
       packageName: "",
       probesCount,
       coveredProbes,
-      probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : null,
+      coveredProbesAggregated,
+      probesCoverageRatio: probesCount > 0 ? coveredProbes / probesCount : undefined,
       classesCount: classes.length,
       classes,
     })
@@ -188,6 +188,7 @@ function buildTableTree(treemapRoots) {
  *   methodsSortBy?: string,
  *   methodsSortOrder?: string,
  *   onMethodsSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   includeOtherBuilds?: boolean,
  * }} props
  */
 export function CoveragePackageTree({
@@ -214,6 +215,7 @@ export function CoveragePackageTree({
   methodsSortBy,
   methodsSortOrder,
   onMethodsSortChange,
+  includeOtherBuilds = true,
 }) {
   const [expandedClassesKey, setExpandedClassesKey] = useState(null)
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
@@ -357,26 +359,49 @@ export function CoveragePackageTree({
         title: "Package",
         dataIndex: "name",
         key: "name",
-        onCell: () => ({ style: { verticalAlign: "top" } }),
+        onCell: (record) => ({
+          colSpan: expandedClassesKey === record.key ? 2 : 1,
+          style: { verticalAlign: "top" },
+        }),
         render: (value, record) => {
           const isExpanded = expandedClassesKey === record.key
           const classesLabel = record.classesCount === 1 ? "class" : "classes"
 
           return (
             <div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <CoverageScopeName
-                  name={formatPackageLabel(value)}
-                  onCopyLink={() => handlePackageNameClick(record)}
-                />
-                {record.classesCount > 0 && (
-                  <Link
-                    type="secondary"
-                    onClick={() => toggleClassesPanel(record)}
-                    style={{ fontSize: 12 }}
-                  >
-                    {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
-                  </Link>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                  <CoverageScopeName
+                    name={formatPackageLabel(value)}
+                    onCopyLink={() => handlePackageNameClick(record)}
+                  />
+                  {record.classesCount > 0 && (
+                    <Link
+                      type="secondary"
+                      onClick={() => toggleClassesPanel(record)}
+                      style={{ fontSize: 12 }}
+                    >
+                      {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
+                    </Link>
+                  )}
+                </div>
+                {isExpanded && (
+                  <div style={{ width: 180, flexShrink: 0, marginLeft: "auto" }}>
+                    <CoverageStackedBar
+                      probesCount={record.probesCount}
+                      coveredProbes={record.coveredProbes}
+                      coveredProbesAggregated={record.coveredProbesAggregated}
+                      includeOtherBuilds={includeOtherBuilds}
+                    />
+                  </div>
                 )}
               </div>
               {isExpanded && (
@@ -409,6 +434,7 @@ export function CoveragePackageTree({
                     onMethodsToggle={onClassToggle}
                     onClassSelect={onClassSelect}
                     onMethodSelect={onMethodSelect}
+                    includeOtherBuilds={includeOtherBuilds}
                   />
                 </div>
               )}
@@ -417,25 +443,28 @@ export function CoveragePackageTree({
         },
       },
       {
-        title: "Probes",
-        key: "probes",
-        width: 110,
-        onCell: () => ({ style: { verticalAlign: "top" } }),
-        render: (_, row) => `${row.coveredProbes ?? 0} / ${row.probesCount ?? 0}`,
-      },
-      {
-        title: "Probe cov.",
-        dataIndex: "probesCoverageRatio",
-        key: "probesCoverageRatio",
-        width: 100,
-        onCell: () => ({ style: { verticalAlign: "top" } }),
-        render: formatPercent,
+        title: "Coverage",
+        key: "probesCoverage",
+        width: 180,
+        onCell: (record) => ({
+          colSpan: expandedClassesKey === record.key ? 0 : 1,
+          style: { verticalAlign: "top" },
+        }),
+        render: (_, row) => (
+          <CoverageStackedBar
+            probesCount={row.probesCount}
+            coveredProbes={row.coveredProbes}
+            coveredProbesAggregated={row.coveredProbesAggregated}
+            includeOtherBuilds={includeOtherBuilds}
+          />
+        ),
       },
     ],
     [
       buildId,
       coverageFilters,
       expandedClassesKey,
+      includeOtherBuilds,
       onClassToggle,
       onClassSelect,
       onClassesSortChange,

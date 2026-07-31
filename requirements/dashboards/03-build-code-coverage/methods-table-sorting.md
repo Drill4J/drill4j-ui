@@ -2,7 +2,7 @@
 
 **Component:** `components/metrics/coverage-methods-table.jsx` (`CoverageMethodsTable`)
 
-**Reference:** [classes-table-sorting.md](./classes-table-sorting.md) — same server-side sort pattern; methods table only exposes **Probes** and **Coverage** columns (equivalent to the classes table **Probes** and **Probe cov.** columns).
+**Reference:** [classes-table-sorting.md](./classes-table-sorting.md) — same server-side sort pattern; methods table exposes a **Coverage** column (ratio + probe count sorts).
 
 ## Role
 
@@ -54,9 +54,9 @@ GET /api/metrics/coverage
 
 | UI column | `sortBy` value | DB / aggregate field |
 |-----------|----------------|----------------------|
-| Coverage | `coverageRatio` | `isolated_probes_coverage_ratio` |
-| Probes — total | `probesCount` | `probes_count` |
-| Probes — covered | `coveredProbes` | `isolated_covered_probes` |
+| Coverage — ratio | `coverageRatio` | `isolated_probes_coverage_ratio` |
+| Coverage — total probes | `probesCount` | `probes_count` |
+| Coverage — covered probes | `coveredProbes` | `isolated_covered_probes` |
 
 ### Default order
 
@@ -96,9 +96,9 @@ Map `MethodView` fields directly to table rows — no client-side mapping. Use `
 |-----------|-------|
 | `signature` | Row key, scroll/highlight targeting |
 | `name`, `params`, `returnType` | Method column |
-| `probesCount` | Probes column |
-| `coveredProbes` | Probes column |
-| `coverageRatio` | Coverage column |
+| `probesCount` | Coverage stacked bar |
+| `coveredProbes` | Coverage stacked bar |
+| `coverageRatio` | Coverage sort |
 
 ## Sort Options
 
@@ -110,11 +110,6 @@ Each sortable column header exposes a menu of options (same UX as classes table 
 |--------|----------|-------------|
 | Coverage, high to low | `coverageRatio` | `DESC` |
 | Coverage, low to high | `coverageRatio` | `ASC` |
-
-### Probes
-
-| Option | `sortBy` | `sortOrder` |
-|--------|----------|-------------|
 | Total probes, high to low | `probesCount` | `DESC` |
 | Total probes, low to high | `probesCount` | `ASC` |
 | Covered probes, high to low | `coveredProbes` | `DESC` |
@@ -139,21 +134,18 @@ Each sortable column header exposes a menu of options (same UX as classes table 
 ## UI Requirements
 
 - Sorting controls on table headers:
-  - `Probes`
   - `Coverage`
 - The active sort option is visible in the header control state.
 - Users can clear sorting (removes `sortBy` / `sortOrder`, refetches with default order).
 - Show loading state while a sort/page fetch is in flight.
-- Existing column content and formatting stay unchanged:
-  - probes render as `covered / total`,
-  - coverage renders as percentage.
+- Coverage renders as a stacked coverage bar with percentage.
 
 ## Acceptance Criteria
 
 - `GET /api/metrics/coverage` accepts `sortBy` and `sortOrder` and returns a correctly ordered page.
 - A user can sort `Coverage` by probe coverage percentage ascending and descending.
-- A user can sort `Probes` by total probes ascending and descending.
-- A user can sort `Probes` by covered probes ascending and descending.
+- A user can sort `Coverage` by total probes ascending and descending.
+- A user can sort `Coverage` by covered probes ascending and descending.
 - Each sort/page change triggers a new API request with the correct params.
 - Pagination displays rows from the server-sorted result set; `total` matches API.
 - Clearing sort restores default `signature` order.

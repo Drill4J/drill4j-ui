@@ -175,12 +175,28 @@ export function CoveragePieChart({
 
 /**
  * @param {{ slices?: { metric: string, value: number }[] }} summary
+ * @param {{ includeOtherBuilds?: boolean }} [options]
  */
-export function coverageUnitSlicesToChart(summary) {
-  return (summary?.slices ?? []).map((slice) => ({
-    name: slice.metric,
-    value: slice.value,
-  }))
+export function coverageUnitSlicesToChart(summary, { includeOtherBuilds = true } = {}) {
+  const slices = summary?.slices ?? []
+  if (includeOtherBuilds) {
+    return slices.map((slice) => ({
+      name: slice.metric,
+      value: slice.value,
+    }))
+  }
+
+  const byMetric = Object.fromEntries(
+    slices.map((slice) => [slice.metric, slice.value ?? 0])
+  )
+  const covered = byMetric.covered ?? 0
+  const other = byMetric.covered_in_other_builds ?? 0
+  const gaps = byMetric.gaps ?? 0
+
+  return [
+    { name: "covered", value: covered },
+    { name: "gaps", value: other + gaps },
+  ]
 }
 
 /**

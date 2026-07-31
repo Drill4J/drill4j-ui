@@ -1,0 +1,58 @@
+.coverage-stacked-bar-tooltip-overlay .ant-tooltip-inner {
+  color: rgba(0, 0, 0, 0.88);
+  background: #ffffff;
+  padding: 8px 12px;
+  min-width: 220px;
+  max-width: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.coverage-stacked-bar-tooltip-overlay .ant-tooltip-arrow::before {
+  background: #ffffff;
+}
+
+.coverage-stacked-bar-tooltip__title {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.coverage-stacked-bar-tooltip {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.coverage-stacked-bar-tooltip td {
+  padding: 3px 0;
+  vertical-align: middle;
+}
+
+.coverage-stacked-bar-tooltip__label {
+  padding-right: 28px;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.coverage-stacked-bar-tooltip__label-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coverage-stacked-bar-tooltip__swatch {
+  display: block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.coverage-stacked-bar-tooltip__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.88);
+}

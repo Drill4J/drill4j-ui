@@ -360,6 +360,7 @@ export const TestSessionCoveragePage = () => {
           methodsSortBy={methodsSortBy}
           methodsSortOrder={methodsSortOrder}
           onMethodsSortChange={handleMethodsSortChange}
+          includeOtherBuilds={false}
         />
       </div>
     </>

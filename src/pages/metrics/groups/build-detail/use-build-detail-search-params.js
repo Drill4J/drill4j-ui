@@ -17,9 +17,8 @@ import { useCallback, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
 import {
   BUILD_DETAIL_QUERY_KEYS,
-  COVERAGE_LIST_QUERY_KEYS,
   buildBuildDetailSearchParams,
-  setListQueryParam,
+  parseIncludeOtherBuilds,
 } from "../../../../modules/metrics/query-params"
 
 const QUERY_KEYS = BUILD_DETAIL_QUERY_KEYS
@@ -52,6 +51,9 @@ export function useBuildDetailSearchParams() {
   const sortOrder = searchParams.get("sortOrder") || undefined
   const methodsSortBy = searchParams.get("methodsSortBy") || undefined
   const methodsSortOrder = searchParams.get("methodsSortOrder") || undefined
+  const includeOtherBuilds = parseIncludeOtherBuilds(
+    searchParams.get("includeOtherBuilds")
+  )
 
   const branchesSerialized = serializeListQueryParam(searchParams, "branches")
   const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
@@ -82,6 +84,7 @@ export function useBuildDetailSearchParams() {
         branches,
         envIds,
         testTags,
+        includeOtherBuilds,
         packageName,
         className,
         methodId,
@@ -108,6 +111,7 @@ export function useBuildDetailSearchParams() {
       branches,
       envIds,
       testTags,
+      includeOtherBuilds,
       packageName,
       className,
       methodId,
@@ -125,6 +129,7 @@ export function useBuildDetailSearchParams() {
       branches: undefined,
       envIds: undefined,
       testTags: undefined,
+      includeOtherBuilds: undefined,
       sortBy: undefined,
       sortOrder: undefined,
       methodsSortBy: undefined,
@@ -149,6 +154,7 @@ export function useBuildDetailSearchParams() {
     branches,
     envIds,
     testTags,
+    includeOtherBuilds,
     packageName,
     className,
     methodId,

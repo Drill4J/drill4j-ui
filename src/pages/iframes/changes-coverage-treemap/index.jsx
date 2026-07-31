@@ -32,6 +32,7 @@ export const ChangesCoverageTreemapPage = () => (
             "classNamePattern",
             "includeDeleted",
             "includeEqual",
+            "includeOtherBuilds",
           ]}
         />
       </Col>

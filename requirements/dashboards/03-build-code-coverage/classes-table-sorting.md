@@ -54,12 +54,11 @@ GET /api/metrics/coverage/by-class
 
 | UI column | `sortBy` value | DB / aggregate field |
 |-----------|----------------|----------------------|
-| Method cov. | `methodsCoverageRatio` | computed ratio from aggregated counts |
 | Methods — total | `methodsCount` | `methods_count` |
 | Methods — covered | `coveredMethods` | `covered_methods` |
-| Probe cov. | `probesCoverageRatio` | computed ratio from aggregated counts |
-| Probes — total | `probesCount` | `probes_count` |
-| Probes — covered | `coveredProbes` | `covered_probes` |
+| Coverage — ratio | `probesCoverageRatio` | computed ratio from aggregated counts |
+| Coverage — total probes | `probesCount` | `probes_count` |
+| Coverage — covered probes | `coveredProbes` | `covered_probes` |
 
 ### Default order
 
@@ -77,7 +76,7 @@ Extend existing coverage-by-class stack:
 - `MetricsService.getCoverageByClass` — pass sort params through; map API field names to SQL column aliases where needed (same pattern as impacted-tests sorting).
 - `MetricsRepository.getClassCoverage` — replace hard-coded `ORDER BY class_name` with dynamic `ORDER BY` based on validated `sortBy` / `sortOrder`.
 
-Coverage ratio sorting (`methodsCoverageRatio`, `probesCoverageRatio`) must use the same ratio expression as `ClassCoverageView` (e.g. `covered / total`, with `0` when total is `0`).
+Coverage ratio sorting (`probesCoverageRatio`) must use the same ratio expression as `ClassCoverageView` (e.g. `covered / total`, with `0` when total is `0`).
 
 ## Data loading
 
@@ -104,21 +103,13 @@ Map `ClassCoverageView` fields directly to table rows — no client-side mapping
 | `className` | Display, method fetches, scope navigation |
 | `methodsCount` | Methods column |
 | `coveredMethods` | Methods column |
-| `methodsCoverageRatio` | Method cov. column |
-| `probesCount` | Probes column |
-| `coveredProbes` | Probes column |
-| `probesCoverageRatio` | Probe cov. column |
+| `probesCount` | Coverage stacked bar |
+| `coveredProbes` | Coverage stacked bar |
+| `probesCoverageRatio` | Coverage sort |
 
 ## Sort Options
 
 Each sortable column header exposes a menu of options. Selecting an option sets `sortBy` + `sortOrder` and refetches page 1.
-
-### Method cov.
-
-| Option | `sortBy` | `sortOrder` |
-|--------|----------|-------------|
-| Coverage, high to low | `methodsCoverageRatio` | `DESC` |
-| Coverage, low to high | `methodsCoverageRatio` | `ASC` |
 
 ### Methods
 
@@ -129,17 +120,12 @@ Each sortable column header exposes a menu of options. Selecting an option sets 
 | Covered methods, high to low | `coveredMethods` | `DESC` |
 | Covered methods, low to high | `coveredMethods` | `ASC` |
 
-### Probe cov.
+### Coverage
 
 | Option | `sortBy` | `sortOrder` |
 |--------|----------|-------------|
 | Coverage, high to low | `probesCoverageRatio` | `DESC` |
 | Coverage, low to high | `probesCoverageRatio` | `ASC` |
-
-### Probes
-
-| Option | `sortBy` | `sortOrder` |
-|--------|----------|-------------|
 | Total probes, high to low | `probesCount` | `DESC` |
 | Total probes, low to high | `probesCount` | `ASC` |
 | Covered probes, high to low | `coveredProbes` | `DESC` |
@@ -166,28 +152,23 @@ Each sortable column header exposes a menu of options. Selecting an option sets 
 ## UI Requirements
 
 - Sorting controls on table headers:
-  - `Method cov.`
   - `Methods`
-  - `Probe cov.`
-  - `Probes`
+  - `Coverage`
 - The active sort option is visible in the header control state.
 - Users can clear sorting (removes `sortBy` / `sortOrder`, refetches with default order).
 - Show loading state while a sort/page fetch is in flight.
-- Existing column content and formatting stay unchanged:
+- Existing column content and formatting:
   - methods render as `covered / total`,
-  - method coverage renders as percentage,
-  - probes render as `covered / total`,
-  - probe coverage renders as percentage.
+  - coverage renders as a stacked coverage bar with percentage.
 
 ## Acceptance Criteria
 
 - `GET /api/metrics/coverage/by-class` accepts `sortBy` and `sortOrder` and returns a correctly ordered page.
-- A user can sort `Method cov.` by method coverage percentage ascending and descending.
 - A user can sort `Methods` by total methods ascending and descending.
 - A user can sort `Methods` by covered methods ascending and descending.
-- A user can sort `Probe cov.` by probe coverage percentage ascending and descending.
-- A user can sort `Probes` by total probes ascending and descending.
-- A user can sort `Probes` by covered probes ascending and descending.
+- A user can sort `Coverage` by probe coverage percentage ascending and descending.
+- A user can sort `Coverage` by total probes ascending and descending.
+- A user can sort `Coverage` by covered probes ascending and descending.
 - Each sort/page change triggers a new API request with the correct params.
 - Pagination displays rows from the server-sorted result set; `total` matches API.
 - Clearing sort restores default `class_name` order.

@@ -653,6 +653,7 @@ function coverageFilterKey(buildId, filters = {}) {
  *   rootId?: string,
  *   testSessionId?: string,
  *   testDefinitionId?: string,
+ *   includeOtherBuilds?: boolean,
  * }} [filters]
  */
 export async function getCoverageTreemap(buildId, filters = {}) {
@@ -665,6 +666,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
     rootId,
     testSessionId,
     testDefinitionId,
+    includeOtherBuilds,
   } = filters
   const key = [
     "coverage-treemap",
@@ -677,6 +679,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
     rootId,
     testSessionId,
     testDefinitionId,
+    includeOtherBuilds,
   ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
@@ -691,6 +694,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
           rootId,
           testSessionId,
           testDefinitionId,
+          includeOtherBuilds,
         }),
         paramsSerializer: axiosListParamsSerializer,
       })

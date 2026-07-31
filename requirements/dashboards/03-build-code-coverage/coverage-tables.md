@@ -71,9 +71,7 @@ Sorting requirements: [classes-table-sorting.md](./classes-table-sorting.md).
 |--------|---------|
 | Class | Clickable → `onClassSelect` |
 | Methods | covered / total |
-| Method cov. | Percentage |
-| Probes | covered / total |
-| Probe cov. | Percentage |
+| Coverage | Stacked coverage bar and percentage |
 
 ### Methods
 
@@ -82,8 +80,7 @@ Sorting requirements: [methods-table-sorting.md](./methods-table-sorting.md).
 | Column | Content |
 |--------|---------|
 | Method | Clickable signature (ellipsis) → `onMethodSelect` |
-| Probes | covered / total |
-| Coverage | Percentage |
+| Coverage | Stacked coverage bar and percentage |
 
 Methods table uses server-side pagination (default page size 20).
 

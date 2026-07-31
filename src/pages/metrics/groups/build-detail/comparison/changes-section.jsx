@@ -22,6 +22,7 @@ import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
  *   build: object,
  *   baselineBuild: object,
  *   coverageFilters?: { testTags?: string[], envIds?: string[], branches?: string[] },
+ *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
  *   methodSignature?: string,
@@ -43,6 +44,7 @@ export function ChangesSection({
   build,
   baselineBuild,
   coverageFilters,
+  includeOtherBuilds = true,
   changeTypes,
   hasImpactedTests,
   methodSignature,
@@ -70,6 +72,7 @@ export function ChangesSection({
         build={build}
         baselineBuild={baselineBuild}
         coverageFilters={coverageFilters}
+        includeOtherBuilds={includeOtherBuilds}
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}
         methodSignature={methodSignature}

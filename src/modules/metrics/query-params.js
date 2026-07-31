@@ -51,6 +51,7 @@ export const TEST_SESSIONS_QUERY_KEYS = [
 export const BUILD_DETAIL_QUERY_KEYS = [
   "baselineBuildId",
   ...COVERAGE_LIST_QUERY_KEYS,
+  "includeOtherBuilds",
   "packageName",
   "className",
   "methodId",
@@ -73,6 +74,7 @@ export const COMPARISON_QUERY_KEYS = [
   "page",
   "pageSize",
   ...COVERAGE_LIST_QUERY_KEYS,
+  "includeOtherBuilds",
 ]
 
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
@@ -152,11 +154,31 @@ export function serializeListQueryParams(params) {
 export const axiosListParamsSerializer = { indexes: null }
 
 /**
+ * Default true. Only persisted when explicitly false.
+ * @param {string | null | undefined} raw
+ * @returns {boolean}
+ */
+export function parseIncludeOtherBuilds(raw) {
+  return raw !== "false"
+}
+
+/**
+ * @param {URLSearchParams} params
+ * @param {boolean | undefined} includeOtherBuilds
+ */
+function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
+  if (includeOtherBuilds === false) {
+    params.set("includeOtherBuilds", "false")
+  }
+}
+
+/**
  * @typedef {{
  *   baselineBuildId?: string,
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   includeOtherBuilds?: boolean,
  *   packageName?: string,
  *   className?: string,
  *   methodId?: string,
@@ -183,6 +205,7 @@ export const axiosListParamsSerializer = { indexes: null }
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   includeOtherBuilds?: boolean,
  * }} ComparisonQueryState
  */
 
@@ -196,6 +219,10 @@ export function buildBuildDetailSearchParams(state) {
     const value = state[key]
     if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
       setListQueryParam(params, key, value)
+      return
+    }
+    if (key === "includeOtherBuilds") {
+      setIncludeOtherBuildsParam(params, value)
       return
     }
     if (value) {
@@ -217,6 +244,10 @@ export function buildComparisonSearchParams(state) {
     const value = state[key]
     if (COVERAGE_LIST_QUERY_KEY_SET.has(key) || COMPARISON_LIST_QUERY_KEY_SET.has(key)) {
       setListQueryParam(params, key, value)
+      return
+    }
+    if (key === "includeOtherBuilds") {
+      setIncludeOtherBuildsParam(params, value)
       return
     }
     if (key === "hasImpactedTests") {

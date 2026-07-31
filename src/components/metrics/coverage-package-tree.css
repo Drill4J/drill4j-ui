@@ -19,17 +19,10 @@
 }
 
 .coverage-package-classes-panel {
-  /* Break out of the Package cell to fill the empty space under the
-     fixed-width Probes (110px) + Probe cov. (100px) columns + cell padding (8px). */
-  width: calc(100% + 218px);
   margin-top: 8px;
   padding: 8px 0 4px;
   border-top: 1px solid #91caff;
   border-bottom: 1px solid #91caff;
-  /* Paint above the adjacent cells so their row-hover background
-     does not cover the part of the table overflowing to the right. */
-  position: relative;
-  z-index: 1;
 }
 
 .coverage-package-classes-panel__header {
@@ -38,17 +31,20 @@
 }
 
 .coverage-class-methods-panel {
-  /* Break out of the Class cell across Methods, Method cov., Probes, and Probe cov. columns. */
-  width: calc(100% + 438px);
-  margin-top: 8px;
-  padding: 8px 0 4px;
-  border-top: 1px solid #91caff;
-  border-bottom: 1px solid #91caff;
-  position: relative;
-  z-index: 1;
+  padding: 4px 0;
 }
 
 .coverage-class-methods-panel__header {
   margin-bottom: 8px;
   font-size: 12px;
+}
+
+.coverage-package-classes-panel .ant-table,
+.coverage-class-methods-panel .ant-table {
+  table-layout: fixed;
+}
+
+.coverage-package-classes-panel .ant-table-cell,
+.coverage-class-methods-panel .ant-table-cell {
+  overflow: hidden;
 }
