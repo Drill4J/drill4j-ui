@@ -22,14 +22,14 @@ import {
   Modal,
   Space,
   Table,
-  Tooltip,
   Typography,
   message,
 } from "antd"
-import { DeleteOutlined, InfoCircleOutlined, PlusOutlined } from "@ant-design/icons"
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons"
 import axios from "axios"
 import { useParams, useSearchParams } from "react-router-dom"
 import { IgnoreRulesTreemap } from "../../../../components/charts/treemap-canvas"
+import { TitleHelpTooltip } from "../../../../components/metrics/title-help-tooltip"
 import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
 import * as MetricsAPI from "../../../../modules/metrics/api-metrics"
 import * as API from "../../../../modules/method-ignore-rules/api-method-ignore-rules"
@@ -66,26 +66,6 @@ const RegexExample = ({ children }) => (
   >
     {children}
   </code>
-)
-
-const TITLE_HELP_ICON_STYLE = {
-  color: "rgba(0, 0, 0, 0.45)",
-  marginLeft: 8,
-  fontSize: 14,
-  verticalAlign: "middle",
-  cursor: "help",
-}
-
-const TitleHelpTooltip = ({ title, ariaLabel }) => (
-  <Tooltip
-    title={title}
-    placement="bottomLeft"
-    mouseEnterDelay={0.15}
-    mouseLeaveDelay={0.35}
-    overlayStyle={{ maxWidth: 540 }}
-  >
-    <InfoCircleOutlined aria-label={ariaLabel} style={TITLE_HELP_ICON_STYLE} />
-  </Tooltip>
 )
 
 const EXCLUSION_RULES_HELP = (

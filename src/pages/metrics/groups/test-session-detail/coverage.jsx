@@ -21,6 +21,10 @@ import {
   coverageUnitSlicesToChart,
 } from "../../../../components/charts/coverage-pie-chart"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
+import {
+  CoverageAppStructureTitle,
+  CoveragePackagesTitle,
+} from "../../../../components/metrics/coverage-section-titles"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
 import { TestDefinitionSelect } from "../../../../components/metrics/test-definition-select"
 import {
@@ -324,6 +328,7 @@ export const TestSessionCoveragePage = () => {
         </Col>
       </Row>
 
+      <CoverageAppStructureTitle />
       <CoverageTreemapCanvas
         roots={treemapRoots}
         rootsLoading={treemapLoading}
@@ -336,6 +341,7 @@ export const TestSessionCoveragePage = () => {
       />
 
       <div style={{ marginTop: 24 }}>
+        <CoveragePackagesTitle />
         <CoverageTables
           buildId={buildId}
           coverageFilters={coverageFilters}

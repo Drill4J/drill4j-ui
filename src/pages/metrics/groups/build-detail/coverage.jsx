@@ -17,6 +17,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { message } from "antd"
 import { useLocation, useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
+import {
+  CoverageAppStructureTitle,
+  CoveragePackagesTitle,
+} from "../../../../components/metrics/coverage-section-titles"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
 import { getCoverageTreemap } from "../../../../modules/metrics/api-metrics"
 import { buildCoverageScopeUrl, copyScopeLinkToClipboard } from "../../../../modules/metrics/copy-scope-link"
@@ -273,6 +277,7 @@ export const BuildCoveragePage = () => {
 
   return (
     <>
+      <CoverageAppStructureTitle />
       <CoverageTreemapCanvas
         roots={treemapRoots}
         rootsLoading={treemapLoading}
@@ -285,6 +290,7 @@ export const BuildCoveragePage = () => {
       />
 
       <div style={{ marginTop: 24 }}>
+        <CoveragePackagesTitle />
         <CoverageTables
           buildId={buildId}
           coverageFilters={coverageFilters}
