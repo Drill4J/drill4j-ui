@@ -13,158 +13,139 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useMemo, useState } from "react"
-import { Button, Col, Row, Select, Tag, Typography, message } from "antd"
-import { ArrowLeftOutlined } from "@ant-design/icons"
-import { Link, useOutletContext, useParams } from "react-router-dom"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Typography, message } from "antd"
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { StatRow } from "../../../../components/metrics/stat-row"
+import {
+  buildTestSessionResultsUrl,
+  copyScopeLinkToClipboard,
+} from "../../../../modules/metrics/copy-scope-link"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { buildTestFileColumns, buildTestLaunchColumns, renderResultTag } from "./results-columns"
 import { useTestSessionSearchParams } from "./use-test-session-search-params"
+import "./results.css"
 
 const { Title, Text } = Typography
 
-const RESULT_COLORS = {
-  FAILED: "error",
-  PASSED: "success",
-  SMART_SKIPPED: "processing",
-  SKIPPED: "default",
-  UNKNOWN: "default",
+const HIGHLIGHT_DURATION_MS = 3000
+const SCROLL_RETRY_MAX_FRAMES = 120
+
+function launchRowId(testDefinitionId) {
+  return `test-launch-row-${encodeURIComponent(testDefinitionId)}`
 }
 
-const RESULT_FILTER_OPTIONS = ["PASSED", "FAILED", "SKIPPED", "SMART_SKIPPED", "UNKNOWN"]
-
-function renderResultTag(result) {
-  return <Tag color={RESULT_COLORS[result] ?? "default"}>{result}</Tag>
+function scopeLookupKey(parts) {
+  return JSON.stringify(parts)
 }
 
-function formatSuccessRate(rate) {
-  return `${(rate * 100).toFixed(1)}%`
+function buildSessionBuildCoverageHref(groupId, testSessionId, buildId, testDefinitionId) {
+  const search = new URLSearchParams()
+  if (testDefinitionId) {
+    search.set("testDefinitionId", testDefinitionId)
+  }
+  const query = search.toString()
+  return `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}/builds/${encodeURIComponent(buildId)}/coverage${query ? `?${query}` : ""}`
 }
 
-const TEST_FILE_COLUMNS = [
-  {
-    title: "Path",
-    dataIndex: "testPath",
-    key: "testPath",
-    ellipsis: true,
-  },
-  {
-    title: "Result",
-    dataIndex: "result",
-    key: "result",
-    render: renderResultTag,
-  },
-  {
-    title: "Tests",
-    dataIndex: "testDefinitions",
-    key: "testDefinitions",
-  },
-  {
-    title: "Launches",
-    dataIndex: "testLaunches",
-    key: "testLaunches",
-  },
-  {
-    title: "Passed",
-    dataIndex: "passed",
-    key: "passed",
-  },
-  {
-    title: "Failed",
-    dataIndex: "failed",
-    key: "failed",
-  },
-  {
-    title: "Skipped",
-    dataIndex: "skipped",
-    key: "skipped",
-  },
-  {
-    title: "Smart skipped",
-    dataIndex: "smartSkipped",
-    key: "smartSkipped",
-  },
-  {
-    title: "Duration",
-    dataIndex: "testDurationFormatted",
-    key: "testDurationFormatted",
-  },
-  {
-    title: "Success rate",
-    dataIndex: "successRate",
-    key: "successRate",
-    render: formatSuccessRate,
-  },
-]
-
-const TEST_LAUNCH_COLUMNS = [
-  {
-    title: "Test",
-    dataIndex: "testName",
-    key: "testName",
-    render: (value) => value || "—",
-  },
-  {
-    title: "Runner",
-    dataIndex: "testRunner",
-    key: "testRunner",
-    render: (value) => value || "—",
-  },
-  {
-    title: "Tags",
-    dataIndex: "testTags",
-    key: "testTags",
-    render: (tags) =>
-      tags?.length ? tags.map((tag) => <Tag key={tag}>{tag}</Tag>) : "—",
-  },
-  {
-    title: "Result",
-    dataIndex: "testResult",
-    key: "testResult",
-    render: renderResultTag,
-  },
-  {
-    title: "Launches",
-    dataIndex: "testLaunches",
-    key: "testLaunches",
-  },
-  {
-    title: "Duration",
-    dataIndex: "testDurationFormatted",
-    key: "testDurationFormatted",
-  },
-]
+function TestFileLaunchesPanel({
+  testPath,
+  columns,
+  dataSource,
+  loading,
+  pagination,
+  onTableChange,
+  onTestClick,
+  highlightedLaunchId,
+  highlightTick,
+}) {
+  return (
+    <div className="test-file-launches-panel">
+      <div className="test-file-launches-panel__header">
+        <Text type="secondary">Test file:</Text>{" "}
+        <Text strong>{testPath}</Text>
+      </div>
+      <MetricsDataTable
+        rowKey="testDefinitionId"
+        columns={columns}
+        dataSource={dataSource}
+        loading={loading}
+        pagination={pagination}
+        onTableChange={onTableChange}
+        onRow={(record) => ({
+          id: launchRowId(record.testDefinitionId),
+          onClick: () => onTestClick(record),
+          style: { cursor: "pointer" },
+          className:
+            record.testDefinitionId === highlightedLaunchId
+              ? `test-launch-row-highlight-${highlightTick % 2}`
+              : undefined,
+        })}
+      />
+    </div>
+  )
+}
 
 export const TestSessionResultsPage = () => {
   const { groupId, testSessionId, buildId } = useParams()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const { session, sessionLoading } = useOutletContext() ?? {}
   const {
     path: selectedPath,
+    launchId,
     testResults,
     testTags,
+    testNames,
+    testPaths,
+    fileResults,
+    sortBy,
+    sortOrder,
+    launchesSortBy,
+    launchesSortOrder,
     page,
     pageSize,
+    launchesPage,
+    launchesPageSize,
+    queryState,
     updateQueryParams,
     clearSelectedPath,
   } = useTestSessionSearchParams()
 
-  const showingLaunches = Boolean(selectedPath)
+  const getCoverageHref = useCallback(
+    (testDefinitionId) =>
+      buildSessionBuildCoverageHref(groupId, testSessionId, buildId, testDefinitionId),
+    [buildId, groupId, testSessionId]
+  )
 
   const [testFiles, setTestFiles] = useState([])
   const [launches, setLaunches] = useState([])
   const [testFilesTotal, setTestFilesTotal] = useState(0)
   const [launchesTotal, setLaunchesTotal] = useState(0)
+  const [fileFilterOptions, setFileFilterOptions] = useState({
+    testPaths: [],
+    results: [],
+  })
+  const [launchFilterOptions, setLaunchFilterOptions] = useState({
+    testNames: [],
+    testTags: [],
+    testResults: [],
+  })
   const [loading, setLoading] = useState({
     testFiles: false,
     launches: false,
   })
+  const [highlightedLaunchId, setHighlightedLaunchId] = useState()
+  const [highlightTick, setHighlightTick] = useState(0)
+  const [pendingLaunchScrollId, setPendingLaunchScrollId] = useState()
+  const highlightTimeoutRef = useRef()
+  const fileLookupKeyRef = useRef()
+  const launchLookupKeyRef = useRef()
+  const launchScrollStartedRef = useRef()
 
   useEffect(() => {
-    if (showingLaunches) {
-      return undefined
-    }
     let cancelled = false
 
     const loadTestFiles = async () => {
@@ -174,6 +155,10 @@ export const TestSessionResultsPage = () => {
           groupId,
           testSessionId,
           buildId,
+          testPaths,
+          results: fileResults,
+          sortBy,
+          sortOrder,
           page,
           pageSize,
         })
@@ -196,10 +181,46 @@ export const TestSessionResultsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, buildId, page, pageSize, showingLaunches])
+  }, [
+    groupId,
+    testSessionId,
+    buildId,
+    testPaths,
+    fileResults,
+    sortBy,
+    sortOrder,
+    page,
+    pageSize,
+  ])
 
   useEffect(() => {
-    if (!showingLaunches) {
+    let cancelled = false
+
+    API.getTestFileLaunchFilterOptions({ groupId, testSessionId, buildId })
+      .then((data) => {
+        if (!cancelled) {
+          setFileFilterOptions({
+            testPaths: data.testPaths,
+            results: data.results,
+          })
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch test file filters. ${error?.message}`)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [groupId, testSessionId, buildId])
+
+  useEffect(() => {
+    if (!selectedPath) {
+      setLaunches([])
+      setLaunchesTotal(0)
+      setLaunchFilterOptions({ testNames: [], testTags: [], testResults: [] })
       return undefined
     }
     let cancelled = false
@@ -212,10 +233,13 @@ export const TestSessionResultsPage = () => {
           testSessionId,
           buildId,
           path: selectedPath,
+          testNames,
           testResults,
           testTags,
-          page,
-          pageSize,
+          sortBy: launchesSortBy,
+          sortOrder: launchesSortOrder,
+          page: launchesPage,
+          pageSize: launchesPageSize,
         })
         if (!cancelled) {
           setLaunches(data)
@@ -241,12 +265,242 @@ export const TestSessionResultsPage = () => {
     testSessionId,
     buildId,
     selectedPath,
+    testNames,
     testResults,
     testTags,
+    launchesSortBy,
+    launchesSortOrder,
+    launchesPage,
+    launchesPageSize,
+  ])
+
+  useEffect(() => {
+    if (!selectedPath) {
+      return undefined
+    }
+    let cancelled = false
+
+    API.getTestLaunchFilterOptions({
+      groupId,
+      testSessionId,
+      buildId,
+      path: selectedPath,
+    })
+      .then((data) => {
+        if (!cancelled) {
+          setLaunchFilterOptions({
+            testNames: data.testNames,
+            testTags: data.testTags,
+            testResults: data.testResults,
+          })
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch test launch filters. ${error?.message}`)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [groupId, testSessionId, buildId, selectedPath])
+
+  useEffect(() => {
+    if (!selectedPath || loading.testFiles || testFiles.some((file) => file.testPath === selectedPath)) {
+      return undefined
+    }
+
+    const lookupKey = scopeLookupKey([
+      selectedPath,
+      sortBy,
+      sortOrder,
+      testPaths,
+      fileResults,
+    ])
+    if (fileLookupKeyRef.current === lookupKey) {
+      return undefined
+    }
+    fileLookupKeyRef.current = lookupKey
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { page: targetPage } = await API.getTestFileLaunchPage({
+          groupId,
+          testSessionId,
+          buildId,
+          path: selectedPath,
+          testPaths,
+          results: fileResults,
+          sortBy,
+          sortOrder,
+          pageSize,
+        })
+        if (cancelled) {
+          return
+        }
+        if (targetPage !== page) {
+          updateQueryParams({ page: targetPage })
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error(`Failed to locate test file. ${error?.message}`)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    buildId,
+    fileResults,
+    groupId,
+    loading.testFiles,
     page,
     pageSize,
-    showingLaunches,
+    selectedPath,
+    sortBy,
+    sortOrder,
+    testFiles,
+    testPaths,
+    testSessionId,
+    updateQueryParams,
   ])
+
+  useEffect(() => {
+    if (!launchId) {
+      launchLookupKeyRef.current = undefined
+      launchScrollStartedRef.current = undefined
+      setPendingLaunchScrollId(undefined)
+      setHighlightedLaunchId(undefined)
+    }
+  }, [launchId])
+
+  useEffect(() => {
+    if (!selectedPath || !launchId || loading.launches) {
+      return undefined
+    }
+
+    const requestKey = `${selectedPath}\u0000${launchId}`
+    if (launches.some((row) => row.testDefinitionId === launchId)) {
+      if (launchScrollStartedRef.current !== requestKey) {
+        launchScrollStartedRef.current = requestKey
+        setPendingLaunchScrollId(launchId)
+      }
+      return undefined
+    }
+
+    const lookupKey = scopeLookupKey([
+      requestKey,
+      launchesSortBy,
+      launchesSortOrder,
+      testNames,
+      testResults,
+      testTags,
+    ])
+    if (launchLookupKeyRef.current === lookupKey) {
+      return undefined
+    }
+    launchLookupKeyRef.current = lookupKey
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { page: targetPage } = await API.getTestLaunchPage({
+          groupId,
+          testSessionId,
+          buildId,
+          path: selectedPath,
+          launchId,
+          testNames,
+          testResults,
+          testTags,
+          sortBy: launchesSortBy,
+          sortOrder: launchesSortOrder,
+          pageSize: launchesPageSize,
+        })
+        if (cancelled) {
+          return
+        }
+        if (targetPage !== launchesPage) {
+          updateQueryParams({ launchesPage: targetPage })
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error(`Failed to locate test launch. ${error?.message}`)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    buildId,
+    groupId,
+    launchId,
+    launches,
+    launchesPage,
+    launchesPageSize,
+    launchesSortBy,
+    launchesSortOrder,
+    loading.launches,
+    selectedPath,
+    testNames,
+    testResults,
+    testSessionId,
+    testTags,
+    updateQueryParams,
+  ])
+
+  useEffect(() => {
+    if (!pendingLaunchScrollId) {
+      return undefined
+    }
+
+    let frame
+    let attempts = 0
+    const tryScroll = () => {
+      const row = document.getElementById(launchRowId(pendingLaunchScrollId))
+      if (!row) {
+        if (attempts++ < SCROLL_RETRY_MAX_FRAMES) {
+          frame = requestAnimationFrame(tryScroll)
+        }
+        return
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" })
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+      setHighlightedLaunchId(pendingLaunchScrollId)
+      setHighlightTick((tick) => tick + 1)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedLaunchId(undefined)
+        highlightTimeoutRef.current = undefined
+      }, HIGHLIGHT_DURATION_MS)
+      setPendingLaunchScrollId(undefined)
+    }
+
+    tryScroll()
+
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
+    }
+  }, [launches, pendingLaunchScrollId])
+
+  useEffect(
+    () => () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+    },
+    []
+  )
 
   const sessionInfoItems = useMemo(() => {
     const buildHref =
@@ -314,9 +568,18 @@ export const TestSessionResultsPage = () => {
     () => ({
       page,
       pageSize,
-      total: showingLaunches ? launchesTotal : testFilesTotal,
+      total: testFilesTotal,
     }),
-    [page, pageSize, showingLaunches, launchesTotal, testFilesTotal]
+    [page, pageSize, testFilesTotal]
+  )
+
+  const launchesPagination = useMemo(
+    () => ({
+      page: launchesPage,
+      pageSize: launchesPageSize,
+      total: launchesTotal,
+    }),
+    [launchesPage, launchesPageSize, launchesTotal]
   )
 
   const handleTableChange = (tablePagination) => {
@@ -326,14 +589,202 @@ export const TestSessionResultsPage = () => {
     })
   }
 
-  const handleTestFileClick = (record) => {
-    updateQueryParams({
-      path: record.testPath,
-      testResults: undefined,
-      testTags: undefined,
-      page: 1,
-    })
-  }
+  const handleLaunchesTableChange = useCallback(
+    (tablePagination) => {
+      updateQueryParams({
+        launchesPage: tablePagination.current,
+        launchesPageSize: tablePagination.pageSize,
+      })
+    },
+    [updateQueryParams]
+  )
+
+  const handleTestFileExpand = useCallback(
+    (expanded, record) => {
+      if (!expanded) {
+        if (selectedPath === record.testPath) {
+          clearSelectedPath()
+        }
+        return
+      }
+      updateQueryParams({
+        path: record.testPath,
+        launchId: undefined,
+        testResults: undefined,
+        testTags: undefined,
+        testNames: undefined,
+        launchesSortBy: undefined,
+        launchesSortOrder: undefined,
+      })
+    },
+    [clearSelectedPath, selectedPath, updateQueryParams]
+  )
+
+  const handleTestClick = useCallback(
+    (record) => {
+      if (!record.testDefinitionId) {
+        return
+      }
+      navigate(getCoverageHref(record.testDefinitionId))
+    },
+    [getCoverageHref, navigate]
+  )
+
+  const handleCopyFileLink = useCallback(
+    (record) => {
+      copyScopeLinkToClipboard(
+        buildTestSessionResultsUrl(pathname, {
+          ...queryState,
+          path: record.testPath,
+          launchId: undefined,
+          testNames: undefined,
+          testTags: undefined,
+          testResults: undefined,
+          launchesPage: undefined,
+          launchesPageSize: undefined,
+          launchesSortBy: undefined,
+          launchesSortOrder: undefined,
+        })
+      )
+    },
+    [pathname, queryState]
+  )
+
+  const handleCopyLaunchLink = useCallback(
+    (record) => {
+      copyScopeLinkToClipboard(
+        buildTestSessionResultsUrl(pathname, {
+          ...queryState,
+          path: record.testPath || selectedPath,
+          launchId: record.testDefinitionId,
+          testNames: undefined,
+          testTags: undefined,
+          testResults: undefined,
+          launchesPage: undefined,
+        })
+      )
+    },
+    [pathname, queryState, selectedPath]
+  )
+
+  const handleFileSortChange = useCallback(
+    (nextSort) => {
+      updateQueryParams({
+        sortBy: nextSort.sortBy || undefined,
+        sortOrder: nextSort.sortOrder || undefined,
+      })
+    },
+    [updateQueryParams]
+  )
+
+  const handleLaunchesSortChange = useCallback(
+    (nextSort) => {
+      updateQueryParams({
+        launchesSortBy: nextSort.sortBy || undefined,
+        launchesSortOrder: nextSort.sortOrder || undefined,
+      })
+    },
+    [updateQueryParams]
+  )
+
+  const testFileColumns = useMemo(
+    () =>
+      buildTestFileColumns({
+        expandedPath: selectedPath,
+        filterOptions: fileFilterOptions,
+        testPaths,
+        fileResults,
+        sortBy,
+        sortOrder,
+        onTestPathsChange: (value) => updateQueryParams({ testPaths: value }),
+        onFileResultsChange: (value) => updateQueryParams({ fileResults: value }),
+        onSortChange: handleFileSortChange,
+        onCopyFileLink: handleCopyFileLink,
+      }),
+    [
+      fileFilterOptions,
+      fileResults,
+      handleCopyFileLink,
+      handleFileSortChange,
+      selectedPath,
+      sortBy,
+      sortOrder,
+      testPaths,
+      updateQueryParams,
+    ]
+  )
+
+  const testLaunchColumns = useMemo(
+    () =>
+      buildTestLaunchColumns({
+        getCoverageHref,
+        filterOptions: launchFilterOptions,
+        testNames,
+        testTags,
+        testResults,
+        sortBy: launchesSortBy,
+        sortOrder: launchesSortOrder,
+        onTestNamesChange: (value) => updateQueryParams({ testNames: value }),
+        onTestTagsChange: (value) => updateQueryParams({ testTags: value }),
+        onTestResultsChange: (value) => updateQueryParams({ testResults: value }),
+        onSortChange: handleLaunchesSortChange,
+        onCopyLaunchLink: handleCopyLaunchLink,
+      }),
+    [
+      getCoverageHref,
+      handleCopyLaunchLink,
+      handleLaunchesSortChange,
+      launchFilterOptions,
+      launchesSortBy,
+      launchesSortOrder,
+      testNames,
+      testResults,
+      testTags,
+      updateQueryParams,
+    ]
+  )
+
+  const expandedRowKeys = useMemo(
+    () => (selectedPath ? [selectedPath] : []),
+    [selectedPath]
+  )
+
+  const expandable = useMemo(
+    () => ({
+      expandedRowKeys,
+      expandRowByClick: true,
+      showExpandColumn: false,
+      rowExpandable: (record) => record.testDefinitions > 0,
+      onExpand: handleTestFileExpand,
+      expandedRowRender: (record) =>
+        record.testPath === selectedPath && (
+          <TestFileLaunchesPanel
+            testPath={record.testPath}
+            columns={testLaunchColumns}
+            dataSource={launches}
+            loading={loading.launches}
+            pagination={launchesPagination}
+            onTableChange={handleLaunchesTableChange}
+            onTestClick={handleTestClick}
+            highlightedLaunchId={highlightedLaunchId}
+            highlightTick={highlightTick}
+          />
+        ),
+    }),
+    [
+      expandedRowKeys,
+      handleLaunchesTableChange,
+      handleTestClick,
+      handleTestFileExpand,
+      highlightTick,
+      highlightedLaunchId,
+      launches,
+      launchesPagination,
+      loading.launches,
+      selectedPath,
+      testLaunchColumns,
+    ]
+  )
 
   return (
     <>
@@ -343,74 +794,22 @@ export const TestSessionResultsPage = () => {
 
       <StatRow stats={statItems} />
 
-      {showingLaunches ? (
-        <>
-          <div style={{ marginBottom: 16 }}>
-            <Button
-              type="link"
-              icon={<ArrowLeftOutlined />}
-              onClick={clearSelectedPath}
-              style={{ paddingLeft: 0 }}
-            >
-              Test files
-            </Button>
-            <Text type="secondary" style={{ marginLeft: 8 }}>
-              {selectedPath}
-            </Text>
-          </div>
-
-          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-            <Col xs={24} md={12}>
-              <Select
-                allowClear
-                mode="multiple"
-                placeholder="Test results"
-                style={{ width: "100%" }}
-                value={testResults}
-                options={RESULT_FILTER_OPTIONS.map((value) => ({ label: value, value }))}
-                onChange={(value) => updateQueryParams({ testResults: value, page: 1 })}
-              />
-            </Col>
-            <Col xs={24} md={12}>
-              <Select
-                allowClear
-                mode="tags"
-                placeholder="Test tags"
-                style={{ width: "100%" }}
-                value={testTags}
-                onChange={(value) => updateQueryParams({ testTags: value, page: 1 })}
-              />
-            </Col>
-          </Row>
-
-          <MetricsDataTable
-            rowKey="testDefinitionId"
-            columns={TEST_LAUNCH_COLUMNS}
-            dataSource={launches}
-            loading={loading.launches}
-            pagination={tablePagination}
-            onTableChange={handleTableChange}
-          />
-        </>
-      ) : (
-        <>
-          <Title level={5} style={{ marginBottom: 16 }}>
-            Test files
-          </Title>
-          <MetricsDataTable
-            rowKey="testPath"
-            columns={TEST_FILE_COLUMNS}
-            dataSource={testFiles}
-            loading={loading.testFiles}
-            pagination={tablePagination}
-            onTableChange={handleTableChange}
-            onRow={(record) => ({
-              onClick: () => handleTestFileClick(record),
-              style: { cursor: "pointer" },
-            })}
-          />
-        </>
-      )}
+      <Title level={5} style={{ marginBottom: 16 }}>
+        Test files
+      </Title>
+      <MetricsDataTable
+        className="test-files-table"
+        rowKey="testPath"
+        columns={testFileColumns}
+        dataSource={testFiles}
+        loading={loading.testFiles}
+        pagination={tablePagination}
+        onTableChange={handleTableChange}
+        expandable={expandable}
+        onRow={(record) => ({
+          style: record.testDefinitions > 0 ? { cursor: "pointer" } : undefined,
+        })}
+      />
     </>
   )
 }

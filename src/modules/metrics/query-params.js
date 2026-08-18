@@ -18,7 +18,13 @@ export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
 
 export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
 
-export const TEST_SESSION_DETAIL_LIST_QUERY_KEYS = ["testResults", "testTags"]
+export const TEST_SESSION_DETAIL_LIST_QUERY_KEYS = [
+  "testResults",
+  "testTags",
+  "testNames",
+  "testPaths",
+  "fileResults",
+]
 
 export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
   "testDefinitionId",
@@ -46,6 +52,23 @@ export const TEST_SESSIONS_QUERY_KEYS = [
   ...TEST_SESSIONS_LIST_QUERY_KEYS,
   "sessionsSortBy",
   "sessionsSortOrder",
+]
+
+export const TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE = 20
+export const TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE = 10
+
+export const TEST_SESSION_DETAIL_QUERY_KEYS = [
+  "path",
+  "launchId",
+  "page",
+  "pageSize",
+  "sortBy",
+  "sortOrder",
+  "launchesPage",
+  "launchesPageSize",
+  "launchesSortBy",
+  "launchesSortOrder",
+  ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
 ]
 
 export const BUILD_DETAIL_QUERY_KEYS = [
@@ -264,6 +287,62 @@ export function buildComparisonSearchParams(state) {
         }
         params.set(key, String(value))
       }
+      return
+    }
+    if (value) {
+      params.set(key, value)
+    }
+  })
+  return params
+}
+
+const TEST_SESSION_DETAIL_LIST_QUERY_KEY_SET = new Set(TEST_SESSION_DETAIL_LIST_QUERY_KEYS)
+
+const TEST_SESSION_DETAIL_PAGE_DEFAULTS = {
+  page: 1,
+  pageSize: TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE,
+  launchesPage: 1,
+  launchesPageSize: TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE,
+}
+
+/**
+ * @typedef {{
+ *   path?: string,
+ *   launchId?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   launchesPage?: number,
+ *   launchesPageSize?: number,
+ *   launchesSortBy?: string,
+ *   launchesSortOrder?: string,
+ *   testResults?: string[],
+ *   testTags?: string[],
+ *   testNames?: string[],
+ *   testPaths?: string[],
+ *   fileResults?: string[],
+ * }} TestSessionResultsQueryState
+ */
+
+/**
+ * @param {TestSessionResultsQueryState} state
+ * @returns {URLSearchParams}
+ */
+export function buildTestSessionResultsSearchParams(state) {
+  const params = new URLSearchParams()
+  TEST_SESSION_DETAIL_QUERY_KEYS.forEach((key) => {
+    const value = state[key]
+    if (TEST_SESSION_DETAIL_LIST_QUERY_KEY_SET.has(key)) {
+      setListQueryParam(params, key, value)
+      return
+    }
+    if (key in TEST_SESSION_DETAIL_PAGE_DEFAULTS) {
+      const numeric = Number(value)
+      if (!value || numeric <= 0 || numeric === TEST_SESSION_DETAIL_PAGE_DEFAULTS[key]) {
+        return
+      }
+      params.set(key, String(value))
       return
     }
     if (value) {

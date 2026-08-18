@@ -480,8 +480,11 @@ export async function getTestSessionDefinitions(groupId, testSessionId, buildId,
  *   testSessionId: string,
  *   buildId?: string,
  *   path?: string,
+ *   testNames?: string[],
  *   testResults?: string[],
  *   testTags?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
  *   page?: number,
  *   pageSize?: number,
  * }} params
@@ -492,8 +495,11 @@ export async function getTestLaunches(params) {
     testSessionId,
     buildId,
     path,
+    testNames = [],
     testResults = [],
     testTags = [],
+    sortBy,
+    sortOrder,
     page = 1,
     pageSize = 20,
   } = params
@@ -503,8 +509,11 @@ export async function getTestLaunches(params) {
     testSessionId,
     buildId,
     path,
+    testNames.join(","),
     testResults.join(","),
     testTags.join(","),
+    sortBy,
+    sortOrder,
     page,
     pageSize,
   ].join(":")
@@ -515,8 +524,11 @@ export async function getTestLaunches(params) {
           groupId,
           buildId,
           path,
+          testNames,
           testResults,
           testTags,
+          sortBy,
+          sortOrder,
           page,
           pageSize,
         }),
@@ -535,19 +547,53 @@ export async function getTestLaunches(params) {
  *   groupId: string,
  *   testSessionId: string,
  *   buildId?: string,
+ *   testPaths?: string[],
+ *   results?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
  *   page?: number,
  *   pageSize?: number,
  * }} params
  */
 export async function getTestFileLaunches(params) {
-  const { groupId, testSessionId, buildId, page = 1, pageSize = 20 } = params
-  const key = ["test-file-launches", groupId, testSessionId, buildId, page, pageSize].join(":")
+  const {
+    groupId,
+    testSessionId,
+    buildId,
+    testPaths = [],
+    results = [],
+    sortBy,
+    sortOrder,
+    page = 1,
+    pageSize = 20,
+  } = params
+  const key = [
+    "test-file-launches",
+    groupId,
+    testSessionId,
+    buildId,
+    testPaths.join(","),
+    results.join(","),
+    sortBy,
+    sortOrder,
+    page,
+    pageSize,
+  ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get(
         `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/file-launches`,
         {
-          params: serializeListQueryParams({ groupId, buildId, page, pageSize }),
+          params: serializeListQueryParams({
+            groupId,
+            buildId,
+            testPaths,
+            results,
+            sortBy,
+            sortOrder,
+            page,
+            pageSize,
+          }),
           paramsSerializer: axiosListParamsSerializer,
         }
       )
@@ -556,6 +602,185 @@ export async function getTestFileLaunches(params) {
       data: response.data.data,
       paging: response.data.paging,
     }
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ * }} params
+ */
+export async function getTestFileLaunchFilterOptions(params) {
+  const { groupId, testSessionId, buildId } = params
+  const key = ["test-file-launch-filter-options", groupId, testSessionId, buildId].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/file-launches/filter-options`,
+        {
+          params: serializeListQueryParams({ groupId, buildId }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   path: string,
+ *   testPaths?: string[],
+ *   results?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ page: number }>}
+ */
+export async function getTestFileLaunchPage(params) {
+  const {
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    testPaths = [],
+    results = [],
+    sortBy,
+    sortOrder,
+    pageSize,
+  } = params
+  const key = [
+    "test-file-launch-page",
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    testPaths.join(","),
+    results.join(","),
+    sortBy,
+    sortOrder,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/file-launches/page`,
+        {
+          params: serializeListQueryParams({
+            groupId,
+            buildId,
+            path,
+            testPaths,
+            results,
+            sortBy,
+            sortOrder,
+            pageSize,
+          }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   path?: string,
+ * }} params
+ */
+export async function getTestLaunchFilterOptions(params) {
+  const { groupId, testSessionId, buildId, path } = params
+  const key = ["test-launch-filter-options", groupId, testSessionId, buildId, path].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/launches/filter-options`,
+        {
+          params: serializeListQueryParams({ groupId, buildId, path }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   path?: string,
+ *   launchId: string,
+ *   testNames?: string[],
+ *   testResults?: string[],
+ *   testTags?: string[],
+ *   sortBy?: string,
+ *   sortOrder?: string,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ page: number }>}
+ */
+export async function getTestLaunchPage(params) {
+  const {
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    launchId,
+    testNames = [],
+    testResults = [],
+    testTags = [],
+    sortBy,
+    sortOrder,
+    pageSize,
+  } = params
+  const key = [
+    "test-launch-page",
+    groupId,
+    testSessionId,
+    buildId,
+    path,
+    launchId,
+    testNames.join(","),
+    testResults.join(","),
+    testTags.join(","),
+    sortBy,
+    sortOrder,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/launches/page`,
+        {
+          params: serializeListQueryParams({
+            groupId,
+            buildId,
+            path,
+            launchId,
+            testNames,
+            testResults,
+            testTags,
+            sortBy,
+            sortOrder,
+            pageSize,
+          }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return response.data.data
   })
 }
 
