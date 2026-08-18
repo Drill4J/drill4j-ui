@@ -1,11 +1,12 @@
 ---
 name: review-changes
 description: >-
-  Review git changes in the current working directory for data-loading rules:
-  no client-side sort/filter on large lists, no API fallbacks or legacy compat,
-  paginated list endpoints only, and no null in JS/JSX. Use when reviewing a PR,
-  diff, staged changes, or when the user asks to review changes against
-  server-side data rules.
+  Review git changes in the current working directory for data-loading and API
+  safety rules: no client-side sort/filter on large lists, no API fallbacks or
+  legacy compat, paginated list endpoints only, no null in JS/JSX, and no SQL
+  or other injection in API endpoints. Use when reviewing a PR, diff, staged
+  changes, or when the user asks to review changes against server-side data
+  rules.
 disable-model-invocation: true
 argument-hint: "[base-ref]"
 arguments: "[base-ref]"
@@ -13,7 +14,7 @@ arguments: "[base-ref]"
 
 # Review Changes (data-loading rules)
 
-Review **only what changed** in the working tree against four non-negotiable rules.
+Review **only what changed** in the working tree against five non-negotiable rules.
 
 ## Invocation
 
@@ -217,7 +218,48 @@ Triage each hit: flag new/changed `null` in UI code. Pre-existing `null` in unto
 
 ---
 
-## Step 6 — Report
+## Step 6 — Rule 5: No injection in API endpoints
+
+Changed API routes, services, repositories, SQL, and SQL builders must not allow SQL injection or other injection/exploits. User-controlled values (query params, path params, body fields, headers) must never become executable SQL, commands, or identifiers.
+
+### Fail (report as violation)
+
+| Pattern | Example |
+|---------|---------|
+| User input interpolated into SQL text | `"WHERE name = '$query'"`, `"""… $sortBy …"""`, `append("ORDER BY $sortBy")` |
+| Client `sortBy` / `sortOrder` / column names used as SQL without an allowlist | `ORDER BY $sortBy $sortOrder` |
+| LIKE / IN fragments built by concatenating request strings into SQL | `"AND path ILIKE '%$query%'"`, `"IN (${ids.joinToString()})" ` when `ids` is client input |
+| `SqlBuilder.append*` with request data inside `sqlFragment` instead of `?` + `params` | `append("AND name = '$name'")` |
+| Dynamic table / schema / function names from the request | `"SELECT * FROM $table"` |
+| Unparameterized JDBC / Exposed exec | `createStatement().execute(sql)`, `exec(sql)` where `sql` includes request strings |
+| Command / path / header injection | `ProcessBuilder(userArg)`, interpolating request values into shell, file paths, or SQL `COPY` |
+| Second-order injection via stored then replayed SQL | persisting a filter string and later concatenating it into a query |
+
+### Pass (usually OK)
+
+- `SqlBuilder.append` / `appendOptional` with `?` placeholders; values go in `params` (including LIKE patterns via `transform { "%$it%" }` as a **bound param**, not SQL text)
+- Allowlist map: API field → SQL column/expression; unknown `sortBy` rejected or ignored
+- Typed Ktor `@Resource` params passed as bound query arguments
+- Static SQL in Flyway / `metrics.*` functions; request values only as function arguments
+- Server-built `IN` lists of **bound** placeholders (`?, ?, ?`) matching a params list
+
+### Grep (run on changed backend files)
+
+```bash
+# replace CHANGED_FILES with admin-metrics paths from step 1
+rg -n 'append(Optional)?\([^)]*\$' CHANGED_FILES
+rg -n 'ORDER BY.*\$' CHANGED_FILES
+rg -n 'ILIKE.*\$|LIKE.*\$' CHANGED_FILES
+rg -n 'createStatement|execute\(\s*["`]' CHANGED_FILES
+rg -n 'ProcessBuilder|Runtime\.getRuntime' CHANGED_FILES
+rg -n '"""[\s\S]{0,200}\$' CHANGED_FILES
+```
+
+For each hit: confirm the `$` / concatenation is a **bound param or static identifier**, not request text inside SQL. False positives (e.g. Kotlin string templates that only build a constant fragment) → note as pass.
+
+---
+
+## Step 7 — Report
 
 Use this template. **Do not** fix code unless the user asks — review only.
 
@@ -235,6 +277,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 | 2. No API fallbacks | PASS / FAIL | N |
 | 3. Paginated list data | PASS / FAIL | N |
 | 4. No `null` in JS/JSX | PASS / FAIL | N |
+| 5. No injection in API endpoints | PASS / FAIL | N |
 
 ## Violations
 
@@ -259,7 +302,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 
 Severity:
 
-- **Blocker** — any Rule 1–4 violation in new/changed list or table flow
+- **Blocker** — any Rule 1–5 violation in new/changed list, table, or API flow
 - **Note** — pre-existing code touched but not worsened; optional cleanup
 
 ---
@@ -277,5 +320,6 @@ Copy while reviewing:
 - [ ] New/changed list endpoints use PagedDataResponse + SQL LIMIT
 - [ ] Count queries match list filters
 - [ ] No `null` in changed JS/JSX (use undefined, omit, or short-circuit)
+- [ ] No SQL/command/identifier interpolation of request data in changed API code
 - [ ] Report written with file:line references
 ```

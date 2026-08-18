@@ -99,7 +99,15 @@ The API must guarantee data consistency and correctness. On the client:
 
 Responses use existing `ApiResponse` / `PagedDataResponse` wrappers; `total` always comes from `paging.total`.
 
-### 5. Deduplicate shared logic
+### 5. No injection in API endpoints
+
+User-controlled values must never become executable SQL, commands, or identifiers.
+
+- Bind request values with `?` placeholders (`SqlBuilder` `params`), including LIKE patterns (`transform { "%$it%" }` as a bound param).
+- Map `sortBy` / column names through a server allowlist — never interpolate client strings into `ORDER BY`, table, or schema names.
+- Do not concatenate query/path/body fields into SQL fragments, shell commands, or file paths.
+
+### 6. Deduplicate shared logic
 
 Before adding a helper in a page or component file:
 
@@ -107,13 +115,13 @@ Before adding a helper in a page or component file:
 - If duplicated, **extract once** to a `util` / `utils` file at the **corresponding directory level** (e.g. `src/modules/metrics/query-params.js`, `src/pages/metrics/groups/build-detail/utils.js`).
 - Reuse existing shared modules (`query-params.js`, hooks, API client) rather than copying.
 
-### 6. Components live in `components/`
+### 7. Components live in `components/`
 
 - Presentational / reusable UI → `src/components/...` (mirror domain, e.g. `components/metrics/`).
 - Pages orchestrate data, routing, and layout → `src/pages/...` — keep pages **thin**; business logic lives in hooks, utils, or components.
 - Do not define new reusable components inline in page files.
 
-### 7. Deep linking — URL query params for interactive state
+### 8. Deep linking — URL query params for interactive state
 
 Anything that changes what the user sees in tables or trees must be **reflected in the URL** so the page is shareable and survives refresh:
 
@@ -138,7 +146,7 @@ Implementation pattern:
 
 Nested tables (e.g. per expanded class): use namespaced keys or a documented encoding if multiple instances share one URL — prefer one active nested scope in URL matching existing build-detail patterns.
 
-### 8. Preserve existing behavior and match references
+### 9. Preserve existing behavior and match references
 
 - **Existing interactions** must keep working: scroll-to-row, row highlight, link copy, expand/collapse.
 - **Scroll-to across pages:** if the target row is not on the current page, resolve the correct page via the API (same approach as classes-table scroll-to-class).
