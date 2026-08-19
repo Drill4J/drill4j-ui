@@ -13,33 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { FilterFilled, FilterOutlined } from "@ant-design/icons"
 import { Dropdown, Select, theme } from "antd"
+import { PagedSearchSelect, stringOption } from "./paged-search-select"
 
 /**
  * @param {{
  *   title: string,
- *   options: { key: string, label: string, value?: string[] }[],
+ *   options?: { key: string, label: string, value?: string[] }[],
  *   value?: string[],
  *   onChange: (value?: string[]) => void,
  *   searchable?: boolean,
  *   placeholder?: string,
+ *   loadPage?: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  * }} props
  */
 export function TableColumnFilterHeader({
   title,
-  options,
+  options = [],
   value,
   onChange,
   searchable = false,
   placeholder,
+  loadPage,
 }) {
   const { token } = theme.useToken()
   const [open, setOpen] = useState(false)
-  const normalized = (value ?? []).map((entry) => entry.toLowerCase()).sort()
+  const normalized = (value || []).map((entry) => entry.toLowerCase()).sort()
   const activeOption = options.find((option) => {
-    const optionValues = (option.value ?? []).map((entry) => entry.toLowerCase()).sort()
+    const optionValues = (option.value || []).map((entry) => entry.toLowerCase()).sort()
     return (
       optionValues.length === normalized.length &&
       optionValues.every((entry, index) => entry === normalized[index])
@@ -47,6 +50,7 @@ export function TableColumnFilterHeader({
   })
   const isActive = Boolean(value?.length)
   const FilterIcon = isActive ? FilterFilled : FilterOutlined
+  const selectedLabel = activeOption ? activeOption.label : value?.[0]
 
   const trigger = (
     <span
@@ -57,7 +61,7 @@ export function TableColumnFilterHeader({
         color: isActive ? token.colorPrimary : undefined,
         fontWeight: isActive ? 600 : undefined,
       }}
-      title={activeOption ? activeOption.label : undefined}
+      title={selectedLabel}
     >
       {title}
       <FilterIcon
@@ -69,6 +73,43 @@ export function TableColumnFilterHeader({
       />
     </span>
   )
+
+  if (searchable && loadPage) {
+    return (
+      <Dropdown
+        trigger={["click"]}
+        open={open}
+        onOpenChange={setOpen}
+        dropdownRender={() => (
+          <div
+            style={{
+              padding: 8,
+              background: token.colorBgElevated,
+              borderRadius: token.borderRadiusLG,
+              boxShadow: token.boxShadowSecondary,
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <PagedSearchSelect
+              valueEqualsLabel
+              defaultOpen
+              loadPage={loadPage}
+              toOption={stringOption}
+              placeholder={placeholder || title}
+              style={{ width: 280, minWidth: 280 }}
+              value={value?.[0]}
+              onChange={(next) => {
+                onChange(next ? [next] : undefined)
+                setOpen(false)
+              }}
+            />
+          </div>
+        )}
+      >
+        {trigger}
+      </Dropdown>
+    )
+  }
 
   if (searchable) {
     const selectedValue = value?.[0]
@@ -99,7 +140,7 @@ export function TableColumnFilterHeader({
                 label: option.label,
               }))}
               filterOption={(input, option) =>
-                String(option?.label ?? "")
+                String(option?.label || "")
                   .toLowerCase()
                   .includes(input.toLowerCase())
               }

@@ -57,10 +57,6 @@ export const AppHubPage = () => {
   const [loading, setLoading] = useState(false)
   const [deletingBuildId, setDeletingBuildId] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [filterOptions, setFilterOptions] = useState({
-    branches: [],
-    envIds: [],
-  })
 
   const updateQueryParams = useCallback(
     (next) => {
@@ -77,30 +73,14 @@ export const AppHubPage = () => {
     [searchString, setSearchParams]
   )
 
-  useEffect(() => {
-    let cancelled = false
-
-    const loadFilterOptions = async () => {
-      try {
-        const [branches, envIds] = await Promise.all([
-          API.getAppBranches(groupId, appId),
-          API.getAppEnvIds(groupId, appId),
-        ])
-        if (!cancelled) {
-          setFilterOptions({ branches, envIds })
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch filter options. ${error?.message}`)
-        }
-      }
-    }
-
-    loadFilterOptions()
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, appId])
+  const loadBranches = useCallback(
+    (params) => API.getAppBranches(groupId, appId, params),
+    [appId, groupId]
+  )
+  const loadEnvIds = useCallback(
+    (params) => API.getAppEnvIds(groupId, appId, params),
+    [appId, groupId]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -276,8 +256,8 @@ export const AppHubPage = () => {
         <OptionalFilters
           branches={branches}
           envIds={envIds}
-          branchOptions={filterOptions.branches}
-          envOptions={filterOptions.envIds}
+          loadBranches={loadBranches}
+          loadEnvIds={loadEnvIds}
           onBranchesChange={(value) =>
             updateQueryParams({ branches: value, envIds })
           }

@@ -22,9 +22,9 @@ import { FilterMultiSelect } from "./filter-multi-select"
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
- *   branchOptions?: string[],
- *   envOptions?: string[],
- *   testTagOptions?: string[],
+ *   loadBranches: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadEnvIds: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadTestTags?: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   size?: "small" | "middle" | "large",
  *   filterHints?: { branches?: string, envIds?: string, testTags?: string },
  *   onBranchesChange: (value?: string[]) => void,
@@ -36,9 +36,9 @@ export function OptionalFilters({
   branches,
   envIds,
   testTags,
-  branchOptions = [],
-  envOptions = [],
-  testTagOptions = [],
+  loadBranches,
+  loadEnvIds,
+  loadTestTags,
   size = "middle",
   filterHints,
   onBranchesChange,
@@ -51,7 +51,7 @@ export function OptionalFilters({
         <FilterMultiSelect
           size={size}
           placeholder="Branches"
-          options={branchOptions}
+          loadPage={loadBranches}
           value={branches}
           onChange={onBranchesChange}
         />
@@ -61,18 +61,18 @@ export function OptionalFilters({
         <FilterMultiSelect
           size={size}
           placeholder="Environments"
-          options={envOptions}
+          loadPage={loadEnvIds}
           value={envIds}
           onChange={onEnvIdsChange}
         />
         {filterHints?.envIds && <HintIcon title={filterHints.envIds} />}
       </Space>
-      {onTestTagsChange && (
+      {onTestTagsChange && loadTestTags && (
         <Space align="center" size={size === "small" ? 4 : 6}>
           <FilterMultiSelect
             size={size}
             placeholder="Test tags"
-            options={testTagOptions}
+            loadPage={loadTestTags}
             value={testTags}
             onChange={onTestTagsChange}
           />

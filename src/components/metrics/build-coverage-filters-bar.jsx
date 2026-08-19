@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState } from "react"
-import { Button, Switch, Tooltip, Typography, message } from "antd"
+import { useCallback } from "react"
+import { Button, Switch, Tooltip, Typography } from "antd"
 import { HintIcon } from "../hint-icon"
 import { OptionalFilters } from "./optional-filters"
 import * as API from "../../modules/metrics/api-metrics"
@@ -71,44 +71,22 @@ export function BuildCoverageFiltersBar({
   filterHints = COVERAGE_FILTER_HINTS,
   sticky = true,
 }) {
-  const [filterOptions, setFilterOptions] = useState({
-    branches: [],
-    envIds: [],
-    testTags: [],
-  })
   const hasActiveFilters = Boolean(
     branches?.length || envIds?.length || testTags?.length || includeOtherBuilds === false
   )
 
-  useEffect(() => {
-    let cancelled = false
-
-    const loadFilters = async () => {
-      try {
-        const [branchesOptions, envIdsOptions, testTagsOptions] = await Promise.all([
-          API.getAppBranches(groupId, appId),
-          API.getAppEnvIds(groupId, appId),
-          API.getAppTestTags(groupId, appId),
-        ])
-        if (!cancelled) {
-          setFilterOptions({
-            branches: branchesOptions,
-            envIds: envIdsOptions,
-            testTags: testTagsOptions,
-          })
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch filter options. ${error?.message}`)
-        }
-      }
-    }
-
-    loadFilters()
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, appId])
+  const loadBranches = useCallback(
+    (params) => API.getAppBranches(groupId, appId, params),
+    [appId, groupId]
+  )
+  const loadEnvIds = useCallback(
+    (params) => API.getAppEnvIds(groupId, appId, params),
+    [appId, groupId]
+  )
+  const loadTestTags = useCallback(
+    (params) => API.getAppTestTags(groupId, appId, params),
+    [appId, groupId]
+  )
 
   return (
     <div
@@ -139,9 +117,9 @@ export function BuildCoverageFiltersBar({
         branches={branches}
         envIds={envIds}
         testTags={testTags}
-        branchOptions={filterOptions.branches}
-        envOptions={filterOptions.envIds}
-        testTagOptions={filterOptions.testTags}
+        loadBranches={loadBranches}
+        loadEnvIds={loadEnvIds}
+        loadTestTags={loadTestTags}
         filterHints={filterHints}
         onBranchesChange={onBranchesChange}
         onEnvIdsChange={onEnvIdsChange}

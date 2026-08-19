@@ -68,6 +68,7 @@ export function buildTestFileColumns({
   onFileResultsChange,
   onSortChange,
   onCopyFileLink,
+  loadTestPaths,
 }) {
   return [
     {
@@ -76,7 +77,7 @@ export function buildTestFileColumns({
           searchable
           title="Path"
           placeholder="Test path"
-          options={toColumnFilterOptions(filterOptions.testPaths)}
+          loadPage={loadTestPaths}
           value={testPaths}
           onChange={onTestPathsChange}
         />

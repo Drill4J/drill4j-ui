@@ -120,6 +120,17 @@ export const TestSessionResultsPage = () => {
     [buildId, groupId, testSessionId]
   )
 
+  const loadTestPaths = useCallback(
+    (params) =>
+      API.getTestFileLaunchPathOptions({
+        groupId,
+        testSessionId,
+        buildId,
+        ...params,
+      }),
+    [buildId, groupId, testSessionId]
+  )
+
   const [testFiles, setTestFiles] = useState([])
   const [launches, setLaunches] = useState([])
   const [testFilesTotal, setTestFilesTotal] = useState(0)
@@ -700,12 +711,14 @@ export const TestSessionResultsPage = () => {
         onFileResultsChange: (value) => updateQueryParams({ fileResults: value }),
         onSortChange: handleFileSortChange,
         onCopyFileLink: handleCopyFileLink,
+        loadTestPaths,
       }),
     [
       fileFilterOptions,
       fileResults,
       handleCopyFileLink,
       handleFileSortChange,
+      loadTestPaths,
       selectedPath,
       sortBy,
       sortOrder,

@@ -13,24 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Select } from "antd"
-
-function toOptions(values = []) {
-  return values.map((value) => ({ value, label: value }))
-}
-
-/**
- * @param {string[] | undefined} values
- * @param {(value?: string[]) => void} onChange
- */
-export function handleMultiFilterChange(onChange, values) {
-  onChange(values?.length ? values : undefined)
-}
+import { PagedSearchSelect, stringOption } from "./paged-search-select"
 
 /**
  * @param {{
  *   placeholder: string,
- *   options?: string[],
+ *   loadPage: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   value?: string[],
  *   onChange: (value?: string[]) => void,
  *   size?: "small" | "middle" | "large",
@@ -39,26 +27,25 @@ export function handleMultiFilterChange(onChange, values) {
  */
 export function FilterMultiSelect({
   placeholder,
-  options = [],
+  loadPage,
   value,
   onChange,
   size = "middle",
   minWidth,
 }) {
-  const controlWidth = minWidth ?? (size === "small" ? 180 : 220)
+  const controlWidth = minWidth !== undefined ? minWidth : size === "small" ? 180 : 220
 
   return (
-    <Select
-      allowClear
-      showSearch
+    <PagedSearchSelect
       mode="multiple"
-      maxTagCount="responsive"
+      valueEqualsLabel
       size={size}
+      loadPage={loadPage}
+      toOption={stringOption}
+      value={value}
+      onChange={onChange}
       placeholder={placeholder}
       style={{ minWidth: controlWidth }}
-      value={value ?? []}
-      options={toOptions(options)}
-      onChange={(values) => handleMultiFilterChange(onChange, values)}
     />
   )
 }

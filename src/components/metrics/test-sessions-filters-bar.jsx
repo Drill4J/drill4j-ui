@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState } from "react"
-import { Button, message, Typography } from "antd"
+import { useCallback } from "react"
+import { Button, Typography } from "antd"
 import { HintIcon } from "../hint-icon"
 import { TestSessionFilters } from "./test-session-filters"
 import * as API from "../../modules/metrics/api-metrics"
@@ -58,36 +58,40 @@ export function TestSessionsFiltersBar({
   onResultsChange,
   onClear,
 }) {
-  const [filterOptions, setFilterOptions] = useState({
-    testTaskIds: [],
-    createdBys: [],
-    results: [],
-  })
   const hasActiveFilters = Boolean(
     testTaskIds?.length || createdBys?.length || results?.length
   )
 
-  useEffect(() => {
-    let cancelled = false
-
-    const loadFilterOptions = async () => {
-      try {
-        const options = await API.getTestSessionFilterOptions(groupId, buildId)
-        if (!cancelled) {
-          setFilterOptions(options)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          message.error(`Failed to fetch filter options. ${error?.message}`)
-        }
-      }
-    }
-
-    loadFilterOptions()
-    return () => {
-      cancelled = true
-    }
-  }, [groupId, buildId])
+  const loadTestTasks = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "testTaskIds",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
+  const loadCreatedBys = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "createdBys",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
+  const loadResults = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "results",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
 
   return (
     <div
@@ -118,9 +122,9 @@ export function TestSessionsFiltersBar({
         testTaskIds={testTaskIds}
         createdBys={createdBys}
         results={results}
-        testTaskOptions={filterOptions.testTaskIds}
-        createdByOptions={filterOptions.createdBys}
-        resultOptions={filterOptions.results}
+        loadTestTasks={loadTestTasks}
+        loadCreatedBys={loadCreatedBys}
+        loadResults={loadResults}
         filterHints={TEST_SESSION_FILTER_HINTS}
         onTestTaskIdsChange={onTestTaskIdsChange}
         onCreatedBysChange={onCreatedBysChange}

@@ -19,6 +19,14 @@ import { Select, message } from "antd"
 const DEFAULT_PAGE_SIZE = 50
 const SEARCH_DEBOUNCE_MS = 300
 
+export function stringOption(value) {
+  return { value, label: value }
+}
+
+function labelsFromValues(values) {
+  return values.map((entry) => ({ value: entry, label: entry }))
+}
+
 /**
  * Server-paged searchable Select.
  *
@@ -29,12 +37,16 @@ const SEARCH_DEBOUNCE_MS = 300
  * `{ query?: string, page: number, pageSize: number }`.
  *
  * @param {{
- *   loadPage: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: object[], paging: { total: number } }>,
- *   toOption: (row: object) => { value: string, label: string },
- *   value?: string,
- *   onChange?: (value?: string) => void,
+ *   loadPage: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   toOption: (row: unknown) => { value: string, label: string },
+ *   value?: string | string[],
+ *   onChange?: (value?: string | string[]) => void,
  *   placeholder?: string,
  *   pageSize?: number,
+ *   mode?: "multiple",
+ *   size?: "small" | "middle" | "large",
+ *   valueEqualsLabel?: boolean,
+ *   defaultOpen?: boolean,
  *   style?: import("react").CSSProperties,
  * }} props
  */
@@ -45,17 +57,29 @@ export function PagedSearchSelect({
   onChange,
   placeholder,
   pageSize = DEFAULT_PAGE_SIZE,
+  mode,
+  size,
+  valueEqualsLabel = false,
+  defaultOpen = false,
   style,
 }) {
-  const [open, setOpen] = useState(false)
+  const isMultiple = mode === "multiple"
+  const [open, setOpen] = useState(defaultOpen)
   const [search, setSearch] = useState("")
   const [options, setOptions] = useState([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedOption, setSelectedOption] = useState()
+  const [selectedOptions, setSelectedOptions] = useState([])
 
   useEffect(() => {
+    if (valueEqualsLabel) {
+      return undefined
+    }
+    if (isMultiple) {
+      return undefined
+    }
     if (!value) {
       setSelectedOption(undefined)
       return undefined
@@ -84,7 +108,7 @@ export function PagedSearchSelect({
     return () => {
       cancelled = true
     }
-  }, [loadPage, pageSize, selectedOption?.value, toOption, value])
+  }, [isMultiple, loadPage, pageSize, selectedOption?.value, toOption, value, valueEqualsLabel])
 
   useEffect(() => {
     if (!open) {
@@ -162,6 +186,20 @@ export function PagedSearchSelect({
 
   const handleChange = useCallback(
     (nextOption) => {
+      if (isMultiple) {
+        if (!nextOption || nextOption.length === 0) {
+          setSelectedOptions([])
+          onChange?.(undefined)
+          return
+        }
+        const nextSelected = nextOption.map((option) => ({
+          value: option.value,
+          label: option.label,
+        }))
+        setSelectedOptions(nextSelected)
+        onChange?.(nextSelected.map((option) => option.value))
+        return
+      }
       if (!nextOption) {
         setSelectedOption(undefined)
         onChange?.(undefined)
@@ -170,8 +208,27 @@ export function PagedSearchSelect({
       setSelectedOption({ value: nextOption.value, label: nextOption.label })
       onChange?.(nextOption.value)
     },
-    [onChange]
+    [isMultiple, onChange]
   )
+
+  const selectValue = (() => {
+    if (isMultiple) {
+      if (valueEqualsLabel) {
+        return Array.isArray(value) ? labelsFromValues(value) : []
+      }
+      return selectedOptions
+    }
+    if (!value) {
+      return undefined
+    }
+    if (valueEqualsLabel) {
+      return { value, label: value }
+    }
+    return {
+      value,
+      label: selectedOption?.value === value ? selectedOption.label : "",
+    }
+  })()
 
   return (
     <Select
@@ -179,16 +236,15 @@ export function PagedSearchSelect({
       showSearch
       labelInValue
       filterOption={false}
+      mode={mode}
+      size={size}
+      maxTagCount={isMultiple ? "responsive" : undefined}
       placeholder={placeholder}
       style={{ minWidth: 280, ...style }}
       loading={loading}
       open={open}
       searchValue={open ? search : ""}
-      value={
-        value
-          ? { value, label: selectedOption?.value === value ? selectedOption.label : "" }
-          : undefined
-      }
+      value={selectValue}
       options={options}
       onSearch={(nextSearch) => {
         if (open) {

@@ -103,42 +103,57 @@ export async function getBuilds(params) {
 /**
  * @param {string} groupId
  * @param {string} appId
- * @returns {Promise<string[]>}
+ * @param {{ query?: string, page?: number, pageSize?: number }} [params]
+ * @returns {Promise<{ data: string[], paging: { page: number, pageSize: number, total: number } }>}
  */
-export async function getAppBranches(groupId, appId) {
-  return dedupedRequest(`branches:${groupId}:${appId}`, async () => {
+export async function getAppBranches(groupId, appId, params = {}) {
+  const { query, page = 1, pageSize = 50 } = params
+  return dedupedRequest(`branches:${groupId}:${appId}:${query || ""}:${page}:${pageSize}`, async () => {
     const response = await runCatching(
-      axios.get("/metrics/apps/branches", { params: { groupId, appId } })
+      axios.get("/metrics/apps/branches", { params: { groupId, appId, query, page, pageSize } })
     )
-    return response.data.data
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 
 /**
  * @param {string} groupId
  * @param {string} appId
- * @returns {Promise<string[]>}
+ * @param {{ query?: string, page?: number, pageSize?: number }} [params]
+ * @returns {Promise<{ data: string[], paging: { page: number, pageSize: number, total: number } }>}
  */
-export async function getAppEnvIds(groupId, appId) {
-  return dedupedRequest(`env-ids:${groupId}:${appId}`, async () => {
+export async function getAppEnvIds(groupId, appId, params = {}) {
+  const { query, page = 1, pageSize = 50 } = params
+  return dedupedRequest(`env-ids:${groupId}:${appId}:${query || ""}:${page}:${pageSize}`, async () => {
     const response = await runCatching(
-      axios.get("/metrics/apps/env-ids", { params: { groupId, appId } })
+      axios.get("/metrics/apps/env-ids", { params: { groupId, appId, query, page, pageSize } })
     )
-    return response.data.data
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 
 /**
  * @param {string} groupId
  * @param {string} appId
- * @returns {Promise<string[]>}
+ * @param {{ query?: string, page?: number, pageSize?: number }} [params]
+ * @returns {Promise<{ data: string[], paging: { page: number, pageSize: number, total: number } }>}
  */
-export async function getAppTestTags(groupId, appId) {
-  return dedupedRequest(`test-tags:${groupId}:${appId}`, async () => {
+export async function getAppTestTags(groupId, appId, params = {}) {
+  const { query, page = 1, pageSize = 50 } = params
+  return dedupedRequest(`test-tags:${groupId}:${appId}:${query || ""}:${page}:${pageSize}`, async () => {
     const response = await runCatching(
-      axios.get("/metrics/apps/test-tags", { params: { groupId, appId } })
+      axios.get("/metrics/apps/test-tags", { params: { groupId, appId, query, page, pageSize } })
     )
-    return response.data.data
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 
@@ -358,22 +373,44 @@ export async function getBuildTestSessions(params) {
 }
 
 /**
- * @param {string} groupId
- * @param {string} [buildId]
- * @returns {Promise<{ testTaskIds: string[], createdBys: string[], results: string[] }>}
+ * @param {{
+ *   groupId: string,
+ *   buildId?: string,
+ *   field: string,
+ *   query?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ data: string[], paging: { page: number, pageSize: number, total: number } }>}
  */
-export async function getTestSessionFilterOptions(groupId, buildId) {
-  const key = `test-session-filter-options:${groupId}:${buildId ?? ""}`
+export async function getTestSessionFilterOptions(params) {
+  const { groupId, buildId, field, query, page = 1, pageSize = 50 } = params
+  const key = [
+    "test-session-filter-options",
+    groupId,
+    buildId || "",
+    field,
+    query || "",
+    page,
+    pageSize,
+  ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/test-sessions/filter-options", {
         params: {
           groupId,
+          field,
+          query,
+          page,
+          pageSize,
           ...(buildId ? { buildId } : {}),
         },
       })
     )
-    return response.data.data
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 
@@ -626,6 +663,51 @@ export async function getTestFileLaunchFilterOptions(params) {
       )
     )
     return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   testSessionId: string,
+ *   buildId?: string,
+ *   query?: string,
+ *   page?: number,
+ *   pageSize?: number,
+ * }} params
+ * @returns {Promise<{ data: string[], paging: { page: number, pageSize: number, total: number } }>}
+ */
+export async function getTestFileLaunchPathOptions(params) {
+  const { groupId, testSessionId, buildId, query, page = 1, pageSize = 50 } = params
+  const key = [
+    "test-file-launch-path-options",
+    groupId,
+    testSessionId,
+    buildId,
+    query || "",
+    page,
+    pageSize,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get(
+        `/metrics/test-sessions/${encodeURIComponent(testSessionId)}/file-launches/filter-options`,
+        {
+          params: serializeListQueryParams({
+            groupId,
+            buildId,
+            query,
+            page,
+            pageSize,
+          }),
+          paramsSerializer: axiosListParamsSerializer,
+        }
+      )
+    )
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
   })
 }
 

@@ -22,9 +22,9 @@ import { FilterMultiSelect } from "./filter-multi-select"
  *   testTaskIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
- *   testTaskOptions?: string[],
- *   createdByOptions?: string[],
- *   resultOptions?: string[],
+ *   loadTestTasks: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadCreatedBys: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadResults: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   size?: "small" | "middle" | "large",
  *   filterHints?: { testTaskIds?: string, createdBys?: string, results?: string },
  *   onTestTaskIdsChange: (value?: string[]) => void,
@@ -36,9 +36,9 @@ export function TestSessionFilters({
   testTaskIds,
   createdBys,
   results,
-  testTaskOptions = [],
-  createdByOptions = [],
-  resultOptions = [],
+  loadTestTasks,
+  loadCreatedBys,
+  loadResults,
   size = "middle",
   filterHints,
   onTestTaskIdsChange,
@@ -51,7 +51,7 @@ export function TestSessionFilters({
         <FilterMultiSelect
           size={size}
           placeholder="Test tasks"
-          options={testTaskOptions}
+          loadPage={loadTestTasks}
           value={testTaskIds}
           onChange={onTestTaskIdsChange}
         />
@@ -61,7 +61,7 @@ export function TestSessionFilters({
         <FilterMultiSelect
           size={size}
           placeholder="Created by"
-          options={createdByOptions}
+          loadPage={loadCreatedBys}
           value={createdBys}
           onChange={onCreatedBysChange}
         />
@@ -71,7 +71,7 @@ export function TestSessionFilters({
         <FilterMultiSelect
           size={size}
           placeholder="Result"
-          options={resultOptions}
+          loadPage={loadResults}
           value={results}
           onChange={onResultsChange}
         />
