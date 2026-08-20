@@ -23,6 +23,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts"
+import { formatCoveragePercent, formatCoveragePercentValue } from "../../modules/metrics/coverage-segments"
 
 const { Text } = Typography
 
@@ -62,9 +63,9 @@ function formatSliceLabel(name) {
 
 function formatPercent(value, total) {
   if (!total) {
-    return "0.0"
+    return "0.00"
   }
-  return ((value / total) * 100).toFixed(1)
+  return formatCoveragePercentValue(value / total)
 }
 
 function SlicePercentLabel({ cx, cy, midAngle, outerRadius, percent, value }) {
@@ -85,7 +86,7 @@ function SlicePercentLabel({ cx, cy, midAngle, outerRadius, percent, value }) {
       fill="rgba(0, 0, 0, 0.65)"
       fontSize={12}
     >
-      {(percent * 100).toFixed(1)}%
+      {formatCoveragePercent(percent)}
     </text>
   )
 }
@@ -158,7 +159,9 @@ export function CoveragePieChart({
             <Tooltip
               formatter={(value, _name, { payload, percent } = {}) => {
                 const slicePercent =
-                  percent != null ? (percent * 100).toFixed(1) : formatPercent(value, total)
+                  percent != null
+                    ? formatCoveragePercentValue(percent)
+                    : formatPercent(value, total)
                 return [
                   `${value} (${slicePercent}%)`,
                   formatSliceLabel(payload?.name ?? _name),

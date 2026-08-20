@@ -22,6 +22,28 @@ export const COVERAGE_SEGMENT_COLORS = {
 }
 
 /**
+ * Format a coverage ratio (0–1) as a percent number string with 2 decimal places.
+ * Keeps near-zero coverage visible (e.g. 0.0284 → "0.03") instead of rounding to "0".
+ *
+ * @param {number} ratio
+ * @returns {string}
+ */
+export function formatCoveragePercentValue(ratio) {
+  if (ratio == null || Number.isNaN(ratio)) {
+    return "0.00"
+  }
+  return (ratio * 100).toFixed(2)
+}
+
+/**
+ * @param {number} ratio
+ * @returns {string}
+ */
+export function formatCoveragePercent(ratio) {
+  return `${formatCoveragePercentValue(ratio)}%`
+}
+
+/**
  * Build probe coverage segments for stacked bars / charts.
  *
  * `coveredProbes` is isolated (this build).
