@@ -1,8 +1,21 @@
+.test-files-table .ant-table {
+  table-layout: fixed;
+}
+
+.test-files-table .ant-table-cell {
+  overflow: hidden;
+}
+
 .test-file-path-cell {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   max-width: 100%;
+  min-width: 0;
+}
+
+.test-file-path-cell .coverage-scope-name {
+  flex: 1;
   min-width: 0;
 }
 

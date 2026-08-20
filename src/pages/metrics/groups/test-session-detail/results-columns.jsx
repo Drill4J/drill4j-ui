@@ -84,6 +84,7 @@ export function buildTestFileColumns({
       ),
       dataIndex: "testPath",
       key: "testPath",
+      width: 380,
       ellipsis: true,
       render: (value, record) => {
         const canExpand = record.testDefinitions > 0
@@ -255,6 +256,7 @@ export function buildTestLaunchColumns({
       ),
       dataIndex: "testName",
       key: "testName",
+      width: 760,
       ellipsis: true,
       render: (value, record) => {
         const label = value || record.testDefinitionId || "—"
