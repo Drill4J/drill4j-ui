@@ -21,35 +21,53 @@ const TITLE_TEXT_STYLE = { fontSize: 20, lineHeight: 1.35 }
 const TITLE_MUTED_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 400 }
 const TITLE_DATA_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 600 }
 
+const BUILD_COLUMN = {
+  title: "Build",
+  dataIndex: "buildVersion",
+  key: "buildVersion",
+  render: (v, row) => v || row.buildId,
+}
+
+const BRANCH_COLUMN = {
+  title: "Branch",
+  dataIndex: "branch",
+  key: "branch",
+  render: (v) => v || "—",
+}
+
+const SIMILARITY_COLUMNS = [
+  {
+    title: "Identity",
+    dataIndex: "identityRatio",
+    key: "identityRatio",
+    render: (ratio) => `${Math.round((ratio ?? 0) * 100)}%`,
+  },
+  {
+    title: "Methods",
+    dataIndex: "changesDescription",
+    key: "changesDescription",
+  },
+]
+
 /**
  * @param {{
  *   builds: object[],
  *   selectedBuildId?: string,
  *   onSelect: (buildId: string) => void,
  *   loading?: boolean,
+ *   showSimilarityColumns?: boolean,
  * }} props
  */
-export function BaselineBuildTable({ builds, selectedBuildId, onSelect, loading }) {
-  const columns = [
-    {
-      title: "Build",
-      dataIndex: "buildVersion",
-      key: "buildVersion",
-      render: (v, row) => v || row.buildId,
-    },
-    { title: "Branch", dataIndex: "branch", key: "branch", render: (v) => v || "—" },
-    {
-      title: "Identity",
-      dataIndex: "identityRatio",
-      key: "identityRatio",
-      render: (ratio) => `${Math.round((ratio ?? 0) * 100)}%`,
-    },
-    {
-      title: "Methods",
-      dataIndex: "changesDescription",
-      key: "changesDescription",
-    },
-  ]
+export function BaselineBuildTable({
+  builds,
+  selectedBuildId,
+  onSelect,
+  loading,
+  showSimilarityColumns = true,
+}) {
+  const columns = showSimilarityColumns
+    ? [BUILD_COLUMN, BRANCH_COLUMN, ...SIMILARITY_COLUMNS]
+    : [BUILD_COLUMN, BRANCH_COLUMN]
 
   return (
     <Table
@@ -84,6 +102,7 @@ export function BaselineBuildTable({ builds, selectedBuildId, onSelect, loading 
  *   selectedBuildId?: string,
  *   onSelect: (buildId: string) => void,
  *   loading?: boolean,
+ *   showSimilarityColumns?: boolean,
  * }} props
  */
 export function BaselineBuildPickerDialog({
@@ -93,13 +112,14 @@ export function BaselineBuildPickerDialog({
   selectedBuildId,
   onSelect,
   loading,
+  showSimilarityColumns = true,
 }) {
   return (
     <Modal
       title="Select baseline build"
       open={open}
       onCancel={onClose}
-      footer={null}
+      footer={false}
       width={720}
       destroyOnClose
     >
@@ -107,6 +127,7 @@ export function BaselineBuildPickerDialog({
         builds={builds}
         selectedBuildId={selectedBuildId}
         loading={loading}
+        showSimilarityColumns={showSimilarityColumns}
         onSelect={(buildId) => {
           onSelect(buildId)
           onClose()
@@ -118,8 +139,8 @@ export function BaselineBuildPickerDialog({
 
 /**
  * @param {{
- *   currentBuild?: { buildId: string } | null,
- *   selectedBuild?: { buildVersion?: string, buildId: string, branch?: string } | null,
+ *   currentBuild?: { buildId: string },
+ *   selectedBuild?: { buildVersion?: string, buildId: string, branch?: string },
  *   baselineBuildId?: string,
  *   onOpenPicker: () => void,
  *   onClear: () => void,
@@ -139,6 +160,7 @@ export function BaselineBuildFilter({
     ? "…"
     : selectedBuild?.buildId || baselineBuildId || ""
   const hasBaseline = Boolean(selectedBuild?.buildId || baselineBuildId)
+  const hasCurrentBuild = Boolean(currentBuild?.buildId)
 
   return (
     <div
@@ -151,14 +173,26 @@ export function BaselineBuildFilter({
       }}
     >
       <div>
-        <Text strong style={TITLE_DATA_STYLE}>
-          {currentLabel}
-        </Text>
-        <Text type="secondary" style={TITLE_MUTED_STYLE}>
-          {" vs "}
-        </Text>
-        <Text strong={!loading && hasBaseline} type={hasBaseline ? undefined : "secondary"} style={TITLE_DATA_STYLE}>
-          {baselineLabel}
+        {hasCurrentBuild ? (
+          <>
+            <Text strong style={TITLE_DATA_STYLE}>
+              {currentLabel}
+            </Text>
+            <Text type="secondary" style={TITLE_MUTED_STYLE}>
+              {" vs "}
+            </Text>
+          </>
+        ) : (
+          <Text type="secondary" style={TITLE_MUTED_STYLE}>
+            {"Baseline "}
+          </Text>
+        )}
+        <Text
+          strong={!loading && hasBaseline}
+          type={hasBaseline ? undefined : "secondary"}
+          style={TITLE_DATA_STYLE}
+        >
+          {baselineLabel || (hasCurrentBuild ? "" : "…")}
         </Text>
       </div>
       {!loading && (

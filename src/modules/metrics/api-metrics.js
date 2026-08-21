@@ -158,6 +158,104 @@ export async function getAppTestTags(groupId, appId, params = {}) {
 }
 
 /**
+ * @param {{
+ *   groupId: string,
+ *   appId: string,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ *   size?: number,
+ * }} params
+ * @returns {Promise<object[]>}
+ */
+export async function getAppCoverageTrends(params) {
+  const {
+    groupId,
+    appId,
+    branches = [],
+    envIds = [],
+    testTags = [],
+    size = 100,
+  } = params
+  const key = [
+    "app-coverage-trends",
+    groupId,
+    appId,
+    branches.join(","),
+    envIds.join(","),
+    testTags.join(","),
+    size,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/apps/trends/coverage", {
+        params: serializeListQueryParams({
+          groupId,
+          appId,
+          branches,
+          envIds,
+          testTags,
+          size,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
+ * @param {{
+ *   groupId: string,
+ *   appId: string,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ *   baselineBuildId: string,
+ *   size?: number,
+ * }} params
+ * @returns {Promise<object[]>}
+ */
+export async function getAppChangesTrends(params) {
+  const {
+    groupId,
+    appId,
+    branches = [],
+    envIds = [],
+    testTags = [],
+    baselineBuildId,
+    size = 100,
+  } = params
+  const key = [
+    "app-changes-trends",
+    groupId,
+    appId,
+    branches.join(","),
+    envIds.join(","),
+    testTags.join(","),
+    baselineBuildId || "",
+    size,
+  ].join(":")
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/apps/trends/changes", {
+        params: serializeListQueryParams({
+          groupId,
+          appId,
+          branches,
+          envIds,
+          testTags,
+          baselineBuildId,
+          size,
+        }),
+        paramsSerializer: axiosListParamsSerializer,
+      })
+    )
+    return response.data.data
+  })
+}
+
+/**
  * @param {string} buildId
  */
 export async function getBuildDetail(buildId) {

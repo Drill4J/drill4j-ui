@@ -100,6 +100,12 @@ export const COMPARISON_QUERY_KEYS = [
   "includeOtherBuilds",
 ]
 
+export const APP_TRENDS_QUERY_KEYS = [
+  "baselineBuildId",
+  "size",
+  ...COVERAGE_LIST_QUERY_KEYS,
+]
+
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
 
 /**
@@ -285,6 +291,41 @@ export function buildComparisonSearchParams(state) {
         if (key === "page" && Number(value) === 1) {
           return
         }
+        params.set(key, String(value))
+      }
+      return
+    }
+    if (value) {
+      params.set(key, value)
+    }
+  })
+  return params
+}
+
+/**
+ * @typedef {{
+ *   baselineBuildId?: string,
+ *   size?: number,
+ *   branches?: string[],
+ *   envIds?: string[],
+ *   testTags?: string[],
+ * }} AppTrendsQueryState
+ */
+
+/**
+ * @param {AppTrendsQueryState} state
+ * @returns {URLSearchParams}
+ */
+export function buildAppTrendsSearchParams(state) {
+  const params = new URLSearchParams()
+  APP_TRENDS_QUERY_KEYS.forEach((key) => {
+    const value = state[key]
+    if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
+      setListQueryParam(params, key, value)
+      return
+    }
+    if (key === "size") {
+      if (value !== undefined && Number(value) > 0 && Number(value) !== 100) {
         params.set(key, String(value))
       }
       return
