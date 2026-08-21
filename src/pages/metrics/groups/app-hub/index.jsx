@@ -29,6 +29,7 @@ import {
   getListQueryParam,
   setListQueryParam,
 } from "../../../../modules/metrics/query-params"
+import { TrendsPromoBanner } from "./trends-promo-banner"
 
 const { Title } = Typography
 
@@ -278,6 +279,10 @@ export const AppHubPage = () => {
           onClick: () => handleBuildRowClick(build),
           style: { cursor: "pointer" },
         })}
+      />
+
+      <TrendsPromoBanner
+        to={`/metrics/${groupId}/apps/${appId}/trends`}
       />
     </>
   )
