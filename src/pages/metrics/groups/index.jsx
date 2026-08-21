@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { Table, Typography, message } from "antd"
 import { Link } from "react-router-dom"
 import * as API from "../../../modules/metrics/api-metrics"
+import { WhatIsGroupTipBanner } from "./what-is-group-tip-banner"
 
 const { Title } = Typography
 
@@ -50,6 +51,7 @@ export const GroupsPage = () => {
   return (
     <>
       <Title level={3}>Select group</Title>
+      <WhatIsGroupTipBanner />
       <Table
         columns={columns}
         dataSource={groups}

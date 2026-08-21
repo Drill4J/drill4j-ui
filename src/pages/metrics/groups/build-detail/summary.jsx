@@ -24,6 +24,7 @@ import {
 } from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { CompareBuildsTipBanner } from "./compare-builds-tip-banner"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 const { Title, Link } = Typography
@@ -191,7 +192,7 @@ export const BuildSummaryPage = () => {
       <Title level={5} style={{ marginTop: 16, marginBottom: 16 }}>
         Total coverage
       </Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Code coverage (probes)"
@@ -214,9 +215,7 @@ export const BuildSummaryPage = () => {
         </Col>
       </Row>
 
-      <Button type="primary" onClick={() => navigate(`${buildBasePath}/comparison`)}>
-        Compare builds
-      </Button>
+      <CompareBuildsTipBanner to={`${buildBasePath}/comparison`} />
     </>
   )
 }

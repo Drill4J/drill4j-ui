@@ -30,6 +30,7 @@ import {
   setListQueryParam,
 } from "../../../../modules/metrics/query-params"
 import { TrendsPromoBanner } from "./trends-promo-banner"
+import { WhatIsBuildTipBanner } from "./what-is-build-tip-banner"
 
 const { Title } = Typography
 
@@ -252,6 +253,8 @@ export const AppHubPage = () => {
           </Link>
         </Space>
       </div>
+
+      <WhatIsBuildTipBanner />
 
       <div style={{ marginBottom: 16 }}>
         <OptionalFilters

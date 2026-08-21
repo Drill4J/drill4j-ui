@@ -38,6 +38,7 @@ import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
 import { MyAccount } from "./pages/account/my-account"
+import { PreferencesPage } from "./pages/account/preferences"
 import { NotFoundPage } from "./pages/not-found"
 import { SiderMenu } from "./components/sider-menu"
 import { MetricsLayout } from "./pages/metrics/metrics-layout"
@@ -217,6 +218,12 @@ const AppContent = ({location}) => {
                 element={<PrivateRoute roles={userRoles} />}
               >
                 <Route index element={<MyAccount />} />
+              </Route>
+              <Route
+                path="/preferences/*"
+                element={<PrivateRoute roles={userRoles} />}
+              >
+                <Route index element={<PreferencesPage />} />
               </Route>
               <Route path="/metrics" element={<PrivateRoute roles={userRoles} />}>
                 <Route element={<MetricsLayout />}>{metricsRoutes}</Route>

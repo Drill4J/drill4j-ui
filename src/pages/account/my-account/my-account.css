@@ -1,5 +1,5 @@
 .my-account-page {
-  max-width: 960px;
+  max-width: 480px;
 }
 
 .my-account-profile {
@@ -30,12 +30,4 @@
 
 .my-account-password-form .ant-form-item-explain {
   text-align: left;
-}
-
-.my-account-pref-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-  max-width: 360px;
 }

@@ -1,0 +1,24 @@
+.preferences-page {
+  max-width: 640px;
+}
+
+.preferences-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  max-width: 420px;
+}
+
+.preferences-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.preferences-row .preferences-copy {
+  margin-bottom: 0;
+  flex: 1 1 240px;
+}

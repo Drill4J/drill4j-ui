@@ -13,29 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Col, Divider, Row } from "antd"
+import { Divider } from "antd"
 import { UpdatePasswordForm } from "./update-password-form"
 import { MyAccountCard } from "./my-account-card"
-import { PreferencesSection } from "./preferences-section"
 import "./my-account.css"
 
 export const MyAccount = () => (
   <div className="my-account-page">
     <MyAccountCard />
 
-    <Row gutter={[48, 24]} style={{ marginTop: 24 }}>
-      <Col xs={24} md={12} lg={10}>
-        <Divider orientation="left" orientationMargin={0}>
-          Update password
-        </Divider>
-        <UpdatePasswordForm />
-      </Col>
-      <Col xs={24} md={12} lg={10}>
-        <Divider orientation="left" orientationMargin={0}>
-          Preferences
-        </Divider>
-        <PreferencesSection />
-      </Col>
-    </Row>
+    <div style={{ marginTop: 24 }}>
+      <Divider orientation="left" orientationMargin={0}>
+        Update password
+      </Divider>
+      <UpdatePasswordForm />
+    </div>
   </div>
 )

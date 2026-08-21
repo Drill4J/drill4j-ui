@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState } from "react"
-import { Button, Typography } from "antd"
-import {
-  ArrowRightOutlined,
-  CloseOutlined,
-  LineChartOutlined,
-} from "@ant-design/icons"
-import { Link } from "react-router-dom"
-import {
-  dismissUiTip,
-  isUiTipDismissed,
-} from "../../../../modules/ui-tips/ui-tips-storage"
-
-const { Title, Text } = Typography
+import { LineChartOutlined } from "@ant-design/icons"
+import { UiTipBanner } from "../../../../components/ui-tips/ui-tip-banner"
 
 function MockTrendChart() {
   return (
@@ -69,98 +57,19 @@ function MockTrendChart() {
 
 /**
  * Discovery banner for the app Trends page.
- * Dismissed state is stored in localStorage for this browser.
  * @param {{ to: string }} props
  */
 export function TrendsPromoBanner({ to }) {
-  const [dismissed, setDismissed] = useState(() =>
-    isUiTipDismissed("trendsPromo")
-  )
-
-  if (dismissed) {
-    return null
-  }
-
-  const handleDismiss = () => {
-    dismissUiTip("trendsPromo")
-    setDismissed(true)
-  }
-
   return (
-    <div
-      style={{
-        marginTop: 16,
-        padding: "16px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: 20,
-        flexWrap: "wrap",
-        background:
-          "linear-gradient(90deg, #e6f4ff 0%, #f0f7ff 55%, #f7fbff 100%)",
-        border: "1px solid #91caff",
-        borderRadius: 8,
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          flexShrink: 0,
-          width: 48,
-          height: 48,
-          borderRadius: 10,
-          background: "#fff",
-          border: "1px solid #bae0ff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#1677ff",
-          fontSize: 22,
-        }}
-      >
-        <LineChartOutlined />
-      </div>
-
-      <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-        <Title level={5} style={{ margin: "0 0 4px", color: "#003a8c" }}>
-          Explore trends
-        </Title>
-        <Text style={{ color: "#0958d9" }}>
-          Track coverage and code changes across recent builds — see how quality
-          moves over time.
-        </Text>
-      </div>
-
-      <div
-        style={{
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          opacity: 0.9,
-        }}
-      >
-        <MockTrendChart />
-      </div>
-
-      <Link to={to} style={{ flexShrink: 0 }}>
-        <Button type="primary">
-          Open Trends
-          <ArrowRightOutlined />
-        </Button>
-      </Link>
-
-      <Button
-        type="text"
-        size="small"
-        aria-label="Dismiss trends promo"
-        icon={<CloseOutlined />}
-        onClick={handleDismiss}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          color: "#1677ff",
-        }}
-      />
-    </div>
+    <UiTipBanner
+      tipId="trendsPromo"
+      title="Explore trends"
+      description="Track coverage and code changes across recent builds — see how quality moves over time."
+      to={to}
+      actionLabel="Open Trends"
+      icon={<LineChartOutlined />}
+      visual={<MockTrendChart />}
+      dismissAriaLabel="Dismiss trends tip"
+    />
   )
 }

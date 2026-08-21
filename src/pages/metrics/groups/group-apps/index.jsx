@@ -17,6 +17,7 @@ import { useEffect, useState } from "react"
 import { Button, Space, Table, Typography, message } from "antd"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { WhatIsAppTipBanner } from "./what-is-app-tip-banner"
 
 const { Title } = Typography
 
@@ -81,6 +82,7 @@ export const GroupAppsPage = () => {
           </Button>
         </Space>
       </div>
+      <WhatIsAppTipBanner />
       <Table
         columns={columns}
         dataSource={apps}
