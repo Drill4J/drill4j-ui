@@ -254,7 +254,12 @@ export const AppHubPage = () => {
         </Space>
       </div>
 
-      <WhatIsBuildTipBanner />
+      <div className="ui-tip-row">
+        <WhatIsBuildTipBanner />
+        <TrendsPromoBanner
+          to={`/metrics/${groupId}/apps/${appId}/trends`}
+        />
+      </div>
 
       <div style={{ marginBottom: 16 }}>
         <OptionalFilters
@@ -282,10 +287,6 @@ export const AppHubPage = () => {
           onClick: () => handleBuildRowClick(build),
           style: { cursor: "pointer" },
         })}
-      />
-
-      <TrendsPromoBanner
-        to={`/metrics/${groupId}/apps/${appId}/trends`}
       />
     </>
   )

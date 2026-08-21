@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 import { useState } from "react"
-import { Button, Typography } from "antd"
-import { ArrowRightOutlined, CloseOutlined } from "@ant-design/icons"
+import { Button, Tooltip, Typography } from "antd"
+import {
+  ArrowRightOutlined,
+  CloseOutlined,
+  SettingOutlined,
+} from "@ant-design/icons"
 import { Link } from "react-router-dom"
 import {
   dismissUiTip,
   shouldShowUiTip,
 } from "../../modules/ui-tips/ui-tips-storage"
+import "./ui-tip-banner.css"
 
 const { Title, Text } = Typography
 
@@ -65,8 +70,8 @@ export function UiTipBanner({
 
   return (
     <div
+      className="ui-tip-banner"
       style={{
-        marginTop: 16,
         padding: "16px 20px",
         display: "flex",
         alignItems: "center",
@@ -76,7 +81,6 @@ export function UiTipBanner({
           "linear-gradient(90deg, #e6f4ff 0%, #f0f7ff 55%, #f7fbff 100%)",
         border: "1px solid #91caff",
         borderRadius: 8,
-        position: "relative",
         ...style,
       }}
     >
@@ -127,19 +131,27 @@ export function UiTipBanner({
         </Link>
       ) : null}
 
-      <Button
-        type="text"
-        size="small"
-        aria-label={dismissAriaLabel}
-        icon={<CloseOutlined />}
-        onClick={handleDismiss}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          color: "#1677ff",
-        }}
-      />
+      <div className="ui-tip-banner-actions">
+        <Tooltip title="Tip preferences">
+          <Link to="/preferences">
+            <Button
+              type="text"
+              size="small"
+              aria-label="Tip preferences"
+              icon={<SettingOutlined />}
+            />
+          </Link>
+        </Tooltip>
+        <Tooltip title="Dismiss this tip">
+          <Button
+            type="text"
+            size="small"
+            aria-label={dismissAriaLabel}
+            icon={<CloseOutlined />}
+            onClick={handleDismiss}
+          />
+        </Tooltip>
+      </div>
     </div>
   )
 }

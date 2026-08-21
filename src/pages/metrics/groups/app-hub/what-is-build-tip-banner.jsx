@@ -71,7 +71,6 @@ export function WhatIsBuildTipBanner() {
       icon={<BuildOutlined />}
       visual={<MockBuildsVisual />}
       dismissAriaLabel="Dismiss build explanation"
-      style={{ marginTop: 0, marginBottom: 16 }}
     />
   )
 }

@@ -1,0 +1,42 @@
+.ui-tip-banner {
+  position: relative;
+  box-sizing: border-box;
+  margin-top: 16px;
+}
+
+.ui-tip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+
+.ui-tip-row > .ui-tip-banner {
+  flex: 1 1 360px;
+  margin: 0;
+  min-width: 0;
+}
+
+.ui-tip-banner-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.ui-tip-banner:hover .ui-tip-banner-actions,
+.ui-tip-banner:focus-within .ui-tip-banner-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-tip-banner-actions .ant-btn {
+  color: #1677ff;
+}
