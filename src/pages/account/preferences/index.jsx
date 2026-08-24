@@ -72,8 +72,7 @@ export const PreferencesPage = () => {
           <div className="preferences-copy">
             <Text strong>Reset dismissed tips</Text>
             <Text type="secondary">
-              Clear dismiss state for all tips in this browser. Does not change
-              the Show UI tips toggle.
+              Clear dismiss state for all tips in this browser.
             </Text>
           </div>
           <Button onClick={handleReset} disabled={!hasDismissed}>
