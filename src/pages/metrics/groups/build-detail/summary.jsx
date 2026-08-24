@@ -211,6 +211,7 @@ export const BuildSummaryPage = () => {
             })}
             loading={loading.coverage}
             showCenterTotal
+            sliceLabel="count"
           />
         </Col>
       </Row>

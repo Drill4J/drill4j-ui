@@ -91,6 +91,29 @@ function SlicePercentLabel({ cx, cy, midAngle, outerRadius, percent, value }) {
   )
 }
 
+function SliceCountLabel({ cx, cy, midAngle, outerRadius, value }) {
+  if (!value) {
+    return null
+  }
+  const radius = outerRadius + LABEL_OFFSET
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  const textAnchor = x >= cx ? "start" : "end"
+
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor={textAnchor}
+      dominantBaseline="central"
+      fill="rgba(0, 0, 0, 0.65)"
+      fontSize={12}
+    >
+      {value}
+    </text>
+  )
+}
+
 function CenterTotalLabel({ viewBox, total }) {
   const { cx, cy } = viewBox
   return (
@@ -112,6 +135,7 @@ function CenterTotalLabel({ viewBox, total }) {
  *   height?: number,
  *   loading?: boolean,
  *   showCenterTotal?: boolean,
+ *   sliceLabel?: "percent" | "count",
  * }} props
  */
 export function CoveragePieChart({
@@ -120,6 +144,7 @@ export function CoveragePieChart({
   height = 220,
   loading,
   showCenterTotal = false,
+  sliceLabel = "percent",
 }) {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
   const data = slices.filter((slice) => slice.value > 0)
@@ -143,7 +168,7 @@ export function CoveragePieChart({
               innerRadius={50}
               outerRadius={72}
               paddingAngle={2}
-              label={SlicePercentLabel}
+              label={sliceLabel === "count" ? SliceCountLabel : SlicePercentLabel}
               labelLine={false}
             >
               {data.map((entry) => (

@@ -522,6 +522,7 @@ export const BuildComparisonPage = () => {
                 })}
                 loading={loading.overview}
                 showCenterTotal
+                sliceLabel="count"
               />
             </Col>
           </Row>

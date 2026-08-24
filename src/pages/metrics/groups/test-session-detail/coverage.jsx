@@ -326,6 +326,7 @@ export const TestSessionCoverageSection = () => {
             slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
             loading={definitionCoverageLoading}
             showCenterTotal
+            sliceLabel="count"
           />
         </Col>
       </Row>
