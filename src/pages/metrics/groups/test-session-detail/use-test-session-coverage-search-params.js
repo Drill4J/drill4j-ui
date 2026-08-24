@@ -18,7 +18,7 @@ import { useSearchParams } from "react-router-dom"
 import { TEST_SESSION_COVERAGE_QUERY_KEYS } from "../../../../modules/metrics/query-params"
 
 /**
- * URL state for the test session coverage tab (definition filter + table drill-down).
+ * URL state for session coverage (definition filter + table drill-down).
  */
 export function useTestSessionCoverageSearchParams() {
   const [searchParams, setSearchParams] = useSearchParams()

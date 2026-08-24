@@ -241,6 +241,7 @@ export function buildTestLaunchColumns({
   onTestResultsChange,
   onSortChange,
   onCopyLaunchLink,
+  onTestNameClick,
 }) {
   return [
     {
@@ -266,7 +267,13 @@ export function buildTestLaunchColumns({
             ellipsis
             name={
               href ? (
-                <Link to={href} onClick={(event) => event.stopPropagation()}>
+                <Link
+                  to={href}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onTestNameClick?.(record)
+                  }}
+                >
                   {label}
                 </Link>
               ) : (

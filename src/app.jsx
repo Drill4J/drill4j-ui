@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useCallback, useMemo } from "react"
+import React, { useMemo } from "react"
 import {
   Alert,
   ConfigProvider as ThemeProvider,
@@ -183,21 +183,15 @@ const IframeRouter = () => {
 };
 
 const AppContent = ({location}) => {
-  const [collapsed, setCollapsed] = useState(false)
-
-  const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => !prev)
-  }, [])
-
   const userRoles = useMemo(() => ["user", "admin"], [])
   const adminRoles = useMemo(() => ["admin"], [])
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
+      <Sider>
         <div className="sider-logo">
           <Link to="/metrics">
-            <Drill4jLogo onDark collapsed={collapsed} showTagline={false} />
+            <Drill4jLogo onDark showTagline={false} />
           </Link>
         </div>
         <SiderMenu location={location} />

@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Alert, Col, Row, message } from "antd"
-import { useParams } from "react-router-dom"
+import { Navigate, useLocation, useParams, useSearchParams } from "react-router-dom"
 import {
   CoveragePieChart,
   coverageUnitSlicesToChart,
@@ -26,11 +26,11 @@ import {
   CoveragePackagesTitle,
 } from "../../../../components/metrics/coverage-section-titles"
 import { CoverageTables } from "../../../../components/metrics/coverage-tables"
-import { TestDefinitionSelect } from "../../../../components/metrics/test-definition-select"
 import {
   getCoverageTreemap,
   getTestSessionCoverageSummary,
 } from "../../../../modules/metrics/api-metrics"
+import { copyScopeLinkToClipboard } from "../../../../modules/metrics/copy-scope-link"
 import { useTestSessionCoverageSearchParams } from "./use-test-session-coverage-search-params"
 
 function buildClassKey(packageName, className) {
@@ -40,8 +40,18 @@ function buildClassKey(packageName, className) {
   return packageName ? `${packageName}/${className}` : className
 }
 
-export const TestSessionCoveragePage = () => {
+/**
+ * Legacy `/coverage` tab URL.
+ */
+export function TestSessionCoverageRedirect() {
+  const [searchParams] = useSearchParams()
+  const search = searchParams.toString()
+  return <Navigate to={{ pathname: "..", search: search ? `?${search}` : "" }} replace relative="path" />
+}
+
+export const TestSessionCoverageSection = () => {
   const { groupId, testSessionId, buildId } = useParams()
+  const { pathname, search } = useLocation()
   const {
     testDefinitionId,
     packageName,
@@ -166,13 +176,6 @@ export const TestSessionCoveragePage = () => {
     }
   }, [treemapLoading, treemapRoots])
 
-  const handleDefinitionChange = useCallback(
-    (nextDefinitionId) => {
-      updateCoverageParams({ testDefinitionId: nextDefinitionId })
-    },
-    [updateCoverageParams]
-  )
-
   const handlePackageNavigate = useCallback((packageKey) => {
     setScrollToPackageKey(packageKey)
   }, [])
@@ -196,6 +199,22 @@ export const TestSessionCoveragePage = () => {
   const handleScrollToMethodHandled = useCallback(() => {
     setScrollToMethod(null)
   }, [])
+
+  const copyScopeLink = useCallback(
+    (scopeUpdates) => {
+      const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search)
+      Object.entries(scopeUpdates).forEach(([key, value]) => {
+        if (value == null || value === "") {
+          params.delete(key)
+        } else {
+          params.set(key, String(value))
+        }
+      })
+      const query = params.toString()
+      copyScopeLinkToClipboard(`${window.location.origin}${pathname}${query ? `?${query}` : ""}`)
+    },
+    [pathname, search]
+  )
 
   const handlePackageToggle = useCallback(
     (nextPackageName) => {
@@ -232,7 +251,7 @@ export const TestSessionCoveragePage = () => {
 
   const handlePackageSelect = useCallback(
     (nextPackageName) => {
-      updateCoverageParams({
+      const updates = {
         packageName: nextPackageName,
         className: undefined,
         methodId: undefined,
@@ -240,27 +259,32 @@ export const TestSessionCoveragePage = () => {
         sortOrder: undefined,
         methodsSortBy: undefined,
         methodsSortOrder: undefined,
-      })
+      }
+      updateCoverageParams(updates)
+      copyScopeLink(updates)
     },
-    [updateCoverageParams]
+    [copyScopeLink, updateCoverageParams]
   )
 
   const handleClassSelect = useCallback(
     ({ packageName: nextPackageName, className: nextClassName }) => {
-      updateCoverageParams({
+      const updates = {
         packageName: nextPackageName,
         className: nextClassName,
         methodId: undefined,
-      })
+      }
+      updateCoverageParams(updates)
+      copyScopeLink(updates)
     },
-    [updateCoverageParams]
+    [copyScopeLink, updateCoverageParams]
   )
 
   const handleMethodSelect = useCallback(
     (scope) => {
       updateCoverageParams(scope)
+      copyScopeLink(scope)
     },
-    [updateCoverageParams]
+    [copyScopeLink, updateCoverageParams]
   )
 
   const handleClassesSortChange = useCallback(
@@ -296,19 +320,6 @@ export const TestSessionCoveragePage = () => {
 
   return (
     <>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} md={12} lg={8}>
-          <TestDefinitionSelect
-            groupId={groupId}
-            testSessionId={testSessionId}
-            buildId={buildId}
-            value={testDefinitionId}
-            onChange={handleDefinitionChange}
-            style={{ width: "100%" }}
-          />
-        </Col>
-      </Row>
-
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} md={12}>
           <CoveragePieChart

@@ -16,4 +16,4 @@
 export { TestSessionBuildsPage } from "./builds"
 export { TestSessionBuildLayout } from "./build-layout"
 export { TestSessionResultsPage } from "./results"
-export { TestSessionCoveragePage } from "./coverage"
+export { TestSessionCoverageRedirect } from "./coverage"

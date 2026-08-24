@@ -26,7 +26,7 @@ import {
   TestSessionBuildLayout,
   TestSessionBuildsPage,
   TestSessionResultsPage,
-  TestSessionCoveragePage,
+  TestSessionCoverageRedirect,
 } from "./groups/test-session-detail"
 
 /**
@@ -78,7 +78,7 @@ export const metricsRoutes = (
           <Route index element={<TestSessionBuildsPage />} />
           <Route path="builds/:buildId" handle={{ breadcrumb: "buildId" }} element={<TestSessionBuildLayout />}>
             <Route index element={<TestSessionResultsPage />} />
-            <Route path="coverage" element={<TestSessionCoveragePage />} />
+            <Route path="coverage" element={<TestSessionCoverageRedirect />} />
           </Route>
         </Route>
       </Route>

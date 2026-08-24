@@ -15,16 +15,19 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Typography, message } from "antd"
-import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom"
+import { Link, useLocation, useOutletContext, useParams } from "react-router-dom"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
+import { SessionCoverageFiltersBar } from "../../../../components/metrics/session-coverage-filters-bar"
 import { StatRow } from "../../../../components/metrics/stat-row"
 import {
   buildTestSessionResultsUrl,
   copyScopeLinkToClipboard,
 } from "../../../../modules/metrics/copy-scope-link"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { TestSessionCoverageSection } from "./coverage"
 import { buildTestFileColumns, buildTestLaunchColumns, renderResultTag } from "./results-columns"
+import { useTestSessionCoverageSearchParams } from "./use-test-session-coverage-search-params"
 import { useTestSessionSearchParams } from "./use-test-session-search-params"
 import "./results.css"
 
@@ -32,6 +35,14 @@ const { Title, Text } = Typography
 
 const HIGHLIGHT_DURATION_MS = 3000
 const SCROLL_RETRY_MAX_FRAMES = 120
+const SESSION_COVERAGE_CHARTS_ID = "session-coverage-charts"
+
+function scrollToSessionCoverageCharts() {
+  document.getElementById(SESSION_COVERAGE_CHARTS_ID)?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  })
+}
 
 function launchRowId(testDefinitionId) {
   return `test-launch-row-${encodeURIComponent(testDefinitionId)}`
@@ -41,13 +52,22 @@ function scopeLookupKey(parts) {
   return JSON.stringify(parts)
 }
 
-function buildSessionBuildCoverageHref(groupId, testSessionId, buildId, testDefinitionId) {
-  const search = new URLSearchParams()
+function buildSessionCoverageFilterHref(pathname, search, testDefinitionId) {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search)
   if (testDefinitionId) {
-    search.set("testDefinitionId", testDefinitionId)
+    params.set("testDefinitionId", testDefinitionId)
+  } else {
+    params.delete("testDefinitionId")
   }
-  const query = search.toString()
-  return `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}/builds/${encodeURIComponent(buildId)}/coverage${query ? `?${query}` : ""}`
+  params.delete("packageName")
+  params.delete("className")
+  params.delete("methodId")
+  params.delete("sortBy")
+  params.delete("sortOrder")
+  params.delete("methodsSortBy")
+  params.delete("methodsSortOrder")
+  const query = params.toString()
+  return `${pathname}${query ? `?${query}` : ""}`
 }
 
 function TestFileLaunchesPanel({
@@ -90,9 +110,9 @@ function TestFileLaunchesPanel({
 
 export const TestSessionResultsPage = () => {
   const { groupId, testSessionId, buildId } = useParams()
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const { session, sessionLoading } = useOutletContext() ?? {}
+  const { testDefinitionId, updateCoverageParams } = useTestSessionCoverageSearchParams()
   const {
     path: selectedPath,
     launchId,
@@ -115,9 +135,8 @@ export const TestSessionResultsPage = () => {
   } = useTestSessionSearchParams()
 
   const getCoverageHref = useCallback(
-    (testDefinitionId) =>
-      buildSessionBuildCoverageHref(groupId, testSessionId, buildId, testDefinitionId),
-    [buildId, groupId, testSessionId]
+    (definitionId) => buildSessionCoverageFilterHref(pathname, search, definitionId),
+    [pathname, search]
   )
 
   const loadTestPaths = useCallback(
@@ -636,9 +655,10 @@ export const TestSessionResultsPage = () => {
       if (!record.testDefinitionId) {
         return
       }
-      navigate(getCoverageHref(record.testDefinitionId))
+      updateCoverageParams({ testDefinitionId: record.testDefinitionId })
+      requestAnimationFrame(scrollToSessionCoverageCharts)
     },
-    [getCoverageHref, navigate]
+    [updateCoverageParams]
   )
 
   const handleCopyFileLink = useCallback(
@@ -742,11 +762,13 @@ export const TestSessionResultsPage = () => {
         onTestResultsChange: (value) => updateQueryParams({ testResults: value }),
         onSortChange: handleLaunchesSortChange,
         onCopyLaunchLink: handleCopyLaunchLink,
+        onTestNameClick: handleTestClick,
       }),
     [
       getCoverageHref,
       handleCopyLaunchLink,
       handleLaunchesSortChange,
+      handleTestClick,
       launchFilterOptions,
       launchesSortBy,
       launchesSortOrder,
@@ -823,6 +845,17 @@ export const TestSessionResultsPage = () => {
           style: record.testDefinitions > 0 ? { cursor: "pointer" } : undefined,
         })}
       />
+
+      <div id={SESSION_COVERAGE_CHARTS_ID} style={{ marginTop: 16 }}>
+        <SessionCoverageFiltersBar
+          groupId={groupId}
+          testSessionId={testSessionId}
+          buildId={buildId}
+          testDefinitionId={testDefinitionId}
+          onTestDefinitionIdChange={(value) => updateCoverageParams({ testDefinitionId: value })}
+        />
+        <TestSessionCoverageSection />
+      </div>
     </>
   )
 }

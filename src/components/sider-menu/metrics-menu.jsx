@@ -37,7 +37,7 @@ const PATH_ROUTES = {
   "apps/:appId": { level: "app", page: "builds" },
   "test-sessions/:testSessionId/builds/:buildId/coverage": {
     level: "test-sessions",
-    page: "session-coverage",
+    page: "session-results",
   },
   "test-sessions/:testSessionId/builds/:buildId": {
     level: "test-sessions",
@@ -106,7 +106,6 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
     buildComparison: build && `${build}/comparison`,
     session,
     sessionResults: sessionBuild,
-    sessionCoverage: sessionBuild && `${sessionBuild}/coverage`,
   }
 }
 
@@ -147,7 +146,6 @@ export function getMetricsSelectedKeys(location) {
     "test-sessions": p.sessions,
     "test-session": p.session,
     "session-results": p.sessionResults,
-    "session-coverage": p.sessionCoverage,
     builds: p.app,
     "exclusion-rules": p.exclusionRules,
     trends: p.trends,
@@ -230,7 +228,6 @@ export function getMetricsMenuItems(location) {
           divider("session-build-divider"),
           contextSection(`session-build-${buildId}`, "Build", [
             linkItem(p.sessionResults, "Results"),
-            linkItem(p.sessionCoverage, "Coverage"),
           ])
         )
       }

@@ -14,29 +14,12 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { message, Tabs } from "antd"
-import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
+import { message } from "antd"
+import { Outlet, useParams } from "react-router-dom"
 import * as API from "../../../../modules/metrics/api-metrics"
-
-const TAB_ITEMS = [
-  { key: "results", label: "Results", path: "" },
-  { key: "coverage", label: "Coverage", path: "coverage" },
-]
-
-/** Segment-based so percent-encoded ids still resolve. */
-function resolveActiveTab(pathname) {
-  const segments = pathname.split("/").filter(Boolean)
-  const buildsIndex = segments.lastIndexOf("builds")
-  const suffix =
-    buildsIndex === -1 ? "" : segments.slice(buildsIndex + 2).join("/")
-  return TAB_ITEMS.find((tab) => tab.path === suffix)?.key ?? "results"
-}
 
 export const TestSessionBuildLayout = () => {
   const { groupId, testSessionId, buildId } = useParams()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const sessionBuildBasePath = `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}/builds/${encodeURIComponent(buildId)}`
 
   const [session, setSession] = useState()
   const [loading, setLoading] = useState(true)
@@ -68,26 +51,5 @@ export const TestSessionBuildLayout = () => {
     }
   }, [groupId, testSessionId, buildId])
 
-  const activeKey = resolveActiveTab(location.pathname)
-
-  const handleTabChange = (key) => {
-    const tab = TAB_ITEMS.find((item) => item.key === key)
-    if (!tab) {
-      return
-    }
-    const target = tab.path ? `${sessionBuildBasePath}/${tab.path}` : sessionBuildBasePath
-    navigate({ pathname: target, search: location.search })
-  }
-
-  return (
-    <>
-      <Tabs
-        activeKey={activeKey}
-        items={TAB_ITEMS.map(({ key, label }) => ({ key, label }))}
-        onChange={handleTabChange}
-        style={{ marginBottom: 16 }}
-      />
-      <Outlet context={{ session, sessionLoading: loading }} />
-    </>
-  )
+  return <Outlet context={{ session, sessionLoading: loading }} />
 }

@@ -89,8 +89,11 @@ export function useTestSessionSearchParams() {
     () => getListQueryParam(searchParams, "fileResults"),
     [searchString]
   )
-  const sortBy = useMemo(() => searchParams.get("sortBy") ?? undefined, [searchString])
-  const sortOrder = useMemo(() => searchParams.get("sortOrder") ?? undefined, [searchString])
+  const sortBy = useMemo(() => searchParams.get("filesSortBy") ?? undefined, [searchString])
+  const sortOrder = useMemo(
+    () => searchParams.get("filesSortOrder") ?? undefined,
+    [searchString]
+  )
   const launchesSortBy = useMemo(
     () => searchParams.get("launchesSortBy") ?? undefined,
     [searchString]
@@ -111,8 +114,8 @@ export function useTestSessionSearchParams() {
       launchId,
       page,
       pageSize,
-      sortBy,
-      sortOrder,
+      filesSortBy: sortBy,
+      filesSortOrder: sortOrder,
       launchesPage,
       launchesPageSize,
       launchesSortBy,
@@ -161,10 +164,10 @@ export function useTestSessionSearchParams() {
       })
 
       if ("sortBy" in next) {
-        setOptionalParam(params, "sortBy", next.sortBy)
+        setOptionalParam(params, "filesSortBy", next.sortBy)
       }
       if ("sortOrder" in next) {
-        setOptionalParam(params, "sortOrder", next.sortOrder)
+        setOptionalParam(params, "filesSortOrder", next.sortOrder)
       }
       if ("launchesSortBy" in next) {
         setOptionalParam(params, "launchesSortBy", next.launchesSortBy)
