@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 import { Link } from "react-router-dom"
+import { CoverageStackedBar } from "./coverage-stacked-bar"
 import { MetricsDataTable } from "./metrics-data-table"
-
-function formatCoverageRatio(covered, total) {
-  if (!total) {
-    return "—"
-  }
-  return `${((covered / total) * 100).toFixed(1)}%`
-}
 
 /**
  * @param {string} groupId
@@ -32,11 +26,15 @@ function buildColumns(groupId) {
       title: "App",
       dataIndex: "appId",
       key: "appId",
+      width: "20%",
+      ellipsis: true,
     },
     {
       title: "Build",
       dataIndex: "buildVersion",
       key: "buildVersion",
+      width: "20%",
+      ellipsis: true,
       render: (value, record) => {
         const buildPath = `/metrics/${groupId}/apps/${encodeURIComponent(record.appId)}/builds/${encodeURIComponent(record.buildId)}`
         return <Link to={buildPath}>{value ?? "—"}</Link>
@@ -46,19 +44,32 @@ function buildColumns(groupId) {
       title: "Branch",
       dataIndex: "branch",
       key: "branch",
+      width: "20%",
+      ellipsis: true,
       render: (value) => value ?? "—",
     },
     {
       title: "Probe coverage",
       key: "probeCoverage",
-      render: (_, record) =>
-        formatCoverageRatio(record.coveredProbes, record.totalProbes),
+      width: "20%",
+      render: (_, record) => (
+        <CoverageStackedBar
+          probesCount={record.totalProbes}
+          coveredProbes={record.coveredProbes}
+          includeOtherBuilds={false}
+        />
+      ),
     },
     {
       title: "Method coverage",
       key: "methodCoverage",
-      render: (_, record) =>
-        formatCoverageRatio(record.coveredMethods, record.totalMethods),
+      width: "20%",
+      render: (_, record) => {
+        if (record.totalMethods == null) {
+          return "—"
+        }
+        return `${record.coveredMethods ?? 0} / ${record.totalMethods}`
+      },
     },
   ]
 }
@@ -85,6 +96,7 @@ export function TestSessionBuildsTable({
     <MetricsDataTable
       rowKey="buildId"
       loading={loading}
+      tableLayout="fixed"
       columns={buildColumns(groupId)}
       dataSource={builds}
       pagination={pagination}
