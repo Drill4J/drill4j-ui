@@ -20,13 +20,12 @@ import { GroupSettingsPage } from "./groups/group-settings"
 import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPage } from "./groups/app-trends"
 import { MethodIgnoreRulesPage } from "./groups/method-ignore-rules"
-import { BuildDetailLayout, BuildSummaryPage, BuildCoveragePage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
+import { BuildDetailLayout, BuildSummaryPage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import {
   TestSessionBuildLayout,
   TestSessionBuildsPage,
   TestSessionResultsPage,
-  TestSessionCoverageRedirect,
 } from "./groups/test-session-detail"
 
 /**
@@ -64,7 +63,6 @@ export const metricsRoutes = (
         >
           <Route index element={<BuildSummaryPage />} />
           <Route path="tests" element={<BuildTestsPage />} />
-          <Route path="coverage" element={<BuildCoveragePage />} />
           <Route path="comparison" element={<BuildComparisonPage />} />
         </Route>
       </Route>
@@ -78,7 +76,6 @@ export const metricsRoutes = (
           <Route index element={<TestSessionBuildsPage />} />
           <Route path="builds/:buildId" handle={{ breadcrumb: "buildId" }} element={<TestSessionBuildLayout />}>
             <Route index element={<TestSessionResultsPage />} />
-            <Route path="coverage" element={<TestSessionCoverageRedirect />} />
           </Route>
         </Route>
       </Route>

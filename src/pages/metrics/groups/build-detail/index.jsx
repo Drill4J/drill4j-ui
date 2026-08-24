@@ -15,6 +15,5 @@
  */
 export { BuildDetailLayout } from "./layout"
 export { BuildSummaryPage } from "./summary"
-export { BuildCoveragePage } from "./coverage"
 export { BuildTestsPage } from "./tests"
 export { BuildComparisonPage } from "./comparison"

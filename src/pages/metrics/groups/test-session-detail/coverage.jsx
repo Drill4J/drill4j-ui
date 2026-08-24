@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Alert, Col, Row, message } from "antd"
-import { Navigate, useLocation, useParams, useSearchParams } from "react-router-dom"
+import { useLocation, useParams } from "react-router-dom"
 import {
   CoveragePieChart,
   coverageUnitSlicesToChart,
@@ -38,15 +38,6 @@ function buildClassKey(packageName, className) {
     return null
   }
   return packageName ? `${packageName}/${className}` : className
-}
-
-/**
- * Legacy `/coverage` tab URL.
- */
-export function TestSessionCoverageRedirect() {
-  const [searchParams] = useSearchParams()
-  const search = searchParams.toString()
-  return <Navigate to={{ pathname: "..", search: search ? `?${search}` : "" }} replace relative="path" />
 }
 
 export const TestSessionCoverageSection = () => {

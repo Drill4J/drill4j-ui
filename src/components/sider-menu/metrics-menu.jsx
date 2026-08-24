@@ -29,16 +29,11 @@ const METRICS_SUBMENU_KEY = "metrics-submenu"
 /** Relative to `/metrics/:groupId`. More specific first. */
 const PATH_ROUTES = {
   "apps/:appId/builds/:buildId/tests": { level: "app", page: "tests" },
-  "apps/:appId/builds/:buildId/coverage": { level: "app", page: "coverage" },
   "apps/:appId/builds/:buildId/comparison": { level: "app", page: "comparison" },
-  "apps/:appId/builds/:buildId": { level: "app", page: "summary" },
+  "apps/:appId/builds/:buildId": { level: "app", page: "coverage" },
   "apps/:appId/trends": { level: "app", page: "trends" },
   "apps/:appId/method-ignore-rules": { level: "app", page: "exclusion-rules" },
   "apps/:appId": { level: "app", page: "builds" },
-  "test-sessions/:testSessionId/builds/:buildId/coverage": {
-    level: "test-sessions",
-    page: "session-results",
-  },
   "test-sessions/:testSessionId/builds/:buildId": {
     level: "test-sessions",
     page: "session-results",
@@ -102,7 +97,6 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
     trends: app && `${app}/trends`,
     build,
     buildTests: build && `${build}/tests`,
-    buildCoverage: build && `${build}/coverage`,
     buildComparison: build && `${build}/comparison`,
     session,
     sessionResults: sessionBuild,
@@ -149,9 +143,8 @@ export function getMetricsSelectedKeys(location) {
     builds: p.app,
     "exclusion-rules": p.exclusionRules,
     trends: p.trends,
-    summary: p.build,
     tests: p.buildTests,
-    coverage: p.buildCoverage,
+    coverage: p.build,
     comparison: p.buildComparison,
   }
   const key = byPage[ctx.page]
@@ -206,9 +199,8 @@ export function getMetricsMenuItems(location) {
         children.push(
           divider("app-build-divider"),
           contextSection(`build-${buildId}`, "Build", [
-            linkItem(p.build, "Summary"),
+            linkItem(p.build, "Coverage"),
             linkItem(p.buildTests, "Tests"),
-            linkItem(p.buildCoverage, "Coverage"),
             linkItem(p.buildComparison, "Comparison"),
           ])
         )
@@ -227,7 +219,7 @@ export function getMetricsMenuItems(location) {
         children.push(
           divider("session-build-divider"),
           contextSection(`session-build-${buildId}`, "Build", [
-            linkItem(p.sessionResults, "Results"),
+            linkItem(p.sessionResults, "Session coverage"),
           ])
         )
       }

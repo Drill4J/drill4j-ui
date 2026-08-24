@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { message } from "antd"
 import { useLocation, useParams } from "react-router-dom"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
@@ -33,7 +33,7 @@ function buildClassKey(packageName, className) {
   return packageName ? `${packageName}/${className}` : className
 }
 
-export const BuildCoveragePage = () => {
+export const BuildCoverageSection = () => {
   const { buildId } = useParams()
   const location = useLocation()
   const {

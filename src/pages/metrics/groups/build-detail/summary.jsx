@@ -24,7 +24,7 @@ import {
 } from "../../../../components/charts/coverage-pie-chart"
 import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
 import * as API from "../../../../modules/metrics/api-metrics"
-import { CompareBuildsTipBanner } from "./compare-builds-tip-banner"
+import { BuildCoverageSection } from "./coverage"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 
 const { Title, Link } = Typography
@@ -215,7 +215,7 @@ export const BuildSummaryPage = () => {
         </Col>
       </Row>
 
-      <CompareBuildsTipBanner to={`${buildBasePath}/comparison`} />
+      <BuildCoverageSection />
     </>
   )
 }

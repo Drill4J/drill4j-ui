@@ -25,13 +25,12 @@ import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
 import { clearTestSessionsQueryParams } from "../../../../modules/metrics/query-params"
 import { clearComparisonQueryParams } from "./use-comparison-search-params"
 
-const TABS_WITH_COVERAGE_FILTERS = new Set(["summary", "coverage"])
+const TABS_WITH_COVERAGE_FILTERS = new Set(["coverage"])
 const TABS_WITH_SESSION_FILTERS = new Set(["tests"])
 
 const TAB_ITEMS = [
-  { key: "summary", label: "Summary", path: "" },
+  { key: "coverage", label: "Coverage", path: "" },
   { key: "tests", label: "Tests", path: "tests" },
-  { key: "coverage", label: "Coverage", path: "coverage" },
   { key: "comparison", label: "Comparison", path: "comparison" },
 ]
 
@@ -41,7 +40,7 @@ function resolveActiveTab(pathname) {
   const buildsIndex = segments.lastIndexOf("builds")
   const suffix =
     buildsIndex === -1 ? "" : segments.slice(buildsIndex + 2).join("/")
-  return TAB_ITEMS.find((tab) => tab.path === suffix)?.key ?? "summary"
+  return TAB_ITEMS.find((tab) => tab.path === suffix)?.key ?? "coverage"
 }
 
 export const BuildDetailLayout = () => {
