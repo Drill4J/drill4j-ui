@@ -25,10 +25,12 @@ import {
 } from "./metrics-menu"
 import { getAccountMenuItems, getAccountOpenKeys } from "./account-menu"
 import { getAdminMenuItems, getAdminOpenKeys } from "./admin-menu"
+import useAuth from "../../modules/auth/hooks/use-auth-hook"
 import { ProjectLinks } from "../project-links"
 import "./sider-menu.css"
 
 export function SiderMenu({ location }) {
+  const { isAdmin } = useAuth()
   const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
   const [openKeys, setOpenKeys] = useState([])
 
@@ -73,7 +75,7 @@ export function SiderMenu({ location }) {
     () => [
       ...getMetricsMenuItems(location),
       ...getAccountMenuItems(),
-      ...getAdminMenuItems(),
+      ...getAdminMenuItems(isAdmin),
       {
         key: "sign-out",
         icon: <LogoutOutlined />,
@@ -96,7 +98,7 @@ export function SiderMenu({ location }) {
         onClick: handleSignOut,
       },
     ],
-    [location, isSignOutInProgress, handleSignOut]
+    [location, isAdmin, isSignOutInProgress, handleSignOut]
   )
 
   return (

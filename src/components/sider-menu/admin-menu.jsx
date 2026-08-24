@@ -14,17 +14,38 @@
  * limitations under the License.
  */
 import { ApiOutlined, ControlOutlined, TeamOutlined } from "@ant-design/icons"
+import { Tooltip } from "antd"
 import { Link } from "react-router-dom"
 
 const ADMIN_SUBMENU_KEY = "admin-submenu"
+const ADMIN_ROLE_HINT = "This page requires ADMIN role"
+
+/**
+ * @param {string} to
+ * @param {string} text
+ * @param {boolean} isAdmin
+ */
+function adminNavLabel(to, text, isAdmin) {
+  if (isAdmin) {
+    return <Link to={to}>{text}</Link>
+  }
+  return (
+    <Tooltip title={ADMIN_ROLE_HINT} placement="right">
+      <span className="sider-menu-disabled-label">{text}</span>
+    </Tooltip>
+  )
+}
 
 /** @param {string} pathname */
 export function getAdminOpenKeys(pathname) {
   return pathname.startsWith("/admin") ? [ADMIN_SUBMENU_KEY] : []
 }
 
-/** @returns {import("antd").MenuProps["items"]} */
-export function getAdminMenuItems() {
+/**
+ * @param {boolean} isAdmin
+ * @returns {import("antd").MenuProps["items"]}
+ */
+export function getAdminMenuItems(isAdmin) {
   return [
     {
       key: ADMIN_SUBMENU_KEY,
@@ -34,12 +55,14 @@ export function getAdminMenuItems() {
         {
           key: "/admin/manage-users",
           icon: <TeamOutlined />,
-          label: <Link to="/admin/manage-users">Users</Link>,
+          disabled: !isAdmin,
+          label: adminNavLabel("/admin/manage-users", "Users", isAdmin),
         },
         {
           key: "/admin/manage-api-keys",
           icon: <ApiOutlined />,
-          label: <Link to="/admin/manage-api-keys">API Keys</Link>,
+          disabled: !isAdmin,
+          label: adminNavLabel("/admin/manage-api-keys", "API Keys", isAdmin),
         },
       ],
     },

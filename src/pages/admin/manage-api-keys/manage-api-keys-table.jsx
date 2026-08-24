@@ -40,7 +40,10 @@ export const ApiKeysManagementTable = () => {
         const data = await API.getKeys()
         setKeys(data)
       } catch (error) {
-        message.error(`Failed to fetch API keys list. ${error?.message}`)
+        message.error({
+          key: "admin-keys-list-fetch",
+          content: `Failed to fetch API keys list. ${error?.message}`,
+        })
       }
       setIsFetched(true)
     }

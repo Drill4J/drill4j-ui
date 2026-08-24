@@ -101,7 +101,9 @@ const BaseRouter = () => {
   if (!isAuthDataFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Checking authentication... ">{" "}</Spin>
+        <Spin tip="Checking authentication...">
+          <div className="auth-layout-spin-slot" />
+        </Spin>
       </AuthLayout>
     )
   }
@@ -109,7 +111,9 @@ const BaseRouter = () => {
   if (!isAuthConfigFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Fetching auth configuration... ">{" "}</Spin>
+        <Spin tip="Fetching auth configuration...">
+          <div className="auth-layout-spin-slot" />
+        </Spin>
       </AuthLayout>
     )
   }

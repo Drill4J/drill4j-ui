@@ -23,13 +23,19 @@ import {
 /** Coalesce concurrent identical requests (e.g. React StrictMode double-mount in dev). */
 const pendingRequests = new Map()
 
-function dedupedRequest(key, request) {
+export function dedupedRequest(key, request) {
   const pending = pendingRequests.get(key)
   if (pending) {
     return pending
   }
   const promise = request().finally(() => {
-    pendingRequests.delete(key)
+    // Keep the settled promise briefly so StrictMode remounts reuse it
+    // instead of firing a second request and a second error toast.
+    setTimeout(() => {
+      if (pendingRequests.get(key) === promise) {
+        pendingRequests.delete(key)
+      }
+    }, 100)
   })
   pendingRequests.set(key, promise)
   return promise

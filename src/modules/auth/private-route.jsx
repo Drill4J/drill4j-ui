@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 import React from "react"
-import { useNavigate, Outlet } from "react-router-dom"
+import { Outlet } from "react-router-dom"
 import useCheckRole from "./hooks/use-check-role-hook"
-import { Button, Spin } from "antd"
+import { Spin } from "antd"
+import { AccessDeniedPage } from "../../pages/not-found"
 
 export const PrivateRoute = ({ roles }) => {
-  const { hasRole, error, isFetched } = useCheckRole(roles)
-  const navigate = useNavigate()
+  const { hasRole, isFetched } = useCheckRole(roles)
 
   if (!isFetched) {
     return <Spin tip="Checking role... ">&nbsp;</Spin>
   }
 
   if (!hasRole) {
-    return (
-      <div style={{ textAlign: "center" }}>
-        <h1>Authentication request failed.</h1>
-        <p>{error}</p>
-        <Button onClick={() => navigate(-1)}>
-          Go Back
-        </Button>
-      </div>
-    )
+    return <AccessDeniedPage />
   }
 
   return <Outlet />

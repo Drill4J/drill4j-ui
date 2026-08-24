@@ -44,3 +44,14 @@
   margin: 2px 16px !important;
   width: auto !important;
 }
+
+.ant-menu-dark .ant-menu-item-disabled {
+  cursor: not-allowed;
+}
+
+.ant-menu-dark .ant-menu-item-disabled .sider-menu-disabled-label {
+  display: inline-block;
+  width: 100%;
+  pointer-events: auto;
+  cursor: not-allowed;
+}

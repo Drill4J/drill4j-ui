@@ -16,14 +16,21 @@
 import { Button, Result, Space } from "antd"
 import { Link, useNavigate } from "react-router-dom"
 
-export const NotFoundPage = () => {
+/**
+ * @param {{
+ *   status: "403" | "404",
+ *   title: string,
+ *   subTitle: string,
+ * }} props
+ */
+export const StatusResultPage = ({ status, title, subTitle }) => {
   const navigate = useNavigate()
 
   return (
     <Result
-      status="404"
-      title="Not Found"
-      subTitle="The requested resource was not found"
+      status={status}
+      title={title}
+      subTitle={subTitle}
       extra={
         <Space>
           <Button onClick={() => navigate(-1)}>Go back</Button>
@@ -35,3 +42,19 @@ export const NotFoundPage = () => {
     />
   )
 }
+
+export const NotFoundPage = () => (
+  <StatusResultPage
+    status="404"
+    title="Not Found"
+    subTitle="The requested resource was not found"
+  />
+)
+
+export const AccessDeniedPage = () => (
+  <StatusResultPage
+    status="403"
+    title="Access Denied"
+    subTitle="This resource requires ADMIN role"
+  />
+)

@@ -15,6 +15,7 @@
  */
 import axios from "axios"
 import { runCatching } from "../util"
+import { dedupedRequest } from "../metrics/api-metrics"
 
 /**
  * @typedef {Object} EditUserPayload
@@ -26,8 +27,10 @@ import { runCatching } from "../util"
  * @returns {Promise<any[]>} A promise that resolves to an array of users.
  */
 export async function getUsers() {
-  const response = await runCatching(axios.get("/users"))
-  return response.data.data
+  return dedupedRequest("users", async () => {
+    const response = await runCatching(axios.get("/users"))
+    return response.data.data
+  })
 }
 
 /**
