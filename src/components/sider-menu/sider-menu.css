@@ -6,7 +6,24 @@
   height: 36px;
   line-height: 36px;
   margin-block: 1px;
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-item-icon svg {
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-title-content {
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sider-menu-metrics-root .ant-menu-item-group-title {

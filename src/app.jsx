@@ -26,6 +26,7 @@ import {
   Routes,
   Navigate,
   useLocation,
+  Link,
 } from "react-router-dom"
 
 import SignIn from "./pages/auth/sign-in"
@@ -41,6 +42,7 @@ import { MyAccount } from "./pages/account/my-account"
 import { PreferencesPage } from "./pages/account/preferences"
 import { NotFoundPage } from "./pages/not-found"
 import { SiderMenu } from "./components/sider-menu"
+import { Drill4jLogo } from "./components/drill4j-logo"
 import { MetricsLayout } from "./pages/metrics/metrics-layout"
 import { metricsRoutes } from "./pages/metrics/metrics-routes"
 import { CoverageTreemapPage } from "./pages/iframes/coverage-treemap"
@@ -189,7 +191,11 @@ const AppContent = ({location}) => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
-        <div className="demo-logo-vertical" />
+        <div className="sider-logo">
+          <Link to="/metrics">
+            <Drill4jLogo onDark collapsed={collapsed} showTagline={false} />
+          </Link>
+        </div>
         <SiderMenu location={location} />
       </Sider>
       <Layout>

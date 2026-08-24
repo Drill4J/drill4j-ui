@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Layout } from 'antd';
+import { Layout } from "antd"
+import { Drill4jLogo } from "../../components/drill4j-logo"
+import { ProjectLinks } from "../../components/project-links"
 
-const { Content } = Layout;
+const { Content } = Layout
 
 const AuthLayout = ({ children }) => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ width: '100%', maxWidth: '400px', padding: '24px', background: '#fff' }}>
+  <Layout style={{ minHeight: "100vh" }}>
+    <Content style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <div style={{ width: "100%", maxWidth: "400px", padding: "24px", background: "#fff" }}>
+        <div className="drill4j-logo-auth">
+          <Drill4jLogo />
+        </div>
         {children}
+        <div className="project-links-auth">
+          <ProjectLinks />
+        </div>
       </div>
     </Content>
   </Layout>
-);
+)
 
-export default AuthLayout;
+export default AuthLayout

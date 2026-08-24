@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ApiOutlined, SettingOutlined, TeamOutlined } from "@ant-design/icons"
+import { ApiOutlined, ControlOutlined, TeamOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
 
 const ADMIN_SUBMENU_KEY = "admin-submenu"
@@ -28,8 +28,8 @@ export function getAdminMenuItems() {
   return [
     {
       key: ADMIN_SUBMENU_KEY,
-      icon: <SettingOutlined />,
-      label: "Manage",
+      icon: <ControlOutlined />,
+      label: "Administration",
       children: [
         {
           key: "/admin/manage-users",

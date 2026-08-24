@@ -25,6 +25,7 @@ import {
 } from "./metrics-menu"
 import { getAccountMenuItems, getAccountOpenKeys } from "./account-menu"
 import { getAdminMenuItems, getAdminOpenKeys } from "./admin-menu"
+import { ProjectLinks } from "../project-links"
 import "./sider-menu.css"
 
 export function SiderMenu({ location }) {
@@ -99,13 +100,18 @@ export function SiderMenu({ location }) {
   )
 
   return (
-    <Menu
-      theme="dark"
-      mode="inline"
-      selectedKeys={selectedKeys}
-      openKeys={openKeys}
-      onOpenChange={handleOpenChange}
-      items={items}
-    />
+    <>
+      <Menu
+        theme="dark"
+        mode="inline"
+        selectedKeys={selectedKeys}
+        openKeys={openKeys}
+        onOpenChange={handleOpenChange}
+        items={items}
+      />
+      <div className="sider-project-links">
+        <ProjectLinks onDark />
+      </div>
+    </>
   )
 }
