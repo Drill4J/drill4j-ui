@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Space, Typography, message } from "antd"
+import { Button, Input, Space, Typography, message } from "antd"
 import { LineChartOutlined } from "@ant-design/icons"
 import dayjs from "dayjs"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { OptionalFilters } from "../../../../components/metrics/optional-filters"
+import { TableColumnSortHeader } from "../../../../components/metrics/table-column-sort-header"
 import { confirmPermanentDelete } from "../../../../components/metrics/confirm-permanent-delete"
 import { RowActionsDropdown } from "../../../../components/metrics/row-actions-dropdown"
 import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
@@ -36,6 +37,37 @@ const { Title } = Typography
 
 const DEFAULT_PAGE_SIZE = 20
 
+const BUILD_SORT_OPTIONS = {
+  buildVersion: [
+    {
+      key: "version-desc",
+      label: "Version (high→low)",
+      sortBy: "BUILD_VERSION",
+      sortOrder: "DESC",
+    },
+    {
+      key: "version-asc",
+      label: "Version (low→high)",
+      sortBy: "BUILD_VERSION",
+      sortOrder: "ASC",
+    },
+  ],
+  commitDate: [
+    {
+      key: "committed-desc",
+      label: "Newest first",
+      sortBy: "COMMIT_DATE",
+      sortOrder: "DESC",
+    },
+    {
+      key: "committed-asc",
+      label: "Oldest first",
+      sortBy: "COMMIT_DATE",
+      sortOrder: "ASC",
+    },
+  ],
+}
+
 export const AppHubPage = () => {
   const { groupId, appId } = useParams()
   const navigate = useNavigate()
@@ -51,6 +83,10 @@ export const AppHubPage = () => {
     () => getListQueryParam(searchParams, "envIds"),
     [searchString]
   )
+  const commitSha = searchParams.get("commitSha") || undefined
+  const buildVersion = searchParams.get("buildVersion") || undefined
+  const sortBy = searchParams.get("sortBy") || undefined
+  const sortOrder = searchParams.get("sortOrder") || undefined
 
   const [builds, setBuilds] = useState([])
   const [page, setPage] = useState(1)
@@ -65,6 +101,18 @@ export const AppHubPage = () => {
       const params = new URLSearchParams()
       setListQueryParam(params, "branches", next.branches)
       setListQueryParam(params, "envIds", next.envIds)
+      if (next.commitSha) {
+        params.set("commitSha", next.commitSha)
+      }
+      if (next.buildVersion) {
+        params.set("buildVersion", next.buildVersion)
+      }
+      if (next.sortBy) {
+        params.set("sortBy", next.sortBy)
+      }
+      if (next.sortOrder) {
+        params.set("sortOrder", next.sortOrder)
+      }
       const nextSearch = params.toString()
       if (nextSearch === searchString) {
         return
@@ -73,6 +121,18 @@ export const AppHubPage = () => {
       setPage(1)
     },
     [searchString, setSearchParams]
+  )
+
+  const currentFilters = useMemo(
+    () => ({
+      branches,
+      envIds,
+      commitSha,
+      buildVersion,
+      sortBy,
+      sortOrder,
+    }),
+    [branches, envIds, commitSha, buildVersion, sortBy, sortOrder]
   )
 
   const loadBranches = useCallback(
@@ -95,6 +155,10 @@ export const AppHubPage = () => {
           appId,
           branches,
           envIds,
+          commitSha,
+          buildVersion,
+          sortBy,
+          sortOrder,
           page,
           pageSize,
         })
@@ -117,7 +181,19 @@ export const AppHubPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, appId, branches, envIds, page, pageSize, refreshKey])
+  }, [
+    groupId,
+    appId,
+    branches,
+    envIds,
+    commitSha,
+    buildVersion,
+    sortBy,
+    sortOrder,
+    page,
+    pageSize,
+    refreshKey,
+  ])
 
   const handleDeleteBuild = useCallback(
     async (build) => {
@@ -146,10 +222,24 @@ export const AppHubPage = () => {
   const columns = useMemo(
     () => [
       {
-        title: "Build",
+        title: (
+          <TableColumnSortHeader
+            title="Build"
+            options={BUILD_SORT_OPTIONS.buildVersion}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(sort) =>
+              updateQueryParams({
+                ...currentFilters,
+                sortBy: sort.sortBy || undefined,
+                sortOrder: sort.sortOrder || undefined,
+              })
+            }
+          />
+        ),
         dataIndex: "buildVersion",
         key: "buildVersion",
-        render: (buildVersion) => buildVersion || "—",
+        render: (value) => value || "—",
       },
       {
         title: "Branch",
@@ -171,7 +261,21 @@ export const AppHubPage = () => {
         render: (value) => value || "—",
       },
       {
-        title: "Committed",
+        title: (
+          <TableColumnSortHeader
+            title="Committed"
+            options={BUILD_SORT_OPTIONS.commitDate}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(sort) =>
+              updateQueryParams({
+                ...currentFilters,
+                sortBy: sort.sortBy || undefined,
+                sortOrder: sort.sortOrder || undefined,
+              })
+            }
+          />
+        ),
         dataIndex: "commitDate",
         key: "commitDate",
         render: (commitDate) =>
@@ -210,7 +314,15 @@ export const AppHubPage = () => {
         ),
       },
     ],
-    [deletingBuildId, handleDeleteBuild, isAdmin]
+    [
+      currentFilters,
+      deletingBuildId,
+      handleDeleteBuild,
+      isAdmin,
+      sortBy,
+      sortOrder,
+      updateQueryParams,
+    ]
   )
 
   const handleTableChange = (tablePagination) => {
@@ -262,18 +374,56 @@ export const AppHubPage = () => {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <OptionalFilters
-          branches={branches}
-          envIds={envIds}
-          loadBranches={loadBranches}
-          loadEnvIds={loadEnvIds}
-          onBranchesChange={(value) =>
-            updateQueryParams({ branches: value, envIds })
-          }
-          onEnvIdsChange={(value) =>
-            updateQueryParams({ branches, envIds: value })
-          }
-        />
+        <Space wrap align="center">
+          <OptionalFilters
+            branches={branches}
+            envIds={envIds}
+            loadBranches={loadBranches}
+            loadEnvIds={loadEnvIds}
+            onBranchesChange={(value) =>
+              updateQueryParams({ ...currentFilters, branches: value })
+            }
+            onEnvIdsChange={(value) =>
+              updateQueryParams({ ...currentFilters, envIds: value })
+            }
+          />
+          <Input
+            allowClear
+            placeholder="Build version"
+            style={{ width: 160 }}
+            defaultValue={buildVersion}
+            onPressEnter={(event) =>
+              updateQueryParams({
+                ...currentFilters,
+                buildVersion: event.target.value.trim() || undefined,
+              })
+            }
+            onBlur={(event) =>
+              updateQueryParams({
+                ...currentFilters,
+                buildVersion: event.target.value.trim() || undefined,
+              })
+            }
+          />
+          <Input
+            allowClear
+            placeholder="Commit SHA"
+            style={{ width: 160 }}
+            defaultValue={commitSha}
+            onPressEnter={(event) =>
+              updateQueryParams({
+                ...currentFilters,
+                commitSha: event.target.value.trim() || undefined,
+              })
+            }
+            onBlur={(event) =>
+              updateQueryParams({
+                ...currentFilters,
+                commitSha: event.target.value.trim() || undefined,
+              })
+            }
+          />
+        </Space>
       </div>
 
       <MetricsDataTable

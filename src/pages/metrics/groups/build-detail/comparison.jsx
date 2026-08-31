@@ -228,6 +228,7 @@ export const BuildComparisonPage = () => {
       try {
         const changeCoverageFilters = { ...coverageFilters, baselineBuildId }
         const impactedBody = buildComparisonRequestBody(build, baselineBuild, { pageSize: 1 })
+        // TODO: pass impactStatuses when the UI supports it; API default remains IMPACTED.
         const buildChangesQuery = buildComparisonQueryParams(build, baselineBuild, {
           hasImpactedTests: true,
           pageSize: 1,

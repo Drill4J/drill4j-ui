@@ -70,6 +70,10 @@ export async function getApplications(groupId) {
  *   appId: string,
  *   branches?: string[],
  *   envIds?: string[],
+ *   commitSha?: string,
+ *   buildVersion?: string,
+ *   sortBy?: string,
+ *   sortOrder?: string,
  *   page?: number,
  *   pageSize?: number,
  * }} params
@@ -81,10 +85,26 @@ export async function getBuilds(params) {
     appId,
     branches = [],
     envIds = [],
+    commitSha,
+    buildVersion,
+    sortBy,
+    sortOrder,
     page = 1,
     pageSize = 20,
   } = params
-  const key = `builds:${groupId}:${appId}:${branches.join(",")}:${envIds.join(",")}:${page}:${pageSize}`
+  const key = [
+    "builds",
+    groupId,
+    appId,
+    branches.join(","),
+    envIds.join(","),
+    commitSha || "",
+    buildVersion || "",
+    sortBy || "",
+    sortOrder || "",
+    page,
+    pageSize,
+  ].join(":")
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get("/metrics/builds", {
@@ -93,6 +113,10 @@ export async function getBuilds(params) {
           appId,
           branches,
           envIds,
+          commitSha,
+          buildVersion,
+          sortBy,
+          sortOrder,
           page,
           pageSize,
         }),
@@ -972,6 +996,7 @@ export async function getTestLaunchPage(params) {
 
 /**
  * @param {object} body
+ * TODO: pass `impactStatuses` from the UI; omit for now so the API default (IMPACTED) applies.
  */
 export async function postImpactedTests(body) {
   const response = await runCatching(axios.post("/metrics/impacted-tests", body))

@@ -240,6 +240,7 @@ export function ImpactedTestsSection({
           page,
           pageSize,
         })
+        // TODO: pass impactStatuses (IMPACTED / NOT_IMPACTED / UNKNOWN_IMPACT); keep API default (IMPACTED) for now.
         const { data, paging } = await API.postImpactedTests(body)
         if (!cancelled) {
           setRows(data)

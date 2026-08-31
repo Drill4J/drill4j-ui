@@ -151,6 +151,7 @@ export function ComparisonChangesTable({
           page: 1,
           pageSize: 1,
         })
+        // TODO: pass impactStatuses when looking up a test by id; default IMPACTED may miss other statuses.
         const { data } = await API.postImpactedTests(body)
         if (cancelled) {
           return
