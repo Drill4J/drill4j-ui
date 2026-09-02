@@ -315,6 +315,7 @@ export const TestSessionCoverageSection = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Code coverage (probes)"
+            coverageUnit="probes"
             slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
             loading={definitionCoverageLoading}
             showCenterTotal
@@ -323,6 +324,7 @@ export const TestSessionCoverageSection = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Methods coverage"
+            coverageUnit="methods"
             slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
             loading={definitionCoverageLoading}
             showCenterTotal

@@ -196,6 +196,7 @@ export const BuildSummaryPage = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Code coverage (probes)"
+            coverageUnit="probes"
             slices={coverageUnitSlicesToChart(buildProbesCoverage, {
               includeOtherBuilds,
             })}
@@ -206,6 +207,7 @@ export const BuildSummaryPage = () => {
         <Col xs={24} md={12}>
           <CoveragePieChart
             title="Methods coverage"
+            coverageUnit="methods"
             slices={coverageUnitSlicesToChart(buildMethodsCoverage, {
               includeOtherBuilds,
             })}

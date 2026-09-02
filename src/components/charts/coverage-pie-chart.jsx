@@ -23,9 +23,60 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts"
+import { TitleHelpTooltip } from "../metrics/title-help-tooltip"
 import { formatCoveragePercent, formatCoveragePercentValue } from "../../modules/metrics/coverage-segments"
 
 const { Text } = Typography
+
+const HELP_BOX_STYLE = { width: 420, lineHeight: 1.55 }
+
+export const PROBE_COVERAGE_PIE_HELP = (
+  <div style={HELP_BOX_STYLE}>
+    <p style={{ margin: "0 0 8px" }}>
+      <b>Probe coverage</b> shows which parts of the application code were
+      actually executed during tests — down to individual lines and branches.
+    </p>
+    <ul style={{ margin: 0, paddingLeft: 18 }}>
+      <li style={{ marginBottom: 8 }}>
+        <b>Covered</b> — code paths run by tests on this build.
+      </li>
+      <li style={{ marginBottom: 8 }}>
+        <b>Covered in other builds</b> — run on other builds (within your
+        filter settings) but not on this build.
+      </li>
+      <li>
+        <b>Gaps</b> — code paths not reached by any matching tests.
+      </li>
+    </ul>
+  </div>
+)
+
+export const METHODS_COVERAGE_PIE_HELP = (
+  <div style={HELP_BOX_STYLE}>
+    <p style={{ margin: "0 0 8px" }}>
+      <b>Methods coverage</b> shows how many functions in the application were
+      executed at least once during tests. A method counts as covered if any
+      part of it ran.
+    </p>
+    <ul style={{ margin: 0, paddingLeft: 18 }}>
+      <li style={{ marginBottom: 8 }}>
+        <b>Covered</b> — methods run by tests on this build.
+      </li>
+      <li style={{ marginBottom: 8 }}>
+        <b>Covered in other builds</b> — run only on other builds (within your
+        filter settings).
+      </li>
+      <li>
+        <b>Gaps</b> — methods never reached by any matching tests.
+      </li>
+    </ul>
+  </div>
+)
+
+const COVERAGE_UNIT_HELP = {
+  probes: PROBE_COVERAGE_PIE_HELP,
+  methods: METHODS_COVERAGE_PIE_HELP,
+}
 
 const RADIAN = Math.PI / 180
 const LABEL_OFFSET = 16
@@ -136,6 +187,9 @@ function CenterTotalLabel({ viewBox, total }) {
  *   loading?: boolean,
  *   showCenterTotal?: boolean,
  *   sliceLabel?: "percent" | "count",
+ *   coverageUnit?: "probes" | "methods",
+ *   help?: import("react").ReactNode,
+ *   helpAriaLabel?: string,
  * }} props
  */
 export function CoveragePieChart({
@@ -145,13 +199,28 @@ export function CoveragePieChart({
   loading,
   showCenterTotal = false,
   sliceLabel = "percent",
+  coverageUnit,
+  help,
+  helpAriaLabel,
 }) {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
   const data = slices.filter((slice) => slice.value > 0)
   const isEmpty = data.length === 0
+  const resolvedHelp = help ?? (coverageUnit ? COVERAGE_UNIT_HELP[coverageUnit] : undefined)
+  const cardTitle = resolvedHelp ? (
+    <span>
+      {title}
+      <TitleHelpTooltip
+        title={resolvedHelp}
+        ariaLabel={helpAriaLabel || `How ${coverageUnit ?? "coverage"} coverage works`}
+      />
+    </span>
+  ) : (
+    title
+  )
 
   return (
-    <Card title={title} size="small" loading={loading}>
+    <Card title={cardTitle} size="small" loading={loading}>
       {isEmpty ? (
         <Text type="secondary" style={{ display: "block", textAlign: "center", padding: 48 }}>
           No data

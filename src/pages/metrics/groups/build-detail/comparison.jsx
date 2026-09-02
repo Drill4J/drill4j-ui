@@ -435,6 +435,7 @@ export const BuildComparisonPage = () => {
             <Col xs={24} md={12}>
               <CoveragePieChart
                 title="Changed code coverage (probes)"
+                coverageUnit="probes"
                 slices={coverageUnitSlicesToChart(changeProbesCoverage, {
                   includeOtherBuilds,
                 })}
@@ -445,6 +446,7 @@ export const BuildComparisonPage = () => {
             <Col xs={24} md={12}>
               <CoveragePieChart
                 title="Changed methods coverage"
+                coverageUnit="methods"
                 slices={coverageUnitSlicesToChart(changeMethodsCoverage, {
                   includeOtherBuilds,
                 })}
