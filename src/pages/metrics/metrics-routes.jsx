@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { createRoutesFromElements, Outlet, Route } from "react-router-dom"
+import { GroupMetricsLayout } from "./group-metrics-layout"
 import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
 import { GroupSettingsPage } from "./groups/group-settings"
@@ -37,7 +38,7 @@ import {
 export const metricsRoutes = (
   <>
     <Route index element={<GroupsPage />} />
-    <Route path=":groupId" handle={{ breadcrumb: "groupId" }} element={<Outlet />}>
+    <Route path=":groupId" handle={{ breadcrumb: "groupId" }} element={<GroupMetricsLayout />}>
       <Route index element={<GroupAppsPage />} />
       <Route
         path="settings"

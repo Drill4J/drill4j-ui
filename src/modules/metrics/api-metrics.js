@@ -1260,3 +1260,32 @@ export async function getCoverageMethods(buildId, params = {}) {
     }
   })
 }
+
+/**
+ * @param {string} groupId
+ * @returns {Promise<{
+ *   status?: string,
+ *   lastProcessedAt?: string,
+ *   lastRunAt?: string,
+ *   errorMessage?: string,
+ *   lastDuration?: number,
+ *   lastRowsProcessed?: number,
+ * } | null>}
+ */
+export async function getRefreshStatus(groupId) {
+  return dedupedRequest(`refresh-status:${groupId}`, async () => {
+    try {
+      const response = await axios.get("/metrics/refresh-status", {
+        params: { groupId },
+      })
+      return response.data.data
+    } catch (error) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return null
+      }
+      const message =
+        error?.response?.data?.message || error?.message || "Unknown error"
+      throw new Error(message)
+    }
+  })
+}
