@@ -19,7 +19,7 @@ import { MetricsDataTable } from "../../../../../components/metrics/metrics-data
 import { TableColumnFilterHeader } from "../../../../../components/metrics/table-column-filter-header"
 import { TableColumnSortHeader } from "../../../../../components/metrics/table-column-sort-header"
 import * as API from "../../../../../modules/metrics/api-metrics"
-import { buildComparisonRequestBody } from "../comparison-build-params"
+import { buildComparisonRequestBody, getComparisonScopeKey } from "../comparison-build-params"
 
 const IMPACTED_METHODS_SORT_OPTIONS = [
   {
@@ -44,6 +44,7 @@ const IMPACTED_METHODS_SORT_OPTIONS = [
  *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
  *   onMethodSignatureChange: (value?: string) => void,
  *   onViewMethodsForTest: (testDefinitionId: string) => void,
+ *   onTotalChange: (total: number) => void,
  * }} props
  */
 export function ImpactedTestsSection({
@@ -53,6 +54,7 @@ export function ImpactedTestsSection({
   coverageFilters,
   onMethodSignatureChange,
   onViewMethodsForTest,
+  onTotalChange,
 }) {
   const [rows, setRows] = useState([])
   const [total, setTotal] = useState(0)
@@ -65,12 +67,16 @@ export function ImpactedTestsSection({
   const [testName, setTestName] = useState()
   const [testRunner, setTestRunner] = useState()
   const [testTag, setTestTag] = useState()
+  const [testTaskId, setTestTaskId] = useState()
   const [filterOptions, setFilterOptions] = useState({
     testPaths: [],
     testNames: [],
     testRunners: [],
     testTags: [],
+    testTaskIds: [],
   })
+
+  const comparisonScopeKey = getComparisonScopeKey(build, baselineBuild)
 
   const toColumnFilterOptions = (options) =>
     options.map((value) => ({ key: value, label: value, value: [value] }))
@@ -131,6 +137,22 @@ export function ImpactedTestsSection({
         title: (
           <TableColumnFilterHeader
             searchable
+            title="Test task"
+            placeholder="Test task ID"
+            options={toColumnFilterOptions(filterOptions.testTaskIds)}
+            value={testTaskId ? [testTaskId] : undefined}
+            onChange={(value) => setTestTaskId(value?.[0])}
+          />
+        ),
+        dataIndex: "testTaskId",
+        key: "testTaskId",
+        width: 140,
+        render: (value) => value || "—",
+      },
+      {
+        title: (
+          <TableColumnFilterHeader
+            searchable
             title="Tags"
             placeholder="Test tag"
             options={toColumnFilterOptions(filterOptions.testTags)}
@@ -183,12 +205,13 @@ export function ImpactedTestsSection({
       testPath,
       testRunner,
       testTag,
+      testTaskId,
     ]
   )
 
   useEffect(() => {
     setPage(1)
-  }, [testPath, testName, testRunner, testTag, methodSignature, coverageFilters, sortBy, sortOrder])
+  }, [testPath, testName, testRunner, testTag, testTaskId, methodSignature, coverageFilters, sortBy, sortOrder])
 
   useEffect(() => {
     let cancelled = false
@@ -206,6 +229,7 @@ export function ImpactedTestsSection({
             testNames: options.testNames ?? [],
             testRunners: options.testRunners ?? [],
             testTags: options.testTags ?? [],
+            testTaskIds: options.testTaskIds ?? [],
           })
         }
       } catch (error) {
@@ -219,7 +243,7 @@ export function ImpactedTestsSection({
     return () => {
       cancelled = true
     }
-  }, [build, baselineBuild, coverageFilters])
+  }, [comparisonScopeKey, coverageFilters])
 
   useEffect(() => {
     let cancelled = false
@@ -233,6 +257,7 @@ export function ImpactedTestsSection({
           testName: testName || undefined,
           testRunner: testRunner || undefined,
           testTag: testTag || undefined,
+          testTaskId: testTaskId || undefined,
           coverageBranches: coverageFilters.branches ?? [],
           coverageAppEnvIds: coverageFilters.envIds ?? [],
           sortBy,
@@ -245,6 +270,7 @@ export function ImpactedTestsSection({
         if (!cancelled) {
           setRows(data)
           setTotal(paging.total)
+          onTotalChange(paging.total)
         }
       } catch (error) {
         if (!cancelled) {
@@ -262,18 +288,19 @@ export function ImpactedTestsSection({
       cancelled = true
     }
   }, [
-    build,
-    baselineBuild,
+    comparisonScopeKey,
     methodSignature,
     testPath,
     testName,
     testRunner,
     testTag,
+    testTaskId,
     coverageFilters,
     sortBy,
     sortOrder,
     page,
     pageSize,
+    onTotalChange,
   ])
 
   return (

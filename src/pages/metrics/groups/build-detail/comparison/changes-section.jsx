@@ -38,6 +38,7 @@ import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
  *   onSortChange: (sort: { sortBy?: string, sortOrder?: string }) => void,
  *   onViewImpactedTests: (signature: string) => void,
  *   onCopyMethodLink?: (payload: { signature: string, page: number, pageSize: number }) => void,
+ *   onImpactedMethodsTotalChange?: (total: number) => void,
  * }} props
  */
 export function ChangesSection({
@@ -60,6 +61,7 @@ export function ChangesSection({
   onSortChange,
   onViewImpactedTests,
   onCopyMethodLink,
+  onImpactedMethodsTotalChange,
 }) {
   return (
     <Space direction="vertical" size={16} style={{ display: "flex" }}>
@@ -95,6 +97,7 @@ export function ChangesSection({
         onSortChange={onSortChange}
         onViewImpactedTests={onViewImpactedTests}
         onCopyMethodLink={onCopyMethodLink}
+        onImpactedMethodsTotalChange={onImpactedMethodsTotalChange}
       />
     </Space>
   )

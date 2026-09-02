@@ -994,27 +994,52 @@ export async function getTestLaunchPage(params) {
   })
 }
 
+function impactedTestsScopeKey(body) {
+  return [
+    body.groupId,
+    body.appId,
+    body.buildVersion,
+    body.baselineBuildVersion,
+    body.methodSignature || "",
+    body.testPath || "",
+    body.testName || "",
+    body.testRunner || "",
+    body.testTag || "",
+    body.testTaskId || "",
+    (body.coverageBranches || []).join(","),
+    (body.coverageAppEnvIds || []).join(","),
+    body.sortBy || "",
+    body.sortOrder || "",
+  ].join(":")
+}
+
 /**
  * @param {object} body
  * TODO: pass `impactStatuses` from the UI; omit for now so the API default (IMPACTED) applies.
  */
 export async function postImpactedTests(body) {
-  const response = await runCatching(axios.post("/metrics/impacted-tests", body))
-  return {
-    data: response.data.data,
-    paging: response.data.paging,
-  }
+  const key = `impacted-tests:${impactedTestsScopeKey(body)}:${body.page ?? 1}:${body.pageSize ?? 20}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(axios.post("/metrics/impacted-tests", body))
+    return {
+      data: response.data.data,
+      paging: response.data.paging,
+    }
+  })
 }
 
 /**
  * @param {object} body Same build/coverage fields as postImpactedTests
- * @returns {Promise<{ testPaths: string[], testNames: string[], testRunners: string[], testTags: string[] }>}
+ * @returns {Promise<{ testPaths: string[], testNames: string[], testRunners: string[], testTags: string[], testTaskIds: string[] }>}
  */
 export async function postImpactedTestsFilterOptions(body) {
-  const response = await runCatching(
-    axios.post("/metrics/impacted-tests/filter-options", body)
-  )
-  return response.data.data
+  const key = `impacted-tests-filter-options:${impactedTestsScopeKey(body)}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.post("/metrics/impacted-tests/filter-options", body)
+    )
+    return response.data.data
+  })
 }
 
 /**

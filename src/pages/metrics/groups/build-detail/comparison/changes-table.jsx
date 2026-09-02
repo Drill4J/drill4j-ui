@@ -99,6 +99,7 @@ const SORT_OPTIONS = {
  *   onSortChange: (sort: { sortBy?: string, sortOrder?: string }) => void,
  *   onViewImpactedTests: (signature: string) => void,
  *   onCopyMethodLink?: (payload: { signature: string, page: number, pageSize: number }) => void,
+ *   onImpactedMethodsTotalChange?: (total: number) => void,
  * }} props
  */
 export function ComparisonChangesTable({
@@ -121,6 +122,7 @@ export function ComparisonChangesTable({
   onSortChange,
   onViewImpactedTests,
   onCopyMethodLink,
+  onImpactedMethodsTotalChange,
 }) {
   const [rows, setRows] = useState([])
   const [total, setTotal] = useState(0)
@@ -220,6 +222,9 @@ export function ComparisonChangesTable({
         if (!cancelled) {
           setRows(data)
           setTotal(paging.total)
+          if (hasImpactedTests) {
+            onImpactedMethodsTotalChange?.(paging.total)
+          }
         }
       } catch (error) {
         if (!cancelled) {
@@ -250,6 +255,7 @@ export function ComparisonChangesTable({
     sortOrder,
     testDefinitionId,
     testTags,
+    onImpactedMethodsTotalChange,
   ])
 
   useEffect(() => {

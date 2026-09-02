@@ -31,7 +31,7 @@ import {
   buildComparisonScopeUrl,
   copyScopeLinkToClipboard,
 } from "../../../../modules/metrics/copy-scope-link"
-import { buildComparisonQueryParams, buildComparisonRequestBody } from "./comparison-build-params"
+import { getComparisonScopeKey } from "./comparison-build-params"
 import { ChangesSection } from "./comparison/changes-section"
 import { ImpactedTestsSection } from "./comparison/impacted-tests-section"
 import { useComparisonSearchParams } from "./use-comparison-search-params"
@@ -89,6 +89,7 @@ export const BuildComparisonPage = () => {
   const sectionTabsRef = useRef()
 
   const buildId = build?.buildId
+  const comparisonScopeKey = getComparisonScopeKey(build, baselineBuild)
 
   const queryState = useMemo(
     () => ({
@@ -227,25 +228,15 @@ export const BuildComparisonPage = () => {
       setLoading((state) => ({ ...state, overview: true }))
       try {
         const changeCoverageFilters = { ...coverageFilters, baselineBuildId }
-        const impactedBody = buildComparisonRequestBody(build, baselineBuild, { pageSize: 1 })
-        // TODO: pass impactStatuses when the UI supports it; API default remains IMPACTED.
-        const buildChangesQuery = buildComparisonQueryParams(build, baselineBuild, {
-          hasImpactedTests: true,
-          pageSize: 1,
-        })
-        const [probes, methods, summary, impactedTests, impactedMethods] = await Promise.all([
+        const [probes, methods, summary] = await Promise.all([
           API.getBuildCoverageByProbes(buildId, changeCoverageFilters),
           API.getBuildCoverageByMethods(buildId, changeCoverageFilters),
           API.getBuildChangesSummary(buildId, baselineBuildId),
-          API.postImpactedTests(impactedBody),
-          API.getBuildChanges(buildChangesQuery),
         ])
         if (!cancelled) {
           setChangeProbesCoverage(probes)
           setChangeMethodsCoverage(methods)
           setChangesSummary(summary)
-          setImpactedTestsTotal(impactedTests.paging.total)
-          setImpactedMethodsTotal(impactedMethods.paging.total)
         }
       } catch (error) {
         if (!cancelled) {
@@ -262,7 +253,7 @@ export const BuildComparisonPage = () => {
     return () => {
       cancelled = true
     }
-  }, [baselineBuild, baselineBuildId, build, buildId, coverageFilters])
+  }, [comparisonScopeKey, baselineBuildId, buildId, coverageFilters])
 
   const handleOpenPicker = () => {
     setPickerOpen(true)
@@ -303,37 +294,39 @@ export const BuildComparisonPage = () => {
     () => [
       {
         label: "Impacted tests",
-        value: loading.overview ? undefined : (
-          <Link
-            onClick={(event) => {
-              event.preventDefault()
-              updateQueryParams({ section: "impacted-tests" })
-            }}
-          >
-            {impactedTestsTotal}
-          </Link>
-        ),
+        value:
+          impactedTestsTotal === undefined ? undefined : (
+            <Link
+              onClick={(event) => {
+                event.preventDefault()
+                updateQueryParams({ section: "impacted-tests" })
+              }}
+            >
+              {impactedTestsTotal}
+            </Link>
+          ),
       },
       {
         label: "Impacted methods",
-        value: loading.overview ? undefined : (
-          <Link
-            onClick={(event) => {
-              event.preventDefault()
-              goToSectionRef.current({
-                hasImpactedTests: true,
-                methodSignature: undefined,
-                testDefinitionId: undefined,
-                changeTypes: undefined,
-              })
-            }}
-          >
-            {impactedMethodsTotal}
-          </Link>
-        ),
+        value:
+          impactedMethodsTotal === undefined ? undefined : (
+            <Link
+              onClick={(event) => {
+                event.preventDefault()
+                goToSectionRef.current({
+                  hasImpactedTests: true,
+                  methodSignature: undefined,
+                  testDefinitionId: undefined,
+                  changeTypes: undefined,
+                })
+              }}
+            >
+              {impactedMethodsTotal}
+            </Link>
+          ),
       },
     ],
-    [impactedMethodsTotal, impactedTestsTotal, loading.overview, updateQueryParams]
+    [impactedMethodsTotal, impactedTestsTotal, updateQueryParams]
   )
 
   const changeItems = useMemo(
@@ -395,72 +388,6 @@ export const BuildComparisonPage = () => {
     ],
     [changesSummary, loading.overview]
   )
-
-  const sectionContent = useMemo(() => {
-    if (!build?.buildVersion || !baselineBuild?.buildVersion) {
-      return undefined
-    }
-    if (section === "impacted-tests") {
-      return (
-        <ImpactedTestsSection
-          build={build}
-          baselineBuild={baselineBuild}
-          methodSignature={methodSignature}
-          coverageFilters={coverageFilters}
-          onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
-          onViewMethodsForTest={(testDefinitionIdValue) =>
-            updateQueryParams({
-              section: "changes",
-              testDefinitionId: testDefinitionIdValue,
-              methodSignature: undefined,
-            })
-          }
-        />
-      )
-    }
-    return (
-      <ChangesSection
-        build={build}
-        baselineBuild={baselineBuild}
-        coverageFilters={coverageFilters}
-        includeOtherBuilds={includeOtherBuilds}
-        changeTypes={changeTypes}
-        hasImpactedTests={hasImpactedTests}
-        methodSignature={methodSignature}
-        methodId={methodId}
-        testDefinitionId={testDefinitionId}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        initialPage={urlPage}
-        initialPageSize={urlPageSize}
-        onFilterChange={updateQueryParams}
-        onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
-        onTestDefinitionIdChange={(value) => updateQueryParams({ testDefinitionId: value })}
-        onSortChange={({ sortBy: nextSortBy, sortOrder: nextSortOrder }) =>
-          updateQueryParams({ sortBy: nextSortBy, sortOrder: nextSortOrder })
-        }
-        onViewImpactedTests={(signature) => goToImpactedTestsRef.current(signature)}
-        onCopyMethodLink={handleCopyMethodLink}
-      />
-    )
-  }, [
-    baselineBuild,
-    build,
-    changeTypes,
-    coverageFilters,
-    handleCopyMethodLink,
-    hasImpactedTests,
-    includeOtherBuilds,
-    methodId,
-    methodSignature,
-    section,
-    sortBy,
-    sortOrder,
-    testDefinitionId,
-    updateQueryParams,
-    urlPage,
-    urlPageSize,
-  ])
 
   return (
     <>
@@ -539,7 +466,48 @@ export const BuildComparisonPage = () => {
         />
       </div>
 
-      {sectionContent}
+      {build?.buildVersion && baselineBuild?.buildVersion && section === "impacted-tests" ? (
+        <ImpactedTestsSection
+          build={build}
+          baselineBuild={baselineBuild}
+          methodSignature={methodSignature}
+          coverageFilters={coverageFilters}
+          onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
+          onViewMethodsForTest={(testDefinitionIdValue) =>
+            updateQueryParams({
+              section: "changes",
+              testDefinitionId: testDefinitionIdValue,
+              methodSignature: undefined,
+            })
+          }
+          onTotalChange={setImpactedTestsTotal}
+        />
+      ) : build?.buildVersion && baselineBuild?.buildVersion ? (
+        <ChangesSection
+          build={build}
+          baselineBuild={baselineBuild}
+          coverageFilters={coverageFilters}
+          includeOtherBuilds={includeOtherBuilds}
+          changeTypes={changeTypes}
+          hasImpactedTests={hasImpactedTests}
+          methodSignature={methodSignature}
+          methodId={methodId}
+          testDefinitionId={testDefinitionId}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          initialPage={urlPage}
+          initialPageSize={urlPageSize}
+          onFilterChange={updateQueryParams}
+          onMethodSignatureChange={(value) => updateQueryParams({ methodSignature: value })}
+          onTestDefinitionIdChange={(value) => updateQueryParams({ testDefinitionId: value })}
+          onSortChange={({ sortBy: nextSortBy, sortOrder: nextSortOrder }) =>
+            updateQueryParams({ sortBy: nextSortBy, sortOrder: nextSortOrder })
+          }
+          onViewImpactedTests={(signature) => goToImpactedTestsRef.current(signature)}
+          onCopyMethodLink={handleCopyMethodLink}
+          onImpactedMethodsTotalChange={setImpactedMethodsTotal}
+        />
+      ) : undefined}
 
       <BaselineBuildPickerDialog
         open={pickerOpen}

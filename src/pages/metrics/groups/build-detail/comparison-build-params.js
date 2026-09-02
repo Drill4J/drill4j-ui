@@ -17,6 +17,20 @@
 export const COMPARISON_SECTIONS = ["changes", "impacted-tests"]
 
 /**
+ * Stable key for comparison scope — matches fields sent to comparison APIs.
+ * @param {{ groupId?: string, appId?: string, buildVersion?: string }} build
+ * @param {{ buildVersion?: string }} baselineBuild
+ */
+export function getComparisonScopeKey(build, baselineBuild) {
+  return [
+    build?.groupId ?? "",
+    build?.appId ?? "",
+    build?.buildVersion ?? "",
+    baselineBuild?.buildVersion ?? "",
+  ].join(":")
+}
+
+/**
  * @param {{ groupId: string, appId: string, buildVersion: string }} build
  * @param {{ buildVersion: string }} baselineBuild
  * @param {Record<string, unknown>} [extra]
