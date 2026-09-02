@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
+export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags", "testResults"]
 
 export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
 
@@ -207,6 +207,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  *   packageName?: string,
  *   className?: string,
@@ -234,6 +235,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  * }} ComparisonQueryState
  */

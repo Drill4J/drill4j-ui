@@ -17,6 +17,7 @@ import { useCallback } from "react"
 import { Button, Switch, Tooltip, Typography } from "antd"
 import { HintIcon } from "../hint-icon"
 import { OptionalFilters } from "./optional-filters"
+import { loadCoverageTestResultsPage } from "./coverage-test-results"
 import * as API from "../../modules/metrics/api-metrics"
 
 const { Text } = Typography
@@ -29,6 +30,7 @@ const COVERAGE_FILTER_HINTS = {
     "When aggregating coverage across builds, only includes builds from the selected branches.",
   envIds: "Shows coverage collected only in the selected environments.",
   testTags: "Shows coverage contributed only by tests with the selected tags.",
+  testResults: "Shows coverage contributed only by tests with the selected results.",
 }
 
 const INCLUDE_OTHER_BUILDS_HINT =
@@ -44,14 +46,16 @@ const INCLUDE_OTHER_BUILDS_HINT =
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  *   onBranchesChange: (value?: string[]) => void,
  *   onEnvIdsChange: (value?: string[]) => void,
  *   onTestTagsChange: (value?: string[]) => void,
+ *   onTestResultsChange: (value?: string[]) => void,
  *   onIncludeOtherBuildsChange?: (value: boolean) => void,
  *   onClear?: () => void,
  *   scopeHint?: string,
- *   filterHints?: { branches?: string, envIds?: string, testTags?: string },
+ *   filterHints?: { branches?: string, envIds?: string, testTags?: string, testResults?: string },
  *   sticky?: boolean,
  * }} props
  */
@@ -61,10 +65,12 @@ export function BuildCoverageFiltersBar({
   branches,
   envIds,
   testTags,
+  testResults,
   includeOtherBuilds = true,
   onBranchesChange,
   onEnvIdsChange,
   onTestTagsChange,
+  onTestResultsChange,
   onIncludeOtherBuildsChange,
   onClear,
   scopeHint = FILTER_SCOPE_HINT,
@@ -72,7 +78,11 @@ export function BuildCoverageFiltersBar({
   sticky = true,
 }) {
   const hasActiveFilters = Boolean(
-    branches?.length || envIds?.length || testTags?.length || includeOtherBuilds === false
+    branches?.length ||
+      envIds?.length ||
+      testTags?.length ||
+      testResults?.length ||
+      includeOtherBuilds === false
   )
 
   const loadBranches = useCallback(
@@ -87,6 +97,8 @@ export function BuildCoverageFiltersBar({
     (params) => API.getAppTestTags(groupId, appId, params),
     [appId, groupId]
   )
+
+  const loadTestResults = useCallback((params) => loadCoverageTestResultsPage(params), [])
 
   return (
     <div
@@ -117,13 +129,16 @@ export function BuildCoverageFiltersBar({
         branches={branches}
         envIds={envIds}
         testTags={testTags}
+        testResults={testResults}
         loadBranches={loadBranches}
         loadEnvIds={loadEnvIds}
         loadTestTags={loadTestTags}
+        loadTestResults={loadTestResults}
         filterHints={filterHints}
         onBranchesChange={onBranchesChange}
         onEnvIdsChange={onEnvIdsChange}
         onTestTagsChange={onTestTagsChange}
+        onTestResultsChange={onTestResultsChange}
       />
       {onIncludeOtherBuildsChange && (
         <Tooltip title={INCLUDE_OTHER_BUILDS_HINT}>
