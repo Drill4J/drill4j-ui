@@ -241,6 +241,8 @@ export const BuildComparisonPage = () => {
           setChangeProbesCoverage(probes)
           setChangeMethodsCoverage(methods)
           setChangesSummary(summary)
+          setImpactedTestsTotal(summary.impactedTests)
+          setImpactedMethodsTotal(summary.impactedMethods)
         }
       } catch (error) {
         if (!cancelled) {
@@ -288,49 +290,41 @@ export const BuildComparisonPage = () => {
     [updateQueryParams]
   )
 
-  const goToSectionRef = useRef(goToSection)
-  goToSectionRef.current = goToSection
-
-  const goToImpactedTestsRef = useRef(goToImpactedTests)
-  goToImpactedTestsRef.current = goToImpactedTests
-
   const impactItems = useMemo(
     () => [
       {
         label: "Impacted tests",
-        value:
-          impactedTestsTotal === undefined ? undefined : (
-            <Link
-              onClick={(event) => {
-                event.preventDefault()
-                updateQueryParams({ section: "impacted-tests" })
-              }}
-            >
-              {impactedTestsTotal}
-            </Link>
-          ),
+        value: loading.overview ? undefined : (
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToImpactedTests()
+            }}
+          >
+            {impactedTestsTotal}
+          </Link>
+        ),
       },
       {
         label: "Impacted methods",
-        value:
-          impactedMethodsTotal === undefined ? undefined : (
-            <Link
-              onClick={(event) => {
-                event.preventDefault()
-                goToSectionRef.current({
-                  hasImpactedTests: true,
-                  methodSignature: undefined,
-                  testDefinitionId: undefined,
-                  changeTypes: undefined,
-                })
-              }}
-            >
-              {impactedMethodsTotal}
-            </Link>
-          ),
+        value: loading.overview ? undefined : (
+          <Link
+            onClick={(event) => {
+              event.preventDefault()
+              goToSection({
+                hasImpactedTests: true,
+                methodSignature: undefined,
+                testDefinitionId: undefined,
+                changeTypes: undefined,
+              })
+            }}
+          >
+            {impactedMethodsTotal}
+          </Link>
+        ),
       },
     ],
-    [impactedMethodsTotal, impactedTestsTotal, updateQueryParams]
+    [goToImpactedTests, goToSection, impactedMethodsTotal, impactedTestsTotal, loading.overview]
   )
 
   const changeItems = useMemo(
@@ -341,7 +335,7 @@ export const BuildComparisonPage = () => {
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current({
+              goToSection({
                 changeTypes: ["new"],
                 hasImpactedTests: undefined,
                 methodSignature: undefined,
@@ -359,7 +353,7 @@ export const BuildComparisonPage = () => {
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current({
+              goToSection({
                 changeTypes: ["modified"],
                 hasImpactedTests: undefined,
                 methodSignature: undefined,
@@ -377,7 +371,7 @@ export const BuildComparisonPage = () => {
           <Link
             onClick={(event) => {
               event.preventDefault()
-              goToSectionRef.current({
+              goToSection({
                 changeTypes: ["deleted"],
                 hasImpactedTests: undefined,
                 methodSignature: undefined,
@@ -390,7 +384,7 @@ export const BuildComparisonPage = () => {
         ),
       },
     ],
-    [changesSummary, loading.overview]
+    [changesSummary, goToSection, loading.overview]
   )
 
   return (
@@ -509,7 +503,7 @@ export const BuildComparisonPage = () => {
           onSortChange={({ sortBy: nextSortBy, sortOrder: nextSortOrder }) =>
             updateQueryParams({ sortBy: nextSortBy, sortOrder: nextSortOrder })
           }
-          onViewImpactedTests={(signature) => goToImpactedTestsRef.current(signature)}
+          onViewImpactedTests={goToImpactedTests}
           onCopyMethodLink={handleCopyMethodLink}
           onImpactedMethodsTotalChange={setImpactedMethodsTotal}
         />
