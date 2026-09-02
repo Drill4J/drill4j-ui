@@ -146,7 +146,8 @@ export function ImpactedTestsSection({
         ),
         dataIndex: "testTaskId",
         key: "testTaskId",
-        width: 140,
+        width: 180,
+        ellipsis: true,
         render: (value) => value || "—",
       },
       {
