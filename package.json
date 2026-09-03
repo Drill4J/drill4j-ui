@@ -16,6 +16,7 @@
     "react-hook-form": "^7.52.0",
     "react-router-dom": "^6.24.0",
     "react-scripts": "5.0.1",
+    "recharts": "^2.15.4",
     "use-immer": "^0.10.0"
   },
   "scripts": {

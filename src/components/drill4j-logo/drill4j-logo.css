@@ -1,0 +1,96 @@
+.drill4j-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #1b191b;
+  line-height: 1;
+}
+
+.drill4j-logo--on-dark {
+  color: #fff;
+}
+
+.drill4j-logo__mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.drill4j-logo__brackets {
+  fill: #007fff;
+}
+
+.drill4j-logo__bit {
+  fill: currentColor;
+}
+
+.drill4j-logo__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.drill4j-logo__wordmark {
+  font-family: Outfit, "Segoe UI", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
+.drill4j-logo__tagline {
+  font-family: Outfit, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.drill4j-logo-auth {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.drill4j-logo-auth .drill4j-logo__mark {
+  width: 48px;
+  height: 48px;
+}
+
+.drill4j-logo-auth .drill4j-logo__wordmark {
+  font-size: 26px;
+}
+
+.drill4j-logo-auth .drill4j-logo__tagline {
+  font-size: 13px;
+}
+
+.sider-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 24px 12px;
+  overflow: hidden;
+}
+
+.sider-logo a {
+  display: flex;
+  color: inherit;
+}
+
+.sider-logo .drill4j-logo__wordmark {
+  font-size: 18px;
+}
+
+.sider-logo .drill4j-logo__tagline {
+  font-size: 12px;
+}
+
+.ant-layout-sider-collapsed .sider-logo {
+  justify-content: center;
+  padding: 16px 0 8px;
+}

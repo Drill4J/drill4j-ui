@@ -1,0 +1,57 @@
+.sider-menu-metrics-root > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  display: none;
+}
+
+.sider-menu-metrics-root .ant-menu-item {
+  height: 36px;
+  line-height: 36px;
+  margin-block: 1px;
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-item-icon svg {
+  overflow: visible;
+}
+
+.sider-menu-metrics-root .ant-menu-item .ant-menu-title-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sider-menu-metrics-root .ant-menu-item-group-title {
+  line-height: 20px;
+  padding-top: 4px;
+  padding-bottom: 2px;
+}
+
+.sider-menu-context-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.sider-menu-context-divider {
+  margin: 2px 16px !important;
+  width: auto !important;
+}
+
+.ant-menu-dark .ant-menu-item-disabled {
+  cursor: not-allowed;
+}
+
+.ant-menu-dark .ant-menu-item-disabled .sider-menu-disabled-label {
+  display: inline-block;
+  width: 100%;
+  pointer-events: auto;
+  cursor: not-allowed;
+}

@@ -44,7 +44,10 @@ export const UserManagementTable = () => {
         const data = await API.getUsers();
         setUsers(data);
       } catch (error) {
-        message.error(`Failed to fetch users list. ${error?.message}`);
+        message.error({
+          key: "users-list-fetch",
+          content: `Failed to fetch users list. ${error?.message}`,
+        });
       }
       setIsFetched(true)
     };

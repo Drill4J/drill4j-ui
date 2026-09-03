@@ -1,0 +1,309 @@
+/**
+ * Copyright 2020 EPAM Systems
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { useEffect, useMemo, useRef, useState } from "react"
+import { MetricsDataTable } from "./metrics-data-table"
+import { CoverageScopeName } from "./coverage-scope-name"
+import { CoverageStackedBar } from "./coverage-stacked-bar"
+import { TableColumnSortHeader } from "./table-column-sort-header"
+
+const HIGHLIGHT_DURATION_MS = 3000
+const SCROLL_RETRY_MAX_FRAMES = 120
+
+const COVERAGE_SORT_OPTIONS = [
+  {
+    key: "coverageRatio-DESC",
+    label: "Coverage, high to low",
+    sortBy: "coverageRatio",
+    sortOrder: "DESC",
+  },
+  {
+    key: "coverageRatio-ASC",
+    label: "Coverage, low to high",
+    sortBy: "coverageRatio",
+    sortOrder: "ASC",
+  },
+  {
+    key: "probesCount-DESC",
+    label: "Total probes, high to low",
+    sortBy: "probesCount",
+    sortOrder: "DESC",
+  },
+  {
+    key: "probesCount-ASC",
+    label: "Total probes, low to high",
+    sortBy: "probesCount",
+    sortOrder: "ASC",
+  },
+  {
+    key: "coveredProbes-DESC",
+    label: "Covered probes, high to low",
+    sortBy: "coveredProbes",
+    sortOrder: "DESC",
+  },
+  {
+    key: "coveredProbes-ASC",
+    label: "Covered probes, low to high",
+    sortBy: "coveredProbes",
+    sortOrder: "ASC",
+  },
+]
+
+function formatMethodParams(params) {
+  if (!params?.length) {
+    return "—"
+  }
+
+  const normalized = params.filter((param) => param != null && param !== "")
+  if (!normalized.length) {
+    return "—"
+  }
+
+  if (normalized.length === 1 && normalized[0] === "()") {
+    return "()"
+  }
+
+  return `(${normalized.join(", ")})`
+}
+
+function formatReturnType(returnType) {
+  if (returnType == null || returnType === "") {
+    return "—"
+  }
+  return returnType
+}
+
+function methodRowId(methodId) {
+  return `coverage-method-row-${encodeURIComponent(methodId)}`
+}
+
+function methodColumns(
+  packageName,
+  className,
+  onMethodSelect,
+  sortBy,
+  sortOrder,
+  onSortChange,
+  includeOtherBuilds
+) {
+  return [
+    {
+      title: "Method",
+      dataIndex: "name",
+      key: "name",
+      ellipsis: true,
+      render: (value, record) => (
+        <CoverageScopeName
+          ellipsis
+          name={value}
+          onCopyLink={() =>
+            onMethodSelect?.({
+              packageName,
+              className,
+              methodId: record.methodId,
+            })
+          }
+        />
+      ),
+    },
+  {
+    title: "Parameters",
+    key: "params",
+    ellipsis: true,
+    render: (_, row) => formatMethodParams(row.params),
+  },
+  {
+    title: "Return type",
+    dataIndex: "returnType",
+    key: "returnType",
+    ellipsis: true,
+    render: formatReturnType,
+  },
+  {
+    title: (
+      <TableColumnSortHeader
+        title="Coverage"
+        options={COVERAGE_SORT_OPTIONS}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={onSortChange}
+      />
+    ),
+    key: "coverage",
+    width: 180,
+    render: (_, row) => (
+      <CoverageStackedBar
+        probesCount={row.probesCount}
+        coveredProbes={row.coveredProbes}
+        coveredProbesAggregated={row.coveredProbesInOtherBuilds}
+        includeOtherBuilds={includeOtherBuilds}
+      />
+    ),
+  },
+  ]
+}
+
+/**
+ * @param {{
+ *   dataSource: object[],
+ *   loading?: boolean,
+ *   pagination?: object | false,
+ *   onTableChange?: import("antd").TableProps["onChange"],
+ *   scrollToMethodId?: string | null,
+ *   onScrollToMethodHandled?: () => void,
+ *   packageName?: string,
+ *   className?: string,
+ *   onMethodSelect?: (scope: { packageName: string, className: string, methodId: string }) => void,
+ *   sortBy?: string | null,
+ *   sortOrder?: string | null,
+ *   onSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,
+ *   includeOtherBuilds?: boolean,
+ * }} props
+ */
+export function CoverageMethodsTable({
+  dataSource,
+  loading,
+  pagination,
+  onTableChange,
+  scrollToMethodId,
+  onScrollToMethodHandled,
+  packageName = "",
+  className = "",
+  onMethodSelect,
+  sortBy = null,
+  sortOrder = null,
+  onSortChange,
+  includeOtherBuilds = true,
+}) {
+  const [pendingScrollKey, setPendingScrollKey] = useState(null)
+  const [highlightedKey, setHighlightedKey] = useState(null)
+  const [highlightTick, setHighlightTick] = useState(0)
+  const highlightTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    if (!scrollToMethodId) {
+      return
+    }
+
+    setPendingScrollKey(scrollToMethodId)
+  }, [scrollToMethodId])
+
+  useEffect(() => {
+    if (!pendingScrollKey) {
+      return undefined
+    }
+
+    let frame
+    // Paint retry budget only — waiting on fetch does not count against it.
+    let paintAttempts = 0
+
+    const tryScroll = () => {
+      // The method list (re)mounts and fetches its data asynchronously. Keep
+      // polling without spending the retry budget until the fetch settles.
+      if (loading) {
+        frame = requestAnimationFrame(tryScroll)
+        return
+      }
+
+      // Data has settled. If the target method isn't part of it (e.g. filtered
+      // out or not found), there is nothing to scroll to.
+      if (
+        dataSource.length > 0 &&
+        !dataSource.some((row) => row.methodId === pendingScrollKey)
+      ) {
+        setPendingScrollKey(null)
+        onScrollToMethodHandled?.()
+        return
+      }
+
+      const row = document.getElementById(methodRowId(pendingScrollKey))
+      if (!row) {
+        // Data is ready but the row hasn't been committed to the DOM yet
+        // (pagination/render still settling). Only now do we spend the budget.
+        if (paintAttempts++ < SCROLL_RETRY_MAX_FRAMES) {
+          frame = requestAnimationFrame(tryScroll)
+        } else {
+          setPendingScrollKey(null)
+          onScrollToMethodHandled?.()
+        }
+        return
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" })
+
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+      setHighlightedKey(pendingScrollKey)
+      setHighlightTick((tick) => tick + 1)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightedKey(null)
+        highlightTimeoutRef.current = null
+      }, HIGHLIGHT_DURATION_MS)
+
+      setPendingScrollKey(null)
+      onScrollToMethodHandled?.()
+    }
+
+    tryScroll()
+
+    return () => {
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
+    }
+  }, [dataSource, loading, onScrollToMethodHandled, pendingScrollKey])
+
+  useEffect(
+    () => () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+    },
+    []
+  )
+
+  const columns = useMemo(
+    () =>
+      methodColumns(
+        packageName,
+        className,
+        onMethodSelect,
+        sortBy,
+        sortOrder,
+        onSortChange,
+        includeOtherBuilds
+      ),
+    [className, includeOtherBuilds, onMethodSelect, onSortChange, packageName, sortBy, sortOrder]
+  )
+
+  return (
+    <MetricsDataTable
+      rowKey="methodId"
+      loading={loading}
+      dataSource={dataSource}
+      columns={columns}
+      pagination={pagination}
+      onTableChange={onTableChange}
+      onRow={(record) => ({
+        id: methodRowId(record.methodId),
+        className:
+          record.methodId === highlightedKey
+            ? `coverage-method-row-highlight-${highlightTick % 2}`
+            : undefined,
+      })}
+    />
+  )
+}

@@ -13,30 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useCallback, useMemo } from "react"
+import React, { useMemo } from "react"
 import {
   Alert,
   ConfigProvider as ThemeProvider,
   Layout,
-  Menu,
   Spin,
-  message,
 } from "antd"
-import {
-  TeamOutlined,
-  SettingOutlined,
-  ApiOutlined,
-  LogoutOutlined,
-  UserOutlined,
-  LoadingOutlined,
-} from "@ant-design/icons"
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Link,
   Navigate,
   useLocation,
+  Link,
 } from "react-router-dom"
 
 import SignIn from "./pages/auth/sign-in"
@@ -48,8 +38,13 @@ import { PrivateRoute } from "./modules/auth/private-route"
 import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
-import { signOut } from "./modules/auth/api-auth"
 import { MyAccount } from "./pages/account/my-account"
+import { PreferencesPage } from "./pages/account/preferences"
+import { NotFoundPage } from "./pages/not-found"
+import { SiderMenu } from "./components/sider-menu"
+import { Drill4jLogo } from "./components/drill4j-logo"
+import { MetricsLayout } from "./pages/metrics/metrics-layout"
+import { metricsRoutes } from "./pages/metrics/metrics-routes"
 import { CoverageTreemapPage } from "./pages/iframes/coverage-treemap"
 import { ChangesCoverageTreemapPage } from "./pages/iframes/changes-coverage-treemap"
 import { TreemapCanvasDevPage } from "./pages/iframes/treemap-canvas-dev"
@@ -57,8 +52,6 @@ import {
   AuthConfigProvider,
   useAuthConfig,
 } from "./modules/auth/hooks/use-ui-config-hook"
-
-const { SubMenu } = Menu
 const { Sider, Content } = Layout
 
 const App = () =>  (
@@ -108,7 +101,9 @@ const BaseRouter = () => {
   if (!isAuthDataFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Checking authentication... ">{" "}</Spin>
+        <Spin tip="Checking authentication...">
+          <div className="auth-layout-spin-slot" />
+        </Spin>
       </AuthLayout>
     )
   }
@@ -116,7 +111,9 @@ const BaseRouter = () => {
   if (!isAuthConfigFetched) {
     return (
       <AuthLayout>
-        <Spin tip="Fetching auth configuration... ">{" "}</Spin>
+        <Spin tip="Fetching auth configuration...">
+          <div className="auth-layout-spin-slot" />
+        </Spin>
       </AuthLayout>
     )
   }
@@ -158,15 +155,6 @@ const BaseRouter = () => {
 
   return (
     <Routes>
-      <Route
-        path="/not-found"
-        element={
-          <ErrorLayout
-            errorTitle={"Not Found"}
-            errorText={"The requested resource was not found"}
-          />
-        }
-      />
       <Route path="/iframe/*" element={<IframeRouter />} />
       <Route path="/*" element={<AppContent location={location} />} />
     </Routes>
@@ -195,19 +183,17 @@ const IframeRouter = () => {
 };
 
 const AppContent = ({location}) => {
-  const [collapsed, setCollapsed] = useState(false)
-
-  const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => !prev)
-  }, [])
-
   const userRoles = useMemo(() => ["user", "admin"], [])
   const adminRoles = useMemo(() => ["admin"], [])
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={toggleCollapsed}>
-        <div className="demo-logo-vertical" />
+      <Sider>
+        <div className="sider-logo">
+          <Link to="/metrics">
+            <Drill4jLogo onDark showTagline={false} />
+          </Link>
+        </div>
         <SiderMenu location={location} />
       </Sider>
       <Layout>
@@ -224,7 +210,7 @@ const AppContent = ({location}) => {
                   element={<AdminManageApiKeys />}
                 />
               </Route>
-              <Route path="/" element={<Navigate to="/my-api-keys" />} />
+              <Route path="/" element={<Navigate to="/metrics" />} />
               <Route
                 path="/my-api-keys/*"
                 element={<PrivateRoute roles={userRoles} />}
@@ -237,76 +223,22 @@ const AppContent = ({location}) => {
               >
                 <Route index element={<MyAccount />} />
               </Route>
-              <Route path="*" element={<Navigate to="/not-found" />} />
+              <Route
+                path="/preferences/*"
+                element={<PrivateRoute roles={userRoles} />}
+              >
+                <Route index element={<PreferencesPage />} />
+              </Route>
+              <Route path="/metrics" element={<PrivateRoute roles={userRoles} />}>
+                <Route element={<MetricsLayout />}>{metricsRoutes}</Route>
+              </Route>
+              <Route path="/not-found" element={<NotFoundPage />} />
+              <Route path="*" element={<Navigate to="/not-found" replace />} />
             </Routes>
           </div>
         </Content>
       </Layout>
     </Layout>
-  )
-}
-
-function SiderMenu({ location }) {
-  const [isSignOutInProgress, setIsSignOutInProgress] = useState(false)
-
-  const handleSignOut = useCallback(async () => {
-    setIsSignOutInProgress(true)
-    try {
-      await signOut()
-      message.success("Signed out successfully! Redirecting...")
-      window.location.reload()
-    } catch (error) {
-      message.error(`Failed to sign out. ${error.message}`)
-    }
-    setIsSignOutInProgress(false)
-  }, [])
-
-  const defaultOpenKeys = useMemo(
-    () =>
-      ["/admin/manage-users", "/admin/manage-api-keys"].includes(
-        location.pathname
-      )
-        ? "admin-submenu"
-        : "",
-    [location.pathname]
-  )
-
-  return (
-    <Menu
-      theme="dark"
-      mode="inline"
-      defaultSelectedKeys={[location.pathname]}
-      defaultOpenKeys={defaultOpenKeys}
-    >
-      <SubMenu key="admin-submenu" icon={<SettingOutlined />} title="Manage">
-        <Menu.Item key="/admin/manage-users" icon={<TeamOutlined />}>
-          <Link to="/admin/manage-users">Users</Link>
-        </Menu.Item>
-        <Menu.Item key="/admin/manage-api-keys" icon={<ApiOutlined />}>
-          <Link to="/admin/manage-api-keys">API Keys</Link>
-        </Menu.Item>
-      </SubMenu>
-      <Menu.Item key="/my-api-keys" icon={<ApiOutlined />}>
-        <Link to="/my-api-keys">My API Keys</Link>
-      </Menu.Item>
-      <Menu.Item key="/my-account" icon={<UserOutlined />}>
-        <Link to="/my-account">My Account</Link>
-      </Menu.Item>
-      <Menu.Item key="5" icon={<LogoutOutlined />} onClick={handleSignOut}>
-        Sign Out{" "}
-        {isSignOutInProgress && (
-          <Spin
-            size="small"
-            indicator={
-              <LoadingOutlined
-                style={{ fontSize: "16px", color: "white", marginLeft: "8px" }}
-                spin
-              />
-            }
-          />
-        )}
-      </Menu.Item>
-    </Menu>
   )
 }
 

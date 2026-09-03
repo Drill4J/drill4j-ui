@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from "react"
 import { Alert, Avatar, Skeleton, Typography } from "antd"
 import useAuth from "../../../modules/auth/hooks/use-auth-hook"
 
@@ -24,12 +23,10 @@ export const MyAccountCard = () => {
 
   if (!isFetched) {
     return (
-      <Skeleton.Avatar
-        active
-        size={64}
-        shape="circle"
-        style={{ marginRight: 16 }}
-      />
+      <div className="my-account-profile">
+        <Skeleton.Avatar active size={64} shape="circle" />
+        <Skeleton active title={{ width: 160 }} paragraph={{ rows: 1, width: 100 }} />
+      </div>
     )
   }
 
@@ -41,20 +38,12 @@ export const MyAccountCard = () => {
   const avatarLetter = username ? username.charAt(0).toUpperCase() : ""
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <Avatar size={64} style={{ backgroundColor: "#87d068", marginRight: 16 }}>
+    <div className="my-account-profile">
+      <Avatar size={64} style={{ backgroundColor: "#87d068", flexShrink: 0 }}>
         {avatarLetter}
       </Avatar>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-        }}
-      >
-        <Title level={3} style={{ marginTop: "0" }}>
-          {username}
-        </Title>
+      <div className="my-account-profile-meta">
+        <Title level={3}>{username}</Title>
         <Text type="secondary">Role: {role}</Text>
       </div>
     </div>

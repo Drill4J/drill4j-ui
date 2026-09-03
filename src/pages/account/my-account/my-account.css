@@ -1,0 +1,33 @@
+.my-account-page {
+  max-width: 480px;
+}
+
+.my-account-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.my-account-profile-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.my-account-profile-meta .ant-typography {
+  margin: 0;
+}
+
+.my-account-password-form {
+  max-width: 360px;
+}
+
+.my-account-password-form .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.my-account-password-form .ant-form-item-explain {
+  text-align: left;
+}

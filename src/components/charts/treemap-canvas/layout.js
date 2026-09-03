@@ -6,90 +6,62 @@
 const PADDING = 2
 const HEADER_HEIGHT = 18
 
-export const SYNTHETIC_ROOT_FULL_NAME = "/"
-
-export function buildTree(data) {
-  if (!data.length) {
-    return null
-  }
-
-  const nodes = new Map()
-
-  data.forEach((item) => {
-    nodes.set(item.full_name, {
-      ...item,
-      children: [],
-    })
-  })
-
-  const topLevel = []
-
-  nodes.forEach((node) => {
-    if (!node.parent) {
-      topLevel.push(node)
-      return
-    }
-
-    const parent = nodes.get(node.parent)
-    if (parent) {
-      parent.children.push(node)
-    } else {
-      topLevel.push(node)
-    }
-  })
-
-  if (!topLevel.length) {
-    return null
-  }
-
-  if (topLevel.length === 1) {
-    return topLevel[0]
-  }
-
-  const probes_count = topLevel.reduce((sum, node) => sum + node.probes_count, 0)
-  const covered_probes = topLevel.reduce((sum, node) => sum + node.covered_probes, 0)
-
-  topLevel.forEach((node) => {
-    node.parent = SYNTHETIC_ROOT_FULL_NAME
-  })
+function attachParents(node, parentFullName = null) {
+  const children = (node.children ?? []).map((child) => attachParents(child, node.full_name))
 
   return {
-    name: "root",
-    full_name: SYNTHETIC_ROOT_FULL_NAME,
-    parent: null,
-    probes_count,
-    covered_probes,
-    params: null,
-    return_type: null,
-    children: topLevel,
+    ...node,
+    parent: parentFullName,
+    children,
   }
 }
 
-export function buildNodeMap(root) {
+/**
+ * @param {object[] | null | undefined} roots - nested treemap roots from the API
+ * @returns {object[] | null}
+ */
+export function normalizeTreemapRoots(roots) {
+  if (!roots?.length) {
+    return null
+  }
+
+  return roots.map((root) => attachParents(root))
+}
+
+export function buildNodeMap(roots) {
   const map = new Map()
 
-  if (!root) {
+  if (!roots) {
     return map
   }
 
+  const nodes = Array.isArray(roots) ? roots : [roots]
+
   const walk = (node) => {
     map.set(node.full_name, node)
-    node.children.forEach(walk)
+    ;(node.children ?? []).forEach(walk)
   }
 
-  walk(root)
+  roots.forEach(walk)
   return map
 }
 
-export function layoutTreemap(root, width, height, maxDepth) {
-  if (!root || width <= 0 || height <= 0) {
+export function layoutTreemap(roots, width, height, maxDepth) {
+  if (!roots || width <= 0 || height <= 0) {
+    return []
+  }
+
+  const nodes = Array.isArray(roots) ? roots : [roots]
+  const visibleRoots = nodes.filter((node) => node.probes_count > 0)
+  if (!visibleRoots.length) {
     return []
   }
 
   const positioned = []
 
   const layoutNode = (node, x, y, w, h, depth) => {
-    const hasVisibleChildren = depth < maxDepth && node.children.some((child) => child.probes_count > 0)
+    const children = node.children ?? []
+    const hasVisibleChildren = depth < maxDepth && children.some((child) => child.probes_count > 0)
 
     positioned.push({
       node,
@@ -106,8 +78,8 @@ export function layoutTreemap(root, width, height, maxDepth) {
       return
     }
 
-    const children = node.children.filter((child) => child.probes_count > 0)
-    if (!children.length) {
+    const visibleChildren = children.filter((child) => child.probes_count > 0)
+    if (!visibleChildren.length) {
       return
     }
 
@@ -120,11 +92,17 @@ export function layoutTreemap(root, width, height, maxDepth) {
       return
     }
 
-    const totalValue = children.reduce((sum, child) => sum + child.probes_count, 0)
-    squarify(children, innerX, innerY, innerW, innerH, totalValue, depth + 1, layoutNode)
+    const totalValue = visibleChildren.reduce((sum, child) => sum + child.probes_count, 0)
+    squarify(visibleChildren, innerX, innerY, innerW, innerH, totalValue, depth + 1, layoutNode)
   }
 
-  layoutNode(root, 0, 0, width, height, 1)
+  if (visibleRoots.length === 1) {
+    layoutNode(visibleRoots[0], 0, 0, width, height, 1)
+    return positioned
+  }
+
+  const totalValue = visibleRoots.reduce((sum, child) => sum + child.probes_count, 0)
+  squarify(visibleRoots, 0, 0, width, height, totalValue, 1, layoutNode)
   return positioned
 }
 

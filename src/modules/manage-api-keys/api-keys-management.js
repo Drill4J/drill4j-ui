@@ -16,14 +16,17 @@
 
 import axios from "axios";
 import { runCatching } from "../util";
+import { dedupedRequest } from "../metrics/api-metrics";
 
 /**
  * Fetches keys from the server.
  * @returns {Promise<any>} A promise that resolves with the fetched keys.
  */
 export async function getKeys() {
-  const response = await runCatching(axios.get("/keys"));
-  return response.data.data;
+  return dedupedRequest("admin-keys", async () => {
+    const response = await runCatching(axios.get("/keys"));
+    return response.data.data;
+  });
 }
 
 /**

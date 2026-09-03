@@ -1,0 +1,79 @@
+.test-files-table .ant-table {
+  table-layout: fixed;
+}
+
+.test-files-table .ant-table-cell {
+  overflow: hidden;
+}
+
+.test-file-path-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.test-file-path-cell .coverage-scope-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.test-file-expand-icon {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.test-files-table .ant-table-expanded-row > td,
+.test-files-table .ant-table-expanded-row:hover > td {
+  background: transparent !important;
+}
+
+.test-file-launches-panel {
+  padding: 4px 0;
+}
+
+.test-file-launches-panel__header {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.test-file-launches-panel .ant-table,
+.test-file-launches-panel .ant-table-container,
+.test-file-launches-panel .ant-table-content,
+.test-file-launches-panel .ant-table-thead > tr > th,
+.test-file-launches-panel .ant-table-tbody > tr > td,
+.test-file-launches-panel .ant-table-tbody > tr.ant-table-row:hover > td,
+.test-file-launches-panel .ant-table-tbody > tr.ant-table-row-selected > td {
+  background: transparent !important;
+}
+
+.test-file-launches-panel .ant-table {
+  table-layout: fixed;
+}
+
+.test-file-launches-panel .ant-table-cell {
+  overflow: hidden;
+}
+
+.test-files-table .ant-table-tbody > tr.ant-table-row:hover > td > .test-file-path-cell > .coverage-scope-name > .coverage-scope-name__link,
+.test-file-launches-panel .ant-table-tbody > tr:hover > td > .coverage-scope-name > .coverage-scope-name__link {
+  opacity: 1;
+}
+
+@keyframes test-launch-row-flash {
+  0% {
+    box-shadow: inset 0 0 0 2px #1677ff;
+    background-color: rgba(22, 119, 255, 0.12) !important;
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px rgba(22, 119, 255, 0);
+    background-color: transparent !important;
+  }
+}
+
+.test-launch-row-highlight-0 > td,
+.test-launch-row-highlight-1 > td {
+  animation: test-launch-row-flash 3s ease-out forwards;
+}

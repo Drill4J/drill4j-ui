@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { useState } from "react"
 import { Form, Input, Button, message } from "antd"
 import * as API from "../../../modules/auth/api-auth"
-import "./update-password-form.css"
-import { useState } from "react"
 
 export const UpdatePasswordForm = () => {
   const [form] = Form.useForm()
@@ -25,12 +24,9 @@ export const UpdatePasswordForm = () => {
   const onFinish = async (values) => {
     setIsSubmitting(true)
     try {
-      const { oldPassword, newPassword, confirmPassword } = values
-      if (newPassword !== confirmPassword) {
-        throw new Error("New passwords do not match!")
-      }
+      const { oldPassword, newPassword } = values
       await API.updatePassword({ oldPassword, newPassword })
-      message.success("Password updated successfully!")
+      message.success("Password updated successfully")
       form.resetFields()
     } catch (error) {
       message.error(`${error?.message}`)
@@ -39,49 +35,56 @@ export const UpdatePasswordForm = () => {
   }
 
   return (
-    <div className="updatePasswordForm">
-      <Form
-        form={form}
-        name="update_password"
-        onFinish={onFinish}
-        layout="vertical"
+    <Form
+      className="my-account-password-form"
+      form={form}
+      name="update_password"
+      onFinish={onFinish}
+      layout="vertical"
+      requiredMark="optional"
+    >
+      <Form.Item
+        label="Current password"
+        name="oldPassword"
+        rules={[
+          { required: true, message: "Please enter your current password" },
+        ]}
       >
-        <Form.Item
-          label="Old Password"
-          name="oldPassword"
-          rules={[
-            { required: true, message: "Please input your old password!" },
-          ]}
-        >
-          <Input.Password />
-        </Form.Item>
+        <Input.Password autoComplete="current-password" />
+      </Form.Item>
 
-        <Form.Item
-          label="New Password"
-          name="newPassword"
-          rules={[
-            { required: true, message: "Please input your new password!" },
-          ]}
-        >
-          <Input.Password />
-        </Form.Item>
+      <Form.Item
+        label="New password"
+        name="newPassword"
+        rules={[{ required: true, message: "Please enter a new password" }]}
+      >
+        <Input.Password autoComplete="new-password" />
+      </Form.Item>
 
-        <Form.Item
-          label="Confirm New Password"
-          name="confirmPassword"
-          rules={[
-            { required: true, message: "Please confirm your new password!" },
-          ]}
-        >
-          <Input.Password />
-        </Form.Item>
+      <Form.Item
+        label="Confirm new password"
+        name="confirmPassword"
+        dependencies={["newPassword"]}
+        rules={[
+          { required: true, message: "Please confirm your new password" },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue("newPassword") === value) {
+                return Promise.resolve()
+              }
+              return Promise.reject(new Error("New passwords do not match"))
+            },
+          }),
+        ]}
+      >
+        <Input.Password autoComplete="new-password" />
+      </Form.Item>
 
-        <Form.Item style={{ textAlign: "left" }}>
-          <Button type="primary" htmlType="submit" loading={isSubmitting}>
-            Update Password
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+      <Form.Item>
+        <Button type="primary" htmlType="submit" loading={isSubmitting}>
+          Update password
+        </Button>
+      </Form.Item>
+    </Form>
   )
 }

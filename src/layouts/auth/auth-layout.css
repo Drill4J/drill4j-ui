@@ -1,0 +1,19 @@
+.auth-layout-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  background: #fff;
+}
+
+.auth-layout-body {
+  width: 100%;
+  min-height: 96px;
+}
+
+.auth-layout-body .ant-spin-nested-loading {
+  width: 100%;
+}
+
+.auth-layout-spin-slot {
+  min-height: 88px;
+}

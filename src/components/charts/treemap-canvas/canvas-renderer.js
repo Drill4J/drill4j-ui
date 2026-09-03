@@ -1,9 +1,8 @@
 /**
  * Canvas drawing utilities for treemap visualization.
  */
-import { getCoverageColor } from "./colors"
+import { coveragePaintStrategy } from "./paint-strategies"
 
-const BORDER_COLOR = "#ffffff"
 const HOVER_OVERLAY = "rgba(0, 0, 0, 0.15)"
 const TEXT_COLOR = "#333333"
 const MIN_LABEL_WIDTH = 36
@@ -11,15 +10,26 @@ const MIN_LABEL_HEIGHT = 20
 const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
 
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Array} positionedNodes
+ * @param {number} dpr
+ * @param {object} [paintStrategy] fill/border/labelSuffix strategy (defaults to coverage)
+ * @param {object} [paintContext] coverage UI knobs forwarded to the strategy
+ */
 export function drawTreemap(
   ctx,
   positionedNodes,
   dpr,
-  colorblindMode = "DEFAULT",
-  hoveredNodeId = null,
-  highlightEnabled = false,
-  highlightThreshold = 50
+  paintStrategy = coveragePaintStrategy,
+  paintContext = {}
 ) {
+  const {
+    colorblindMode = "DEFAULT",
+    highlightEnabled = false,
+    highlightThreshold = 50,
+  } = paintContext
+
   ctx.save()
   ctx.scale(dpr, dpr)
   ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
@@ -29,13 +39,20 @@ export function drawTreemap(
       return
     }
 
-    const fill = getCoverageColor(coverageRatio, colorblindMode, highlightEnabled, highlightThreshold)
+    const strategyArgs = {
+      node,
+      coverageRatio,
+      colorblindMode,
+      highlightEnabled,
+      highlightThreshold,
+    }
 
-    ctx.fillStyle = fill
+    ctx.fillStyle = paintStrategy.getFill(strategyArgs)
     ctx.fillRect(x, y, width, height)
 
-    ctx.strokeStyle = BORDER_COLOR
-    ctx.lineWidth = 1
+    const border = paintStrategy.getBorder(strategyArgs)
+    ctx.strokeStyle = border.color
+    ctx.lineWidth = border.width ?? 1
     ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1)
 
     const showParentLabel = !isLeaf && width >= MIN_LABEL_WIDTH && height >= HEADER_HEIGHT + MIN_LABEL_HEIGHT
@@ -44,9 +61,17 @@ export function drawTreemap(
     if (showParentLabel) {
       drawParentLabel(ctx, node.name, x, y, width)
     } else if (showLeafLabel) {
-      drawLabel(ctx, node.name, Math.round(coverageRatio * 100), x, y, width, height)
+      drawLabel(ctx, node.name, paintStrategy.getLabelSuffix(strategyArgs), x, y, width, height)
     }
   })
+
+  ctx.restore()
+}
+
+export function drawHoverOverlay(ctx, positionedNodes, dpr, hoveredNodeId) {
+  ctx.save()
+  ctx.scale(dpr, dpr)
+  ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
 
   if (hoveredNodeId) {
     const hovered = positionedNodes.find((positioned) => positioned.node.full_name === hoveredNodeId)
@@ -85,7 +110,7 @@ function truncateToWidth(ctx, text, maxWidth) {
   return truncated + ellipsis
 }
 
-function drawLabel(ctx, name, coveragePercent, x, y, width, height) {
+function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
   const padding = 4
   const maxWidth = width - padding * 2
   const maxHeight = height - padding * 2
@@ -100,9 +125,14 @@ function drawLabel(ctx, name, coveragePercent, x, y, width, height) {
   ctx.textAlign = "left"
 
   const nameLines = wrapText(ctx, name, maxWidth, fontSize, 3)
-  const percentLine = `${coveragePercent}%`
+  const percentLine =
+    secondaryLabel === "" || secondaryLabel == null
+      ? null
+      : typeof secondaryLabel === "number"
+        ? `${secondaryLabel}%`
+        : String(secondaryLabel)
   const lineHeight = fontSize * 1.2
-  const totalLines = nameLines.length + 1
+  const totalLines = nameLines.length + (percentLine ? 1 : 0)
   const textHeight = totalLines * lineHeight
 
   if (textHeight > maxHeight) {
@@ -117,8 +147,10 @@ function drawLabel(ctx, name, coveragePercent, x, y, width, height) {
     textY += lineHeight
   })
 
-  ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`
-  ctx.fillText(percentLine, x + padding, textY, maxWidth)
+  if (percentLine) {
+    ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`
+    ctx.fillText(percentLine, x + padding, textY, maxWidth)
+  }
 }
 
 function wrapText(ctx, text, maxWidth, fontSize, maxLines) {

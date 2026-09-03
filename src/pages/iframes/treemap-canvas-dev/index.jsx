@@ -23,9 +23,9 @@ export const TreemapCanvasDevPage = () => (
         apiEndpoint="/metrics/coverage-treemap"
         queryParams={[
           "buildId",
-          "testTag",
-          "envId",
-          "branch",
+          "testTags",
+          "envIds",
+          "branches",
           "packageNamePattern",
           "classNamePattern",
           "testSessionId",

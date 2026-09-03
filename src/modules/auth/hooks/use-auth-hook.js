@@ -76,5 +76,11 @@ export const AuthProvider = ({ children }) => {
   )
 }
 
-const useAuth = () => useContext(AuthContext)
+const useAuth = () => {
+  const state = useContext(AuthContext)
+  return {
+    ...state,
+    isAdmin: state?.userInfo?.role?.toLowerCase() === "admin",
+  }
+}
 export default useAuth
