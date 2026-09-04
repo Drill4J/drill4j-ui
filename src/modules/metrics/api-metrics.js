@@ -1263,22 +1263,18 @@ export async function getCoverageMethods(buildId, params = {}) {
 
 /**
  * @param {string} groupId
- * @returns {Promise<{
- *   status?: string,
- *   lastProcessedAt?: string,
- *   lastRunAt?: string,
- *   errorMessage?: string,
- *   lastDuration?: number,
- *   lastRowsProcessed?: number,
- * } | null>}
+ * @returns {Promise<number | null>} Epoch milliseconds of the last successfully
+ *   processed ETL record, or null when unknown / unauthorized.
  */
-export async function getRefreshStatus(groupId) {
-  return dedupedRequest(`refresh-status:${groupId}`, async () => {
+export async function getLastProcessedTimestamp(groupId) {
+  return dedupedRequest(`last-processed-timestamp:${groupId}`, async () => {
     try {
-      const response = await axios.get("/metrics/refresh-status", {
-        params: { groupId },
-      })
-      return response.data.data
+      const response = await axios.get(
+        "/metrics/refresh/last-processed-timestamp",
+        { params: { groupId } }
+      )
+      const value = response.data?.data?.lastProcessedTimestamp
+      return typeof value === "number" ? value : null
     } catch (error) {
       if (error?.response?.status === 401 || error?.response?.status === 403) {
         return null

@@ -21,9 +21,6 @@ import * as API from "../../modules/metrics/api-metrics"
 
 const { Text } = Typography
 
-const IN_PROGRESS_STATUSES = new Set(["EXTRACTING", "LOADING"])
-const POLL_INTERVAL_MS = 5000
-
 const FRESHNESS_HINT = (
   <div style={{ width: 320, lineHeight: 1.55 }}>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -47,95 +44,64 @@ const FRESHNESS_HINT = (
 )
 
 function formatFreshnessDate(value) {
-  if (!value) {
+  if (value == null) {
     return null
   }
   const parsed = dayjs(value)
   return parsed.isValid() ? parsed.format("YYYY-MM-DD HH:mm") : null
 }
 
-function buildFreshnessMessage(status) {
-  if (IN_PROGRESS_STATUSES.has(status.status)) {
-    return {
-      text: "Updating metrics…",
-      spinning: true,
-    }
-  }
-
-  if (status.status === "FAILED") {
-    const failedAt = formatFreshnessDate(status.lastRunAt ?? status.lastProcessedAt)
-    return {
-      text: failedAt ? `Refresh failed · ${failedAt}` : "Metrics refresh failed",
-      spinning: false,
-    }
-  }
-
-  const date = formatFreshnessDate(status.lastProcessedAt)
-  if (!date) {
-    return null
-  }
-
-  return {
-    text: `Updated · ${date}`,
-    spinning: false,
-  }
-}
-
 /**
- * @param {{ groupId: string }} props
+ * @param {{
+ *   groupId: string,
+ *   updateFailedAt?: number | string | null,
+ * }} props
  */
-export function MetricsFreshnessBar({ groupId }) {
-  const [message, setMessage] = useState(null)
+export function MetricsFreshnessBar({ groupId, updateFailedAt = null }) {
+  const [text, setText] = useState("Loading last metrics update time…")
+  const [spinning, setSpinning] = useState(true)
+  const [danger, setDanger] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    let intervalId = null
 
-    const applyStatus = (status) => {
-      if (!status || Object.keys(status).length === 0) {
-        setMessage(null)
-        return false
-      }
-      setMessage(buildFreshnessMessage(status))
-      return IN_PROGRESS_STATUSES.has(status.status)
-    }
-
-    const fetchStatus = async () => {
-      try {
-        const status = await API.getRefreshStatus(groupId)
-        if (cancelled) {
-          return null
-        }
-        applyStatus(status)
-        return status
-      } catch {
-        if (!cancelled) {
-          setMessage({
-            text: "Failed to fetch metrics refresh date",
-            spinning: false,
-          })
-        }
-        return null
-      }
-    }
-
-    const load = async () => {
-      const status = await fetchStatus()
+    const show = (nextText, { spinning: nextSpinning = false, danger: nextDanger = false } = {}) => {
       if (cancelled) {
         return
       }
-      if (status && IN_PROGRESS_STATUSES.has(status.status)) {
-        intervalId = setInterval(async () => {
-          const nextStatus = await fetchStatus()
-          if (
-            !cancelled
-            && nextStatus
-            && !IN_PROGRESS_STATUSES.has(nextStatus.status)
-          ) {
-            clearInterval(intervalId)
-            intervalId = null
-          }
-        }, POLL_INTERVAL_MS)
+      setText(nextText)
+      setSpinning(nextSpinning)
+      setDanger(nextDanger)
+    }
+
+    const load = async () => {
+      // ETL update failure (fed in from elsewhere) ≠ failed to load freshness.
+      if (updateFailedAt != null) {
+        const failedAt = formatFreshnessDate(updateFailedAt)
+        show(
+          failedAt ? `Metrics update failed · ${failedAt}` : "Metrics update failed",
+          { danger: true }
+        )
+        return
+      }
+
+      show("Loading last metrics update time…", { spinning: true })
+
+      try {
+        const lastProcessedTimestamp = await API.getLastProcessedTimestamp(groupId)
+        if (cancelled) {
+          return
+        }
+        const date = formatFreshnessDate(lastProcessedTimestamp)
+        if (!date) {
+          setText(null)
+          setSpinning(false)
+          setDanger(false)
+          return
+        }
+        show(`Updated · ${date}`)
+      } catch {
+        show("Could not load last metrics update time", { danger: true })
       }
     }
 
@@ -143,13 +109,10 @@ export function MetricsFreshnessBar({ groupId }) {
 
     return () => {
       cancelled = true
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
     }
-  }, [groupId])
+  }, [groupId, updateFailedAt])
 
-  if (!message?.text) {
+  if (!text) {
     return null
   }
 
@@ -176,9 +139,12 @@ export function MetricsFreshnessBar({ groupId }) {
           }}
         />
       </Tooltip>
-      <Text type="secondary" style={{ fontSize: 13, whiteSpace: "nowrap" }}>
-        {message.spinning ? <LoadingOutlined spin style={{ marginRight: 8 }} /> : null}
-        {message.text}
+      <Text
+        type={danger ? "danger" : "secondary"}
+        style={{ fontSize: 13, whiteSpace: "nowrap" }}
+      >
+        {spinning ? <LoadingOutlined spin style={{ marginRight: 8 }} /> : null}
+        {text}
       </Text>
     </span>
   )
