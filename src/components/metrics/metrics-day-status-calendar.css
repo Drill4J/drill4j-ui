@@ -1,0 +1,144 @@
+.metrics-day-status-calendar {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.metrics-day-status-body {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.metrics-day-weekdays {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.metrics-day-weekdays-spacer {
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.metrics-day-weekdays-labels {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  gap: 3px;
+  padding: 4px 0;
+  font-size: 10px;
+  line-height: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  text-align: right;
+}
+
+.metrics-day-weekdays-labels > span {
+  display: block;
+  height: 12px;
+}
+
+.metrics-day-status-main {
+  min-width: 0;
+}
+
+.metrics-day-status-grid {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-columns: 12px;
+  gap: 3px;
+  padding: 4px 0;
+}
+
+.metrics-day-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.metrics-day-cell--empty {
+  background: transparent;
+}
+
+/* Lightness + hue separation for bad monitors / color vision deficiency.
+   Scheduled uses amber (not purple) so it stays distinct from blues. */
+.metrics-day-cell--unloaded {
+  background: #e8eaed;
+}
+
+.metrics-day-cell--scheduled {
+  background: #e6c36a;
+}
+
+.metrics-day-cell--running {
+  background-color: #9ecae8;
+  animation: metrics-day-pulse 1.4s ease-in-out infinite;
+}
+
+.metrics-day-cell--completed {
+  background: #d9ebf7;
+}
+
+.metrics-day-cell--failed {
+  background: #d97b7b;
+}
+
+/* Dim only non-matching statuses (higher-specificity restore was losing before). */
+.metrics-day-status-grid[data-highlight="UNLOADED"]
+  .metrics-day-cell:not(.metrics-day-cell--empty):not(.metrics-day-cell--unloaded),
+.metrics-day-status-grid[data-highlight="SCHEDULED"]
+  .metrics-day-cell:not(.metrics-day-cell--empty):not(.metrics-day-cell--scheduled),
+.metrics-day-status-grid[data-highlight="RUNNING"]
+  .metrics-day-cell:not(.metrics-day-cell--empty):not(.metrics-day-cell--running),
+.metrics-day-status-grid[data-highlight="COMPLETED"]
+  .metrics-day-cell:not(.metrics-day-cell--empty):not(.metrics-day-cell--completed),
+.metrics-day-status-grid[data-highlight="FAILED"]
+  .metrics-day-cell:not(.metrics-day-cell--empty):not(.metrics-day-cell--failed) {
+  opacity: 0.22;
+}
+
+@keyframes metrics-day-pulse {
+  0%,
+  100% {
+    background-color: #9ecae8;
+  }
+  50% {
+    background-color: #1a5f9e;
+  }
+}
+
+.metrics-day-status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.metrics-day-status-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.metrics-day-status-legend-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.metrics-day-month-labels {
+  position: relative;
+  margin-bottom: 4px;
+  min-height: 16px;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.metrics-day-month-label {
+  flex: none;
+  white-space: nowrap;
+}

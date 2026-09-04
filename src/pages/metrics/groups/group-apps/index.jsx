@@ -71,8 +71,8 @@ export const GroupAppsPage = () => {
           {groupId}
         </Title>
         <Space>
-          <Button onClick={() => navigate(`/metrics/${groupId}/settings`)}>
-            Settings
+          <Button onClick={() => navigate(`/metrics/${groupId}/data-management`)}>
+            Data Management
           </Button>
           <Button
             type="primary"

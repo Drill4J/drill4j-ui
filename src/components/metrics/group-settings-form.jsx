@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Button, Form, Modal, Space, Spin, message } from "antd"
+import { Button, Form, Modal, Space, Spin, Tooltip, message } from "antd"
 import * as API from "../../modules/group-settings/api-group-settings"
 import { PeriodDaysField } from "./period-days-field"
+
+const ADMIN_REQUIRED = "ADMIN role is required"
 
 function validatePeriodDays(_, value) {
   if (value === undefined) {
@@ -29,9 +31,9 @@ function validatePeriodDays(_, value) {
 }
 
 /**
- * @param {{ groupId: string }} props
+ * @param {{ groupId: string, disabled?: boolean }} props
  */
-export function GroupSettingsForm({ groupId }) {
+export function GroupSettingsForm({ groupId, disabled = false }) {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -109,11 +111,12 @@ export function GroupSettingsForm({ groupId }) {
     return <Spin />
   }
 
-  return (
+  const formNode = (
     <Form
       form={form}
       layout="vertical"
       onFinish={onFinish}
+      disabled={disabled}
       style={{ maxWidth: 420 }}
     >
       <Form.Item
@@ -143,5 +146,17 @@ export function GroupSettingsForm({ groupId }) {
         </Space>
       </Form.Item>
     </Form>
+  )
+
+  if (!disabled) {
+    return formNode
+  }
+
+  return (
+    <Tooltip title={ADMIN_REQUIRED}>
+      <div style={{ display: "inline-block", maxWidth: 420, width: "100%" }}>
+        {formNode}
+      </div>
+    </Tooltip>
   )
 }

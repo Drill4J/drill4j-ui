@@ -1285,3 +1285,55 @@ export async function getLastProcessedTimestamp(groupId) {
     }
   })
 }
+
+/**
+ * @param {string} groupId
+ * @param {{ fromDay?: string, toDay?: string }} [params]
+ * @returns {Promise<Record<string, string>>} Map of ISO date → EtlDailyStatus
+ */
+export async function getDailyRefreshStatuses(groupId, params = {}) {
+  const { fromDay, toDay } = params
+  const key = `refresh-status:${groupId}:${fromDay ?? ""}:${toDay ?? ""}`
+  return dedupedRequest(key, async () => {
+    const response = await runCatching(
+      axios.get("/metrics/refresh/status", {
+        params: {
+          groupId,
+          ...(fromDay ? { fromDay } : {}),
+          ...(toDay ? { toDay } : {}),
+        },
+      })
+    )
+    return response.data?.data ?? {}
+  })
+}
+
+/**
+ * @param {string} groupId
+ * @param {{
+ *   reset?: boolean,
+ *   fromDay?: string,
+ *   toDay?: string,
+ *   workers?: number,
+ * }} [params]
+ * @returns {Promise<string>} Success message from the API
+ */
+export async function refreshMetrics(groupId, params = {}) {
+  const { reset, fromDay, toDay, workers } = params
+  const response = await runCatching(
+    axios.post("/metrics/refresh", null, {
+      params: {
+        groupId,
+        ...(reset != null ? { reset } : {}),
+        ...(fromDay ? { fromDay } : {}),
+        ...(toDay ? { toDay } : {}),
+        ...(workers != null ? { workers } : {}),
+      },
+    })
+  )
+  return (
+    response.data?.data ??
+    response.data?.message ??
+    "Metrics refreshed successfully"
+  )
+}

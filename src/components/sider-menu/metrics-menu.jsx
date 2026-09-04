@@ -16,10 +16,10 @@
 import {
   ApartmentOutlined,
   AppstoreOutlined,
+  DatabaseOutlined,
   ExperimentOutlined,
   FileSearchOutlined,
   LineChartOutlined,
-  SettingOutlined,
   StopOutlined,
 } from "@ant-design/icons"
 import { Link } from "react-router-dom"
@@ -40,7 +40,8 @@ const PATH_ROUTES = {
   },
   "test-sessions/:testSessionId": { level: "test-sessions", page: "test-session" },
   "test-sessions": { level: "test-sessions", page: "test-sessions" },
-  settings: { level: "group", page: "settings" },
+  "data-management": { level: "group", page: "data-management" },
+  settings: { level: "group", page: "data-management" },
   "": { level: "group", page: "apps" },
 }
 
@@ -91,7 +92,7 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
   return {
     group,
     sessions,
-    settings: groupId && `${group}/settings`,
+    dataManagement: groupId && `${group}/data-management`,
     app,
     exclusionRules: app && `${app}/method-ignore-rules`,
     trends: app && `${app}/trends`,
@@ -136,7 +137,7 @@ export function getMetricsSelectedKeys(location) {
   const byPage = {
     root: "/metrics",
     apps: p.group,
-    settings: p.settings,
+    "data-management": p.dataManagement,
     "test-sessions": p.sessions,
     "test-session": p.session,
     "session-results": p.sessionResults,
@@ -181,7 +182,7 @@ export function getMetricsMenuItems(location) {
       contextSection(`group-${groupId}`, groupId, [
         linkItem(p.group, "Apps", <AppstoreOutlined />),
         linkItem(p.sessions, "Test Sessions", <ExperimentOutlined />),
-        linkItem(p.settings, "Settings", <SettingOutlined />),
+        linkItem(p.dataManagement, "Data Management", <DatabaseOutlined />),
       ]),
     ]
 

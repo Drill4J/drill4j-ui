@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createRoutesFromElements, Outlet, Route } from "react-router-dom"
+import { createRoutesFromElements, Navigate, Outlet, Route, useParams } from "react-router-dom"
 import { GroupMetricsLayout } from "./group-metrics-layout"
 import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
-import { GroupSettingsPage } from "./groups/group-settings"
+import { DataManagementPage } from "./groups/data-management"
 import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPage } from "./groups/app-trends"
 import { MethodIgnoreRulesPage } from "./groups/method-ignore-rules"
@@ -28,6 +28,11 @@ import {
   TestSessionBuildsPage,
   TestSessionResultsPage,
 } from "./groups/test-session-detail"
+
+function SettingsToDataManagementRedirect() {
+  const { groupId } = useParams()
+  return <Navigate to={`/metrics/${groupId}/data-management`} replace />
+}
 
 /**
  * Group is the metrics context (like Report Portal project).
@@ -41,9 +46,13 @@ export const metricsRoutes = (
     <Route path=":groupId" handle={{ breadcrumb: "groupId" }} element={<GroupMetricsLayout />}>
       <Route index element={<GroupAppsPage />} />
       <Route
+        path="data-management"
+        handle={{ breadcrumb: "Data Management" }}
+        element={<DataManagementPage />}
+      />
+      <Route
         path="settings"
-        handle={{ breadcrumb: "Settings" }}
-        element={<GroupSettingsPage />}
+        element={<SettingsToDataManagementRedirect />}
       />
       <Route path="apps/:appId" handle={{ breadcrumb: "appId" }} element={<Outlet />}>
         <Route index element={<AppHubRoute />} />

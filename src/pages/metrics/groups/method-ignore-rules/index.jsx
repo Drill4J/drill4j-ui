@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
+  Alert,
   Button,
   Form,
   Input,
@@ -26,8 +27,7 @@ import {
   message,
 } from "antd"
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons"
-import axios from "axios"
-import { useParams, useSearchParams } from "react-router-dom"
+import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom"
 import { IgnoreRulesTreemap } from "../../../../components/charts/treemap-canvas"
 import { TitleHelpTooltip } from "../../../../components/metrics/title-help-tooltip"
 import useAuth from "../../../../modules/auth/hooks/use-auth-hook"
@@ -40,7 +40,7 @@ import {
 import { generateExclusionRuleFromNode } from "../../../../modules/method-ignore-rules/exclusion-rule-generator"
 import { RawMethodsPackageTree } from "./raw-methods-package-tree"
 
-const { Link, Text, Title } = Typography
+const { Text, Title } = Typography
 const PATTERN_FIELDS = [
   ["classnamePattern", "Class name regex"],
   ["namePattern", "Method name regex"],
@@ -48,10 +48,6 @@ const PATTERN_FIELDS = [
 const EXCLUSION_ACTION_LABEL = "Generate exclusion rule"
 const RULES_PAGE_SIZE = 20
 const BUILDS_PAGE_SIZE = 8
-const METRICS_REFRESH_SWAGGER_URL = `${new URL(
-  axios.defaults.baseURL || "/api",
-  window.location.href
-).origin}/swagger#operations-metrics-refreshMetrics`
 
 const RegexExample = ({ children }) => (
   <code
@@ -68,7 +64,10 @@ const RegexExample = ({ children }) => (
   </code>
 )
 
-const EXCLUSION_RULES_HELP = (
+/**
+ * @param {{ groupId: string }} props
+ */
+const ExclusionRulesHelp = ({ groupId }) => (
   <div style={{ width: 500, lineHeight: 1.55 }}>
     <p style={{ margin: "0 0 8px" }}>
       Rules are regular expressions used to match <i>methods</i>, either by class name or by method name.
@@ -76,16 +75,14 @@ const EXCLUSION_RULES_HELP = (
     </p>
     <p style={{ margin: "0 0 12px" }}>
       Rule changes apply <b>to new builds only</b>. To apply rules to earlier
-      builds, recalculate metrics via{" "}
-      <Link
-        href={METRICS_REFRESH_SWAGGER_URL}
-        target="_blank"
-        rel="noopener noreferrer"
+      builds, save the rule and then launch recalculation on the{" "}
+      <RouterLink
+        to={`/metrics/${groupId}/data-management`}
         style={{ color: "#91caff" }}
       >
-        POST /api/metrics/refresh
-      </Link>
-      .
+        Data Management
+      </RouterLink>{" "}
+      page.
     </p>
     <div style={{ fontWeight: 600, marginBottom: 6 }}>Examples</div>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -100,7 +97,8 @@ const EXCLUSION_RULES_HELP = (
       </li>
       <li style={{ marginBottom: 8 }}>
         To exclude a method by name in any class or package — set a method name
-        pattern, e.g. <RegexExample>^toString$</RegexExample> or{" "}
+        pattern, e.g.{" "}
+        <RegexExample>^toString$</RegexExample> or{" "}
         <RegexExample>^get.*</RegexExample>
       </li>
       <li>
@@ -432,7 +430,7 @@ export const MethodIgnoreRulesPage = () => {
       <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
         Exclusion rules
         <TitleHelpTooltip
-          title={EXCLUSION_RULES_HELP}
+          title={<ExclusionRulesHelp groupId={groupId} />}
           ariaLabel="How exclusion rules work"
         />
       </Title>
@@ -479,6 +477,22 @@ export const MethodIgnoreRulesPage = () => {
           <Title level={5} style={{ marginTop: 0 }}>
             New rule
           </Title>
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Applies to new builds only"
+            description={
+              <>
+                Rule changes apply to new builds only. To apply rules to earlier
+                builds, save the rule and then launch recalculation on the{" "}
+                <RouterLink to={`/metrics/${groupId}/data-management`}>
+                  Data Management
+                </RouterLink>{" "}
+                page.
+              </>
+            }
+          />
           <Form form={form} layout="vertical">
             <div
               style={{

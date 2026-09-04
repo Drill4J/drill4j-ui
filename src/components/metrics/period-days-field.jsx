@@ -29,12 +29,14 @@ import {
  *   value?: number | null,
  *   onChange?: (days: number | null | undefined) => void,
  *   unsetLabel?: string,
+ *   disabled?: boolean,
  * }} props
  */
 export function PeriodDaysField({
   value = null,
   onChange,
   unsetLabel = "Unset",
+  disabled = false,
 }) {
   const resolvedKey = resolvePeriodPresetKey(value)
   const [forceCustom, setForceCustom] = useState(false)
@@ -105,6 +107,7 @@ export function PeriodDaysField({
         options={selectOptions}
         onChange={onPresetChange}
         style={{ width: "100%" }}
+        disabled={disabled}
       />
       {presetKey === "custom" && (
         <InputNumber
@@ -115,6 +118,7 @@ export function PeriodDaysField({
           placeholder="Days"
           style={{ width: "100%" }}
           addonAfter="days"
+          disabled={disabled}
         />
       )}
     </Space>

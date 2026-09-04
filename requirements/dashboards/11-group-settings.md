@@ -1,8 +1,10 @@
 # Dashboard 11 — Group Settings
 
+> **Superseded by [14-group-data-management.md](./14-group-data-management.md)** — Settings becomes the **Data Management** page (day-status + trigger refresh + retention/metrics period).
+
 **Metabase ID:** —  
 **Route:** `/metrics/:groupId/settings`  
-**Status:** Draft
+**Status:** Superseded
 
 ## Summary
 
