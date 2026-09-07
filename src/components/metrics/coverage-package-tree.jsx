@@ -166,7 +166,7 @@ function buildTableTree(treemapRoots) {
 /**
  * @param {{
  *   buildId: string,
- *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[] },
  *   data: object[],
  *   loading: boolean,
  *   scrollToPackageKey?: string | null,

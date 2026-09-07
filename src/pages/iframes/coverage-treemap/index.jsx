@@ -24,7 +24,6 @@ export const CoverageTreemapPage = () => (
           apiEndpoint={"/metrics/coverage-treemap"}
           queryParams={[
               "buildId",
-              "testTags",
               "envIds",
               "branches",
               "packageNamePattern",

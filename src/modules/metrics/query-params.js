@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testTags", "testResults"]
+export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testResults"]
 
 export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
 
@@ -39,8 +39,11 @@ export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
 
 export const COMPARISON_LIST_QUERY_KEYS = ["changeTypes"]
 
+export const APP_TRENDS_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
+
 export const LIST_QUERY_PARAM_KEYS = new Set([
   ...COVERAGE_LIST_QUERY_KEYS,
+  ...APP_TRENDS_LIST_QUERY_KEYS,
   ...TEST_SESSIONS_LIST_QUERY_KEYS,
   ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
   ...COMPARISON_LIST_QUERY_KEYS,
@@ -103,10 +106,11 @@ export const COMPARISON_QUERY_KEYS = [
 export const APP_TRENDS_QUERY_KEYS = [
   "baselineBuildId",
   "size",
-  ...COVERAGE_LIST_QUERY_KEYS,
+  ...APP_TRENDS_LIST_QUERY_KEYS,
 ]
 
 const COVERAGE_LIST_QUERY_KEY_SET = new Set(COVERAGE_LIST_QUERY_KEYS)
+const APP_TRENDS_LIST_QUERY_KEY_SET = new Set(APP_TRENDS_LIST_QUERY_KEYS)
 
 /**
  * @param {URLSearchParams} params
@@ -206,7 +210,6 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   baselineBuildId?: string,
  *   branches?: string[],
  *   envIds?: string[],
- *   testTags?: string[],
  *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  *   packageName?: string,
@@ -234,7 +237,6 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   pageSize?: number,
  *   branches?: string[],
  *   envIds?: string[],
- *   testTags?: string[],
  *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  * }} ComparisonQueryState
@@ -322,7 +324,7 @@ export function buildAppTrendsSearchParams(state) {
   const params = new URLSearchParams()
   APP_TRENDS_QUERY_KEYS.forEach((key) => {
     const value = state[key]
-    if (COVERAGE_LIST_QUERY_KEY_SET.has(key)) {
+    if (APP_TRENDS_LIST_QUERY_KEY_SET.has(key)) {
       setListQueryParam(params, key, value)
       return
     }

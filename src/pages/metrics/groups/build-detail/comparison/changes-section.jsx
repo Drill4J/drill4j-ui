@@ -21,7 +21,7 @@ import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
  * @param {{
  *   build: object,
  *   baselineBuild: object,
- *   coverageFilters?: { testTags?: string[], envIds?: string[], branches?: string[] },
+ *   coverageFilters?: { testResults?: string[], envIds?: string[], branches?: string[] },
  *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,

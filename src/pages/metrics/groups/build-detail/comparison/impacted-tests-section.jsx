@@ -41,7 +41,7 @@ const IMPACTED_METHODS_SORT_OPTIONS = [
  *   build: object,
  *   baselineBuild: object,
  *   methodSignature?: string,
- *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[] },
  *   onMethodSignatureChange: (value?: string) => void,
  *   onViewMethodsForTest: (testDefinitionId: string) => void,
  *   onTotalChange: (total: number) => void,

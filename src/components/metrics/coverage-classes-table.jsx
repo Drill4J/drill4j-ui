@@ -326,7 +326,7 @@ function classColumns(
  * @param {{
  *   buildId: string,
  *   packageName: string,
- *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[] },
  *   sortBy?: string,
  *   sortOrder?: string,
  *   onSortChange?: (sort: { sortBy: string | null, sortOrder: string | null }) => void,

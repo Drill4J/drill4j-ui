@@ -23,18 +23,17 @@ import * as API from "../../modules/metrics/api-metrics"
 const { Text } = Typography
 
 const FILTER_SCOPE_HINT =
-  "Branches, environments, and test tags apply to all coverage charts on this page."
+  "Branches and environments apply to all coverage charts on this page."
 
 const COVERAGE_FILTER_HINTS = {
   branches:
     "When aggregating coverage across builds, only includes builds from the selected branches.",
   envIds: "Shows coverage collected only in the selected environments.",
-  testTags: "Shows coverage contributed only by tests with the selected tags.",
   testResults: "Shows coverage contributed only by tests with the selected results.",
 }
 
 const INCLUDE_OTHER_BUILDS_HINT =
-  "When on, coverage includes probes covered on other builds (within branch / env / tag filters). When off, only coverage collected on this build is shown."
+  "When on, coverage includes probes covered on other builds (within branch / env filters). When off, only coverage collected on this build is shown."
 
 /**
  * Sticky coverage filter bar for build detail pages.
@@ -45,17 +44,15 @@ const INCLUDE_OTHER_BUILDS_HINT =
  *   appId: string,
  *   branches?: string[],
  *   envIds?: string[],
- *   testTags?: string[],
  *   testResults?: string[],
  *   includeOtherBuilds?: boolean,
  *   onBranchesChange: (value?: string[]) => void,
  *   onEnvIdsChange: (value?: string[]) => void,
- *   onTestTagsChange: (value?: string[]) => void,
  *   onTestResultsChange: (value?: string[]) => void,
  *   onIncludeOtherBuildsChange?: (value: boolean) => void,
  *   onClear?: () => void,
  *   scopeHint?: string,
- *   filterHints?: { branches?: string, envIds?: string, testTags?: string, testResults?: string },
+ *   filterHints?: { branches?: string, envIds?: string, testResults?: string },
  *   sticky?: boolean,
  * }} props
  */
@@ -64,12 +61,10 @@ export function BuildCoverageFiltersBar({
   appId,
   branches,
   envIds,
-  testTags,
   testResults,
   includeOtherBuilds = true,
   onBranchesChange,
   onEnvIdsChange,
-  onTestTagsChange,
   onTestResultsChange,
   onIncludeOtherBuildsChange,
   onClear,
@@ -80,7 +75,6 @@ export function BuildCoverageFiltersBar({
   const hasActiveFilters = Boolean(
     branches?.length ||
       envIds?.length ||
-      testTags?.length ||
       testResults?.length ||
       includeOtherBuilds === false
   )
@@ -91,10 +85,6 @@ export function BuildCoverageFiltersBar({
   )
   const loadEnvIds = useCallback(
     (params) => API.getAppEnvIds(groupId, appId, params),
-    [appId, groupId]
-  )
-  const loadTestTags = useCallback(
-    (params) => API.getAppTestTags(groupId, appId, params),
     [appId, groupId]
   )
 
@@ -128,16 +118,13 @@ export function BuildCoverageFiltersBar({
         size="small"
         branches={branches}
         envIds={envIds}
-        testTags={testTags}
         testResults={testResults}
         loadBranches={loadBranches}
         loadEnvIds={loadEnvIds}
-        loadTestTags={loadTestTags}
         loadTestResults={loadTestResults}
         filterHints={filterHints}
         onBranchesChange={onBranchesChange}
         onEnvIdsChange={onEnvIdsChange}
-        onTestTagsChange={onTestTagsChange}
         onTestResultsChange={onTestResultsChange}
       />
       {onIncludeOtherBuildsChange && (

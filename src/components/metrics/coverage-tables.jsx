@@ -18,7 +18,7 @@ import { CoveragePackageTree } from "./coverage-package-tree"
 /**
  * @param {{
  *   buildId: string,
- *   coverageFilters: { branches?: string[], envIds?: string[], testTags?: string[] },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[] },
  *   treemapRoots: object[],
  *   treemapLoading: boolean,
  *   scrollToPackageKey?: string | null,

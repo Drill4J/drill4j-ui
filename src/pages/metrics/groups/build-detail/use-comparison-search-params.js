@@ -52,7 +52,6 @@ export function useComparisonSearchParams() {
     [searchParams]
   )
   const envIds = useMemo(() => getListQueryParam(searchParams, "envIds"), [searchParams])
-  const testTags = useMemo(() => getListQueryParam(searchParams, "testTags"), [searchParams])
   const testResults = useMemo(() => getListQueryParam(searchParams, "testResults"), [searchParams])
   const changeTypes = useMemo(
     () => getListQueryParam(searchParams, "changeTypes"),
@@ -60,8 +59,8 @@ export function useComparisonSearchParams() {
   )
 
   const coverageFilters = useMemo(
-    () => ({ branches, envIds, testTags, testResults, baselineBuildId }),
-    [baselineBuildId, branches, envIds, testTags, testResults]
+    () => ({ branches, envIds, testResults, baselineBuildId }),
+    [baselineBuildId, branches, envIds, testResults]
   )
 
   const updateQueryParams = useCallback(
@@ -80,7 +79,6 @@ export function useComparisonSearchParams() {
         pageSize,
         branches,
         envIds,
-        testTags,
         testResults,
         includeOtherBuilds,
       }
@@ -111,7 +109,6 @@ export function useComparisonSearchParams() {
       pageSize,
       branches,
       envIds,
-      testTags,
       testResults,
       includeOtherBuilds,
       searchString,
@@ -123,7 +120,6 @@ export function useComparisonSearchParams() {
     updateQueryParams({
       branches: undefined,
       envIds: undefined,
-      testTags: undefined,
       testResults: undefined,
       includeOtherBuilds: undefined,
     })
@@ -143,7 +139,6 @@ export function useComparisonSearchParams() {
     pageSize,
     branches,
     envIds,
-    testTags,
     testResults,
     includeOtherBuilds,
     coverageFilters,

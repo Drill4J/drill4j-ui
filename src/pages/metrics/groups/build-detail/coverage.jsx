@@ -42,7 +42,6 @@ export const BuildCoverageSection = () => {
     includeOtherBuilds,
     branches,
     envIds,
-    testTags,
     packageName,
     className,
     methodId,
@@ -143,7 +142,6 @@ export const BuildCoverageSection = () => {
       baselineBuildId,
       branches,
       envIds,
-      testTags,
       includeOtherBuilds,
       packageName,
       className,
@@ -165,7 +163,6 @@ export const BuildCoverageSection = () => {
       packageName,
       sortBy,
       sortOrder,
-      testTags,
     ]
   )
 

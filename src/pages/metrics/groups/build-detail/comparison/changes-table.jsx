@@ -82,7 +82,7 @@ const SORT_OPTIONS = {
  * @param {{
  *   build: object,
  *   baselineBuild: object,
- *   coverageFilters?: { testTags?: string[], testResults?: string[], envIds?: string[], branches?: string[] },
+ *   coverageFilters?: { testResults?: string[], envIds?: string[], branches?: string[] },
  *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
@@ -136,7 +136,7 @@ export function ComparisonChangesTable({
   const scrolledForMethodIdRef = useRef(null)
   const skipPageResetRef = useRef(Boolean(initialPage))
 
-  const { testTags, envIds, branches, testResults } = coverageFilters
+  const { envIds, branches, testResults } = coverageFilters
 
   useEffect(() => {
     if (!testDefinitionId || !build?.buildVersion || !baselineBuild?.buildVersion) {
@@ -196,7 +196,6 @@ export function ComparisonChangesTable({
     sortBy,
     sortOrder,
     testDefinitionId,
-    testTags,
     testResults,
   ])
 
@@ -207,7 +206,6 @@ export function ComparisonChangesTable({
       setLoading(true)
       try {
         const query = buildComparisonQueryParams(build, baselineBuild, {
-          testTags,
           testResults,
           envIds,
           branches,
@@ -256,7 +254,6 @@ export function ComparisonChangesTable({
     sortBy,
     sortOrder,
     testDefinitionId,
-    testTags,
     testResults,
     onImpactedMethodsTotalChange,
   ])
@@ -280,7 +277,6 @@ export function ComparisonChangesTable({
     const locateRow = async () => {
       try {
         const baseQuery = {
-          testTags,
           testResults,
           envIds,
           branches,
@@ -354,7 +350,6 @@ export function ComparisonChangesTable({
     sortBy,
     sortOrder,
     testDefinitionId,
-    testTags,
     testResults,
   ])
 
