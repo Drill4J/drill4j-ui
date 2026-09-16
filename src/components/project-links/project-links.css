@@ -72,10 +72,12 @@
 .project-links-auth {
   margin-top: 16px;
   padding-top: 16px;
+  border-top: 1px solid var(--d4j-line, #d3dee8);
 }
 
 .sider-project-links {
-  padding: 24px 0 16px;
+  padding: 12px 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ant-layout-sider-collapsed .sider-project-links .project-links__license {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { Descriptions } from "antd"
+import "./key-value-panel.css"
 
 /**
  * @param {{
@@ -42,13 +43,14 @@ export function KeyValuePanel({ title, items, column = 2, extra }) {
 
   return (
     <Descriptions
+      className="key-value-panel"
       title={panelTitle}
       bordered
       size="small"
       column={column}
       styles={{
-        label: { padding: "12px 16px" },
-        content: { padding: "12px 16px" },
+        label: { padding: "12px 16px", whiteSpace: "nowrap" },
+        content: { padding: "12px 16px", minWidth: 0, overflow: "hidden" },
       }}
     >
       {items.map(({ label, value }) => (

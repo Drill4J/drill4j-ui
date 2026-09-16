@@ -33,9 +33,9 @@ const { Text } = Typography
 
 const TOOLTIP_BOX_STYLE = {
   fontSize: 12,
-  borderRadius: 4,
-  border: "1px solid #f0f0f0",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  borderRadius: 10,
+  border: "1px solid #d3dee8",
+  boxShadow: "0 8px 24px rgba(12, 36, 56, 0.08)",
   background: "#fff",
   padding: "8px 10px",
   pointerEvents: "none",
@@ -91,7 +91,7 @@ function PointTooltip({
           ? valueFormatter(Number(entry.value), key)
           : String(entry.value)
         return (
-          <div key={String(entry.dataKey)} style={{ color: entry.color || "#227FD2" }}>
+          <div key={String(entry.dataKey)} style={{ color: entry.color || "#2f8eea" }}>
             {name}: {formatted}
           </div>
         )
@@ -286,21 +286,21 @@ export function TrendChart({
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e8f1f7" />
               <XAxis
                 dataKey={xKey}
-                tick={{ fontSize: 11, fill: "rgba(0, 0, 0, 0.45)" }}
+                tick={{ fontSize: 11, fill: "#5a7186" }}
                 interval="preserveStartEnd"
                 minTickGap={24}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "rgba(0, 0, 0, 0.45)" }}
+                tick={{ fontSize: 11, fill: "#5a7186" }}
                 tickFormatter={resolvedYTickFormatter}
                 width={integerScale ? 56 : 52}
                 {...yAxisProps}
               />
               <Tooltip
-                cursor={{ stroke: "rgba(0, 0, 0, 0.2)", strokeWidth: 1 }}
+                cursor={{ stroke: "#9ee0cb", strokeWidth: 1 }}
                 isAnimationActive={false}
                 allowEscapeViewBox={{ x: false, y: true }}
                 wrapperStyle={{ overflow: "visible", pointerEvents: "none" }}

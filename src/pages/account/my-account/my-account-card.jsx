@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Alert, Avatar, Skeleton, Typography } from "antd"
+import { Alert, Avatar, Skeleton } from "antd"
 import useAuth from "../../../modules/auth/hooks/use-auth-hook"
 
-const { Title, Text } = Typography
+function formatRoleLabel(role) {
+  if (!role) {
+    return "User"
+  }
+  return String(role)
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 export const MyAccountCard = () => {
   const { userInfo, isFetched } = useAuth()
@@ -24,8 +31,14 @@ export const MyAccountCard = () => {
   if (!isFetched) {
     return (
       <div className="my-account-profile">
-        <Skeleton.Avatar active size={64} shape="circle" />
-        <Skeleton active title={{ width: 160 }} paragraph={{ rows: 1, width: 100 }} />
+        <Skeleton.Avatar active size={72} shape="circle" />
+        <div className="my-account-profile-meta">
+          <Skeleton
+            active
+            title={{ width: 180 }}
+            paragraph={{ rows: 1, width: 100 }}
+          />
+        </div>
       </div>
     )
   }
@@ -35,16 +48,24 @@ export const MyAccountCard = () => {
   }
 
   const { role, username } = userInfo
-  const avatarLetter = username ? username.charAt(0).toUpperCase() : ""
+  const avatarLetter = username ? username.charAt(0).toUpperCase() : "?"
+  const roleLabel = formatRoleLabel(role)
+  const isAdmin = String(role || "").toLowerCase() === "admin"
 
   return (
     <div className="my-account-profile">
-      <Avatar size={64} style={{ backgroundColor: "#87d068", flexShrink: 0 }}>
+      <Avatar className="my-account-avatar" size={72}>
         {avatarLetter}
       </Avatar>
       <div className="my-account-profile-meta">
-        <Title level={3}>{username}</Title>
-        <Text type="secondary">Role: {role}</Text>
+        <div className="my-account-username" title={username}>
+          {username}
+        </div>
+        <span
+          className={`my-account-role${isAdmin ? " my-account-role--admin" : ""}`}
+        >
+          {roleLabel}
+        </span>
       </div>
     </div>
   )

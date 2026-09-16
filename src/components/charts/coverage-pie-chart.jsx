@@ -24,9 +24,19 @@ import {
   Tooltip,
 } from "recharts"
 import { TitleHelpTooltip } from "../metrics/title-help-tooltip"
-import { formatCoveragePercent, formatCoveragePercentValue } from "../../modules/metrics/coverage-segments"
+import {
+  COVERAGE_SEGMENT_COLORS,
+  COVERAGE_SEGMENT_GRADIENT_STOPS,
+  formatCoveragePercent,
+  formatCoveragePercentValue,
+} from "../../modules/metrics/coverage-segments"
 
 const { Text } = Typography
+
+const PIE_INNER = 50
+const PIE_OUTER = 72
+/** Round only the coverage-run ends (gap stays a flat grey track). */
+const COVERAGE_CORNER_RADIUS = 10
 
 const HELP_BOX_STYLE = { width: 420, lineHeight: 1.55 }
 
@@ -82,13 +92,28 @@ const RADIAN = Math.PI / 180
 const LABEL_OFFSET = 16
 
 const DEFAULT_COLORS = {
-  covered: "#227FD2",
-  covered_in_other_builds: "#87BCEC",
-  gaps: "#ED8535",
-  missed: "#ED8535",
-  new: "#1677ff",
-  modified: "#faad14",
-  deleted: "#8c8c8c",
+  covered: COVERAGE_SEGMENT_COLORS.own,
+  covered_in_other_builds: COVERAGE_SEGMENT_COLORS.other,
+  gaps: COVERAGE_SEGMENT_COLORS.gap,
+  missed: COVERAGE_SEGMENT_COLORS.gap,
+  new: "#1aabb8",
+  modified: "#c9992e",
+  deleted: "#8aa0b2",
+}
+
+const SLICE_GRADIENT_KEYS = {
+  covered: "own",
+  covered_in_other_builds: "other",
+  gaps: "gap",
+  missed: "gap",
+}
+
+function sliceFill(entryName) {
+  const key = SLICE_GRADIENT_KEYS[entryName?.toLowerCase?.() ?? ""]
+  if (key) {
+    return `url(#coverage-grad-${key})`
+  }
+  return DEFAULT_COLORS[entryName?.toLowerCase?.()] || COVERAGE_SEGMENT_COLORS.own
 }
 
 const SLICE_LABELS = {
@@ -179,6 +204,29 @@ function CenterTotalLabel({ viewBox, total }) {
   )
 }
 
+function isGapSliceName(name) {
+  const key = name?.toLowerCase?.() ?? ""
+  return key === "gaps" || key === "missed" || key === "gaps_in_current_build"
+}
+
+function isOtherSliceName(name) {
+  return (name?.toLowerCase?.() ?? "") === "covered_in_other_builds"
+}
+
+function isOwnSliceName(name) {
+  return (name?.toLowerCase?.() ?? "") === "covered"
+}
+
+function resolveSliceColor(entry) {
+  if (entry.color) {
+    return entry.color
+  }
+  if (isGapSliceName(entry.name)) {
+    return COVERAGE_SEGMENT_COLORS.gap
+  }
+  return sliceFill(entry.name)
+}
+
 /**
  * @param {{
  *   title: string,
@@ -205,7 +253,37 @@ export function CoveragePieChart({
 }) {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0)
   const data = slices.filter((slice) => slice.value > 0)
+  const ownValue = data.find((s) => isOwnSliceName(s.name))?.value ?? 0
+  const otherValue = data.find((s) => isOtherSliceName(s.name))?.value ?? 0
+  const gapEntry = data.find((slice) => isGapSliceName(slice.name))
+  const gapValue = gapEntry?.value ?? 0
+  const coveredSum = ownValue + otherValue
   const isEmpty = data.length === 0
+  const labelRenderer = sliceLabel === "count" ? SliceCountLabel : SlicePercentLabel
+  // Round coverage ends only when there is a gap to round against; full ring stays flush.
+  const coverageCornerRadius =
+    coveredSum > 0 && gapValue > 0 ? COVERAGE_CORNER_RADIUS : 0
+
+  /** Hit-targets + labels (transparent fills — colour comes from layers below). */
+  const hitData = [
+    ...(ownValue > 0 ? [{ name: "covered", value: ownValue }] : []),
+    ...(otherValue > 0
+      ? [{ name: "covered_in_other_builds", value: otherValue }]
+      : []),
+    ...(gapValue > 0 ? [{ name: gapEntry.name, value: gapValue }] : []),
+    // Non-coverage pies (changes) fall back to raw slices.
+    ...data.filter(
+      (s) =>
+        !isOwnSliceName(s.name) &&
+        !isOtherSliceName(s.name) &&
+        !isGapSliceName(s.name)
+    ),
+  ]
+
+  const isCoveragePie = data.some(
+    (s) => isOwnSliceName(s.name) || isOtherSliceName(s.name) || isGapSliceName(s.name)
+  )
+
   const resolvedHelp = help ?? (coverageUnit ? COVERAGE_UNIT_HELP[coverageUnit] : undefined)
   const cardTitle = resolvedHelp ? (
     <span>
@@ -219,6 +297,13 @@ export function CoveragePieChart({
     title
   )
 
+  const legendPayload = data.map((slice) => ({
+    id: slice.name,
+    value: slice.name,
+    type: "square",
+    color: resolveSliceColor(slice),
+  }))
+
   return (
     <Card title={cardTitle} size="small" loading={loading}>
       {isEmpty ? (
@@ -228,30 +313,170 @@ export function CoveragePieChart({
       ) : (
         <ResponsiveContainer width="100%" height={height}>
           <PieChart margin={{ top: 16, right: 28, bottom: 16, left: 28 }}>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={72}
-              paddingAngle={2}
-              label={sliceLabel === "count" ? SliceCountLabel : SlicePercentLabel}
-              labelLine={false}
-            >
-              {data.map((entry) => (
-                <Cell
-                  key={entry.name}
-                  fill={entry.color || DEFAULT_COLORS[entry.name.toLowerCase()] || "#007fff"}
+            <defs>
+              {Object.entries(COVERAGE_SEGMENT_GRADIENT_STOPS)
+                .filter(([key]) => key !== "gap")
+                .map(([key, [from, to]]) => (
+                  <linearGradient
+                    key={key}
+                    id={`coverage-grad-${key}`}
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor={from} />
+                    <stop offset="100%" stopColor={to} />
+                  </linearGradient>
+                ))}
+            </defs>
+
+            {isCoveragePie ? (
+              <>
+                {/* Flat grey track — gaps are empty background */}
+                <Pie
+                  data={[{ name: "__track__", value: Math.max(total, 1) }]}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={PIE_INNER}
+                  outerRadius={PIE_OUTER}
+                  fill={COVERAGE_SEGMENT_COLORS.gap}
+                  stroke="none"
+                  isAnimationActive={false}
+                  legendType="none"
+                  tooltipType="none"
                 />
-              ))}
-              {showCenterTotal ? (
-                <Label content={<CenterTotalLabel total={total} />} position="center" />
-              ) : null}
-            </Pie>
+                {/*
+                  Layer below: full covered run (own+other) in other-builds colour,
+                  rounded against the gap. Trailing tip stays visible.
+                */}
+                {coveredSum > 0 ? (
+                  (() => {
+                    const runData = [
+                      { name: "__covered_run__", value: coveredSum },
+                      { name: "__rest__", value: Math.max(total - coveredSum, 0) },
+                    ].filter((d) => d.value > 0)
+                    const runFill =
+                      otherValue > 0
+                        ? sliceFill("covered_in_other_builds")
+                        : sliceFill("covered")
+                    return (
+                      <Pie
+                        data={runData}
+                        dataKey="value"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={PIE_INNER}
+                        outerRadius={PIE_OUTER}
+                        paddingAngle={0}
+                        cornerRadius={coverageCornerRadius}
+                        stroke="none"
+                        isAnimationActive={false}
+                        legendType="none"
+                        tooltipType="none"
+                      >
+                        {runData.map((entry) => (
+                          <Cell
+                            key={entry.name}
+                            fill={entry.name === "__covered_run__" ? runFill : "transparent"}
+                          />
+                        ))}
+                      </Pie>
+                    )
+                  })()
+                ) : null}
+                {/*
+                  Layer above: this-build covered — rounded ends overlay the other-builds
+                  run so the join shows covered’s round edge on top.
+                */}
+                {ownValue > 0 && otherValue > 0 ? (
+                  (() => {
+                    const ownData = [
+                      { name: "covered", value: ownValue },
+                      { name: "__after__", value: Math.max(total - ownValue, 0) },
+                    ].filter((d) => d.value > 0)
+                    return (
+                      <Pie
+                        data={ownData}
+                        dataKey="value"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={PIE_INNER}
+                        outerRadius={PIE_OUTER}
+                        paddingAngle={0}
+                        cornerRadius={coverageCornerRadius}
+                        stroke="none"
+                        isAnimationActive={false}
+                        legendType="none"
+                        tooltipType="none"
+                      >
+                        {ownData.map((entry) => (
+                          <Cell
+                            key={entry.name}
+                            fill={
+                              entry.name === "covered"
+                                ? sliceFill("covered")
+                                : "transparent"
+                            }
+                          />
+                        ))}
+                      </Pie>
+                    )
+                  })()
+                ) : null}
+                {/* Invisible hit pie for tooltips + labels */}
+                <Pie
+                  data={hitData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={PIE_INNER}
+                  outerRadius={PIE_OUTER}
+                  paddingAngle={0}
+                  cornerRadius={0}
+                  stroke="none"
+                  label={labelRenderer}
+                  labelLine={false}
+                >
+                  {hitData.map((entry) => (
+                    <Cell key={entry.name} fill="transparent" />
+                  ))}
+                  {showCenterTotal ? (
+                    <Label content={<CenterTotalLabel total={total} />} position="center" />
+                  ) : null}
+                </Pie>
+              </>
+            ) : (
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={PIE_INNER}
+                outerRadius={PIE_OUTER}
+                paddingAngle={0}
+                cornerRadius={0}
+                stroke="none"
+                label={labelRenderer}
+                labelLine={false}
+              >
+                {data.map((entry) => (
+                  <Cell key={entry.name} fill={resolveSliceColor(entry)} />
+                ))}
+                {showCenterTotal ? (
+                  <Label content={<CenterTotalLabel total={total} />} position="center" />
+                ) : null}
+              </Pie>
+            )}
+
             <Tooltip
               formatter={(value, _name, { payload, percent } = {}) => {
+                if (payload?.name?.startsWith?.("__")) {
+                  return null
+                }
                 const slicePercent =
                   percent != null
                     ? formatCoveragePercentValue(percent)
@@ -262,7 +487,14 @@ export function CoveragePieChart({
                 ]
               }}
             />
-            <Legend formatter={(value) => formatSliceLabel(value)} />
+            <Legend
+              payload={legendPayload}
+              formatter={(value) => (
+                <span style={{ color: "var(--d4j-ink, #0c2438)" }}>
+                  {formatSliceLabel(value)}
+                </span>
+              )}
+            />
           </PieChart>
         </ResponsiveContainer>
       )}

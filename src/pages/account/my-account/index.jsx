@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Divider } from "antd"
+import { Divider, Typography } from "antd"
 import { UpdatePasswordForm } from "./update-password-form"
 import { MyAccountCard } from "./my-account-card"
 import "./my-account.css"
 
+const { Title } = Typography
+
 export const MyAccount = () => (
   <div className="my-account-page">
+    <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
+      My Account
+    </Title>
     <MyAccountCard />
 
     <div style={{ marginTop: 24 }}>

@@ -31,8 +31,8 @@ function MockBuildsVisual() {
         width="22"
         height="18"
         rx="4"
-        fill="#bae0ff"
-        stroke="#91caff"
+        fill="#cfe4fb"
+        stroke="#cfe4fb"
         strokeWidth="1.5"
       />
       <rect
@@ -42,7 +42,7 @@ function MockBuildsVisual() {
         height="30"
         rx="4"
         fill="#87BCEC"
-        stroke="#91caff"
+        stroke="#cfe4fb"
         strokeWidth="1.5"
       />
       <rect
@@ -51,8 +51,8 @@ function MockBuildsVisual() {
         width="22"
         height="42"
         rx="4"
-        fill="#227FD2"
-        stroke="#1677ff"
+        fill="#2f8eea"
+        stroke="#2f8eea"
         strokeWidth="1.5"
       />
     </svg>

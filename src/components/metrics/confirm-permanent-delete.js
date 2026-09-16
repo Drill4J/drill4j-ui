@@ -24,9 +24,12 @@ import { Modal } from "antd"
 export function confirmPermanentDelete({ title, onOk }) {
   Modal.confirm({
     title,
+    content: "This cannot be undone.",
     okText: "Yes, delete permanently",
     okButtonProps: { danger: true },
     cancelText: "Cancel",
+    centered: true,
+    autoFocusButton: "cancel",
     onOk,
   })
 }

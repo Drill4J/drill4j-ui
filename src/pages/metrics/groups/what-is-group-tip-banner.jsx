@@ -31,13 +31,13 @@ function MockGroupVisual() {
         width="104"
         height="52"
         rx="8"
-        fill="#e6f4ff"
-        stroke="#91caff"
+        fill="#eaf4fc"
+        stroke="#cfe4fb"
         strokeWidth="2"
       />
-      <rect x="20" y="22" width="28" height="28" rx="6" fill="#227FD2" />
+      <rect x="20" y="22" width="28" height="28" rx="6" fill="#2f8eea" />
       <rect x="56" y="22" width="28" height="28" rx="6" fill="#87BCEC" />
-      <rect x="92" y="28" width="10" height="16" rx="3" fill="#bae0ff" />
+      <rect x="92" y="28" width="10" height="16" rx="3" fill="#cfe4fb" />
     </svg>
   )
 }

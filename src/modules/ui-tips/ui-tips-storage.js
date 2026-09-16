@@ -39,6 +39,15 @@ export const UI_TIPS = {
   whatIsBuild: {
     key: "uiTips.whatIsBuild.dismissed",
   },
+  manageApiKeys: {
+    key: "uiTips.manageApiKeys.dismissed",
+  },
+  manageUsers: {
+    key: "uiTips.manageUsers.dismissed",
+  },
+  myApiKeys: {
+    key: "uiTips.myApiKeys.dismissed",
+  },
 }
 
 function storageKeysForTip(tipId) {

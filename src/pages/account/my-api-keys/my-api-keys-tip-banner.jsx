@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
-import { ApiKeysManagementTable } from "./manage-api-keys-table"
-import { ManageApiKeysTipBanner } from "./manage-api-keys-tip-banner"
+import { KeyOutlined } from "@ant-design/icons"
+import { UiTipBanner } from "../../../components/ui-tips/ui-tip-banner"
 
-const { Title } = Typography
-
-const AdminManageApiKeys = () => (
-  <>
-    <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-      API Keys
-    </Title>
-    <ManageApiKeysTipBanner />
-    <ApiKeysManagementTable />
-  </>
-)
-
-export default AdminManageApiKeys
+/**
+ * Account tip: personal API keys.
+ */
+export function MyApiKeysTipBanner() {
+  return (
+    <UiTipBanner
+      tipId="myApiKeys"
+      title="Your personal API keys"
+      description="Manage your personal API keys used by agents and CI/CD to report coverage and test data to Drill4J."
+      icon={<KeyOutlined />}
+      dismissAriaLabel="Dismiss my API keys tip"
+      style={{ marginTop: 0, marginBottom: 16 }}
+    />
+  )
+}

@@ -27,8 +27,8 @@ function MockTrendChart() {
     >
       <defs>
         <linearGradient id="trendsPromoFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#227FD2" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#227FD2" stopOpacity="0.02" />
+          <stop offset="0%" stopColor="#2f8eea" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#2f8eea" stopOpacity="0.02" />
         </linearGradient>
       </defs>
       <path
@@ -38,7 +38,7 @@ function MockTrendChart() {
       <path
         d="M8 52 C28 48, 36 40, 48 36 C64 30, 72 42, 88 28 C98 20, 106 24, 112 18"
         fill="none"
-        stroke="#227FD2"
+        stroke="#2f8eea"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -50,7 +50,7 @@ function MockTrendChart() {
         strokeLinecap="round"
         strokeDasharray="3 3"
       />
-      <circle cx="112" cy="18" r="3.5" fill="#227FD2" />
+      <circle cx="112" cy="18" r="3.5" fill="#2f8eea" />
     </svg>
   )
 }

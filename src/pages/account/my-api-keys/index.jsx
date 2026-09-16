@@ -13,24 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { GenerateApiKeyForm } from "./generate-api-key-form";
-import { UserApiKeysTable } from "./my-api-keys-table";
-import { useState } from "react";
+import { useState } from "react"
+import { Typography } from "antd"
+import { GenerateApiKeyForm } from "./generate-api-key-form"
+import { UserApiKeysTable } from "./my-api-keys-table"
+import { MyApiKeysTipBanner } from "./my-api-keys-tip-banner"
+
+const { Title } = Typography
 
 const MyApiKeys = () => {
   const [refreshFlag, refreshData] = useState("")
   return (
     <>
-      <GenerateApiKeyForm
-        refreshData = {() => refreshData(Date.now().toString())}
-      />
-      <div style={{marginTop:'15px'}} />
+      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
+        My API Keys
+      </Title>
+      <MyApiKeysTipBanner />
+      <GenerateApiKeyForm refreshData={() => refreshData(Date.now().toString())} />
+      <div style={{ marginTop: 15 }} />
       <UserApiKeysTable
-        refreshData = {() => refreshData(Date.now().toString())}
-        refreshFlag = {refreshFlag}
+        refreshData={() => refreshData(Date.now().toString())}
+        refreshFlag={refreshFlag}
       />
     </>
-  );
-};
+  )
+}
 
-export default MyApiKeys;
+export default MyApiKeys

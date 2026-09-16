@@ -102,24 +102,48 @@ export const BuildSummaryPage = () => {
 
   const buildInfoItems = useMemo(
     () => [
-      { label: "Version", value: build?.buildVersion },
-      { label: "Commit", value: build?.commitSha },
+      {
+        label: "Version",
+        value: build?.buildVersion ? (
+          <span className="key-value-panel-nowrap">{build.buildVersion}</span>
+        ) : null,
+      },
+      {
+        label: "Commit",
+        value: build?.commitSha ? (
+          <span className="key-value-panel-ellipsis" title={build.commitSha}>
+            {build.commitSha}
+          </span>
+        ) : null,
+      },
       {
         label: "Committed at",
         value: build?.committedAt
           ? dayjs(build.committedAt).format("YYYY-MM-DD HH:mm")
           : null,
       },
-      { label: "Branch", value: build?.branch },
-      { label: "Author", value: build?.commitAuthor },
+      {
+        label: "Branch",
+        value: build?.branch ? (
+          <span className="key-value-panel-ellipsis" title={build.branch}>
+            {build.branch}
+          </span>
+        ) : null,
+      },
+      {
+        label: "Author",
+        value: build?.commitAuthor ? (
+          <span className="key-value-panel-ellipsis" title={build.commitAuthor}>
+            {build.commitAuthor}
+          </span>
+        ) : null,
+      },
       {
         label: "Message",
         value: build?.commitMessage ? (
-          <div style={{ overflow: "hidden", minWidth: 0 }}>
-            <Typography.Text ellipsis={{ tooltip: build.commitMessage }}>
-              {build.commitMessage}
-            </Typography.Text>
-          </div>
+          <span className="key-value-panel-ellipsis" title={build.commitMessage}>
+            {build.commitMessage}
+          </span>
         ) : null,
       },
     ],

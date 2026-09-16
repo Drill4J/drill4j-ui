@@ -2,6 +2,66 @@
   position: relative;
   box-sizing: border-box;
   margin-top: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: linear-gradient(
+    90deg,
+    var(--d4j-blue-mist, #eaf4fc) 0%,
+    #f2f9fc 55%,
+    var(--d4j-success-bg, #e8f8f3) 100%
+  );
+  border: 1px solid var(--d4j-blue-soft, #cfe4fb);
+  border-radius: 12px;
+}
+
+.ui-tip-banner-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--d4j-surface, #fff);
+  border: 1px solid var(--d4j-blue-soft, #cfe4fb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--d4j-blue, #2f8eea);
+  font-size: 22px;
+}
+
+.ui-tip-banner-copy {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.ui-tip-banner-title.ant-typography {
+  margin: 0 0 4px !important;
+  color: var(--d4j-blue-deep, #1a6fc7) !important;
+}
+
+.ui-tip-banner-desc.ant-typography,
+.ui-tip-banner-desc {
+  color: var(--d4j-muted, #5a7186) !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ui-tip-banner-desc p {
+  margin: 0 0 8px;
+}
+
+.ui-tip-banner-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.ui-tip-banner-visual {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.9;
+  color: var(--d4j-blue, #2f8eea);
 }
 
 .ui-tip-row {
@@ -38,5 +98,10 @@
 }
 
 .ui-tip-banner-actions .ant-btn {
-  color: #1677ff;
+  color: var(--d4j-blue, #2f8eea);
+}
+
+.ui-tip-banner .ant-alert {
+  border-radius: 12px;
+  border-color: var(--d4j-line, #d3dee8);
 }

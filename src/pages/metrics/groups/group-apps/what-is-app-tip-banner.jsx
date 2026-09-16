@@ -31,13 +31,13 @@ function MockAppsVisual() {
         width="30"
         height="44"
         rx="6"
-        fill="#e6f4ff"
-        stroke="#91caff"
+        fill="#eaf4fc"
+        stroke="#cfe4fb"
         strokeWidth="2"
       />
-      <rect x="16" y="22" width="18" height="8" rx="2" fill="#227FD2" />
+      <rect x="16" y="22" width="18" height="8" rx="2" fill="#2f8eea" />
       <rect x="16" y="34" width="18" height="4" rx="1" fill="#87BCEC" />
-      <rect x="16" y="42" width="12" height="4" rx="1" fill="#bae0ff" />
+      <rect x="16" y="42" width="12" height="4" rx="1" fill="#cfe4fb" />
 
       <rect
         x="48"
@@ -45,13 +45,13 @@ function MockAppsVisual() {
         width="30"
         height="44"
         rx="6"
-        fill="#e6f4ff"
-        stroke="#91caff"
+        fill="#eaf4fc"
+        stroke="#cfe4fb"
         strokeWidth="2"
       />
-      <rect x="54" y="22" width="18" height="8" rx="2" fill="#227FD2" />
+      <rect x="54" y="22" width="18" height="8" rx="2" fill="#2f8eea" />
       <rect x="54" y="34" width="18" height="4" rx="1" fill="#87BCEC" />
-      <rect x="54" y="42" width="12" height="4" rx="1" fill="#bae0ff" />
+      <rect x="54" y="42" width="12" height="4" rx="1" fill="#cfe4fb" />
 
       <rect
         x="86"
@@ -60,7 +60,7 @@ function MockAppsVisual() {
         height="44"
         rx="6"
         fill="#f0f7ff"
-        stroke="#bae0ff"
+        stroke="#cfe4fb"
         strokeWidth="2"
         strokeDasharray="3 3"
       />

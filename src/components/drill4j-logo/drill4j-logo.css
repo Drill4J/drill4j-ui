@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #1b191b;
+  color: var(--d4j-ink, #0c2438);
   line-height: 1;
 }
 
@@ -17,7 +17,7 @@
 }
 
 .drill4j-logo__brackets {
-  fill: #007fff;
+  fill: var(--d4j-blue, #2f8eea);
 }
 
 .drill4j-logo__bit {

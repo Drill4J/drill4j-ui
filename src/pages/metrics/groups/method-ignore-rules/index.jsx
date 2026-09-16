@@ -78,7 +78,7 @@ const ExclusionRulesHelp = ({ groupId }) => (
       builds, save the rule and then launch recalculation on the{" "}
       <RouterLink
         to={`/metrics/${groupId}/data-management`}
-        style={{ color: "#91caff" }}
+        style={{ color: "#cfe4fb" }}
       >
         Data Management
       </RouterLink>{" "}
@@ -380,6 +380,9 @@ export const MethodIgnoreRulesPage = () => {
         content: "Existing metrics remain unchanged until manually recomputed.",
         okText: "Delete",
         okButtonProps: { danger: true },
+        cancelText: "Cancel",
+        centered: true,
+        autoFocusButton: "cancel",
         onOk: async () => {
           try {
             await API.deleteRule(groupId, appId, rule.id)

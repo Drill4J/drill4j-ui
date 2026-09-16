@@ -18,15 +18,16 @@ import { AppstoreOutlined } from "@ant-design/icons"
 import { Link, matchRoutes, useLocation } from "react-router-dom"
 import { metricsRouteTree } from "../../pages/metrics/metrics-routes"
 
-const linkStyle = { color: "#007fff" }
+const linkStyle = { color: "var(--d4j-blue, #2f8eea)" }
 
 const currentStyle = {
-  color: "rgba(0, 0, 0, 0.88)",
-  fontWeight: 500,
+  color: "var(--d4j-ink, #0c2438)",
+  fontWeight: 600,
+  fontFamily: "var(--d4j-display, Space Grotesk, sans-serif)",
 }
 
 const separatorStyle = {
-  color: "rgba(0, 0, 0, 0.45)",
+  color: "var(--d4j-muted, #5a7186)",
   margin: "0 8px",
   userSelect: "none",
 }

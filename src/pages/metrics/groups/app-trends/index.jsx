@@ -23,17 +23,23 @@ import {
 } from "../../../../components/metrics/baseline-build-select"
 import { OptionalFilters } from "../../../../components/metrics/optional-filters"
 import * as API from "../../../../modules/metrics/api-metrics"
+import { COVERAGE_SEGMENT_COLORS } from "../../../../modules/metrics/coverage-segments"
 import { useAppTrendsSearchParams } from "./use-app-trends-search-params"
 
 const { Title, Text } = Typography
 
 /** Stacked: own coverage + other-builds delta (sums to aggregated). */
 const COVERAGE_SERIES = [
-  { key: "isolatedCoveragePercent", label: "Covered", color: "#227FD2", stackId: "coverage" },
+  {
+    key: "isolatedCoveragePercent",
+    label: "Covered",
+    color: COVERAGE_SEGMENT_COLORS.own,
+    stackId: "coverage",
+  },
   {
     key: "otherBuildsCoveragePercent",
     label: "Covered in other builds",
-    color: "#87BCEC",
+    color: COVERAGE_SEGMENT_COLORS.other,
     stackId: "coverage",
   },
 ]
@@ -43,22 +49,22 @@ const CODE_CHANGES_SERIES = [
   {
     key: "coveredInOtherBuildsProbes",
     label: "Covered in other builds",
-    color: "#87BCEC",
+    color: COVERAGE_SEGMENT_COLORS.other,
     kind: "area",
   },
-  { key: "coveredProbes", label: "Covered", color: "#227FD2", kind: "area" },
-  { key: "totalProbes", label: "Total", color: "#E75454", kind: "line" },
+  { key: "coveredProbes", label: "Covered", color: COVERAGE_SEGMENT_COLORS.own, kind: "area" },
+  { key: "totalProbes", label: "Total", color: "#e4565c", kind: "line" },
 ]
 
 const METHOD_CHANGES_SERIES = [
   {
     key: "coveredInOtherBuildsMethods",
     label: "Covered in other builds",
-    color: "#87BCEC",
+    color: COVERAGE_SEGMENT_COLORS.other,
     kind: "area",
   },
-  { key: "coveredMethods", label: "Covered", color: "#227FD2", kind: "area" },
-  { key: "totalMethods", label: "Total", color: "#E75454", kind: "line" },
+  { key: "coveredMethods", label: "Covered", color: COVERAGE_SEGMENT_COLORS.own, kind: "area" },
+  { key: "totalMethods", label: "Total", color: "#e4565c", kind: "line" },
 ]
 
 function formatPercent(value) {

@@ -21,8 +21,8 @@ import "./auth-layout.css"
 const { Content } = Layout
 
 const AuthLayout = ({ children }) => (
-  <Layout style={{ minHeight: "100vh" }}>
-    <Content style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+  <Layout className="auth-layout">
+    <Content>
       <div className="auth-layout-card">
         <div className="drill4j-logo-auth">
           <Drill4jLogo />

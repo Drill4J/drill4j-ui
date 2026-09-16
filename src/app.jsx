@@ -16,6 +16,7 @@
 import React, { useMemo } from "react"
 import {
   Alert,
+  App as AntdApp,
   ConfigProvider as ThemeProvider,
   Layout,
   Spin,
@@ -52,23 +53,26 @@ import {
   AuthConfigProvider,
   useAuthConfig,
 } from "./modules/auth/hooks/use-ui-config-hook"
+import { antdTheme } from "./theme/tokens"
+import "./layouts/app-shell.css"
+
 const { Sider, Content } = Layout
 
-const App = () =>  (
-  <ThemeProvider
-    theme={{
-      token: {
-        colorPrimary: "#007fff",
-      },
-    }}
-  >
-    <AuthConfigProvider>
-      <AuthProvider>
-        <Router basename="">
-          <BaseRouter/>
-        </Router>
-      </AuthProvider>
-    </AuthConfigProvider>
+const App = () => (
+  <ThemeProvider theme={antdTheme}>
+    <AntdApp
+      component={false}
+      message={{ maxCount: 3 }}
+      notification={{ placement: "topRight" }}
+    >
+      <AuthConfigProvider>
+        <AuthProvider>
+          <Router basename="">
+            <BaseRouter />
+          </Router>
+        </AuthProvider>
+      </AuthConfigProvider>
+    </AntdApp>
   </ThemeProvider>
 )
 
@@ -92,8 +96,10 @@ const BaseRouter = () => {
 
   if (process.env.NODE_ENV === "development" && location.pathname === "/dev/treemap-canvas") {
     return (
-      <div style={{ padding: 16, background: "#fff", minHeight: "100vh" }}>
-        <TreemapCanvasDevPage />
+      <div className="iframe-shell">
+        <div className="iframe-shell-panel">
+          <TreemapCanvasDevPage />
+        </div>
       </div>
     )
   }
@@ -165,40 +171,44 @@ const IframeRouter = () => {
   const userRoles = useMemo(() => ["user", "admin"], [])
 
   return (
-    <Routes>
-      <Route
-        path="/coverage-treemap/*"
-        element={<PrivateRoute roles={userRoles} />}
-      >
-        <Route index element={<CoverageTreemapPage />} />
-      </Route>
-      <Route
-        path="/changes-coverage-treemap/*"
-        element={<PrivateRoute roles={userRoles} />}
-      >
-        <Route index element={<ChangesCoverageTreemapPage />} />
-      </Route>
-    </Routes>
-  );
-};
+    <div className="iframe-shell">
+      <div className="iframe-shell-panel">
+        <Routes>
+          <Route
+            path="/coverage-treemap/*"
+            element={<PrivateRoute roles={userRoles} />}
+          >
+            <Route index element={<CoverageTreemapPage />} />
+          </Route>
+          <Route
+            path="/changes-coverage-treemap/*"
+            element={<PrivateRoute roles={userRoles} />}
+          >
+            <Route index element={<ChangesCoverageTreemapPage />} />
+          </Route>
+        </Routes>
+      </div>
+    </div>
+  )
+}
 
 const AppContent = ({location}) => {
   const userRoles = useMemo(() => ["user", "admin"], [])
   const adminRoles = useMemo(() => ["admin"], [])
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider>
+    <Layout className="app-shell-layout">
+      <Sider className="app-shell-sider" theme="dark" width={220}>
         <div className="sider-logo">
           <Link to="/metrics">
-            <Drill4jLogo onDark showTagline={false} />
+            <Drill4jLogo onDark showTagline />
           </Link>
         </div>
         <SiderMenu location={location} />
       </Sider>
-      <Layout>
-        <Content style={{ margin: "16px" }}>
-          <div style={{ padding: 24, minHeight: 360, background: "#fff" }}>
+      <Layout style={{ background: "transparent" }}>
+        <Content className="app-shell-content">
+          <div className="app-content-panel">
             <Routes>
               <Route
                 path="/admin/*"

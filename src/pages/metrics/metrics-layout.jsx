@@ -37,20 +37,21 @@ export function MetricsLayout() {
   const showFreshnessBar = groupId && !isTestSessionBuildPage(location.pathname)
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 16,
-          marginBottom: 16,
-        }}
-      >
-        <MetricsBreadcrumb style={{ marginBottom: 0, minWidth: 0 }} />
-        {showFreshnessBar ? <MetricsFreshnessBar groupId={groupId} /> : null}
+    <div className="metrics-layout">
+      <div className="metrics-layout__chrome">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
+          <MetricsBreadcrumb style={{ marginBottom: 0, minWidth: 0 }} />
+          {showFreshnessBar ? <MetricsFreshnessBar groupId={groupId} /> : null}
+        </div>
       </div>
       <Outlet />
-    </>
+    </div>
   )
 }

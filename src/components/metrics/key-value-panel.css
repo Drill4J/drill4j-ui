@@ -1,0 +1,17 @@
+.key-value-panel .ant-descriptions-item-content {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.key-value-panel-nowrap {
+  white-space: nowrap;
+}
+
+.key-value-panel-ellipsis {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}

@@ -1,8 +1,41 @@
+.auth-layout {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 70% 50% at 80% 10%, rgba(47, 142, 234, 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 10% 90%, rgba(27, 191, 154, 0.14), transparent 50%),
+    linear-gradient(165deg, #dceaf5 0%, #f3f8fb 45%, #eaf4f2 100%);
+}
+
+.auth-layout::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(12, 36, 56, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 36, 56, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, #000 25%, transparent 75%);
+}
+
+.auth-layout .ant-layout-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
 .auth-layout-card {
   width: 100%;
   max-width: 400px;
-  padding: 24px;
-  background: #fff;
+  padding: 28px 28px 24px;
+  background: var(--d4j-surface, #fff);
+  border: 1px solid var(--d4j-line, #d3dee8);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(12, 36, 56, 0.1);
 }
 
 .auth-layout-body {
@@ -16,4 +49,8 @@
 
 .auth-layout-spin-slot {
   min-height: 88px;
+}
+
+.auth-layout .drill4j-logo-auth {
+  margin-bottom: 20px;
 }

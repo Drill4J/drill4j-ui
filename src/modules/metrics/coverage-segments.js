@@ -14,11 +14,28 @@
  * limitations under the License.
  */
 
-/** Matches CoveragePieChart slice colors. */
+/**
+ * Coverage chart segments — 3 luminance steps (readable in grayscale).
+ * Gaps use a clear orange track so they stay visible on the page
+ * and contrast with cool blues.
+ */
 export const COVERAGE_SEGMENT_COLORS = {
-  own: "#227FD2",
-  other: "#87BCEC",
-  gap: "#ED8535",
+  own: "#2f8eea", // L ≈ 0.26 — brand / buttons
+  other: "#90caf9", // L ≈ 0.55 — lighter sky
+  gap: "#f0a04b", // orange track — warm, distinct from cool blues
+}
+
+/** CSS / SVG-friendly fills for bars and pies (gradients where supported). */
+export const COVERAGE_SEGMENT_FILLS = {
+  own: "linear-gradient(90deg, #1a6fc7 0%, #2f8eea 100%)",
+  other: "linear-gradient(90deg, #64b5f6 0%, #bbdefb 100%)",
+  gap: "#f0a04b",
+}
+
+export const COVERAGE_SEGMENT_GRADIENT_STOPS = {
+  own: ["#1a6fc7", "#2f8eea"],
+  other: ["#64b5f6", "#bbdefb"],
+  gap: ["#f0a04b", "#f0a04b"],
 }
 
 /**

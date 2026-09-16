@@ -1,0 +1,53 @@
+.app-shell-layout .sider-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 18px 20px 14px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-shell-layout .sider-logo a {
+  display: flex;
+  color: inherit;
+}
+
+.app-shell-layout .sider-logo .drill4j-logo__wordmark {
+  font-size: 18px;
+}
+
+.app-shell-layout .sider-logo .drill4j-logo__tagline {
+  font-size: 11px;
+}
+
+.iframe-shell {
+  min-height: 100vh;
+  padding: 16px;
+  background: var(--d4j-paper, #f6fafc);
+  box-sizing: border-box;
+}
+
+.iframe-shell-panel {
+  min-height: calc(100vh - 32px);
+  padding: 16px;
+  background: var(--d4j-surface, #fff);
+  border: 1px solid var(--d4j-line, #d3dee8);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(12, 36, 56, 0.06);
+  box-sizing: border-box;
+}
+
+.metrics-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metrics-layout__chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--d4j-line, #d3dee8);
+}

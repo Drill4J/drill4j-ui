@@ -27,19 +27,21 @@ import {
 } from "../../modules/ui-tips/ui-tips-storage"
 import "./ui-tip-banner.css"
 
-const { Title, Text } = Typography
+const { Title } = Typography
 
 /**
  * Dismissible info/tip banner for feature discovery.
  * Omit `to` / `actionLabel` for explanation-only tips (no CTA).
+ * Use `onAction` with `actionLabel` (no `to`) for a button action (e.g. copy link).
  *
  * @param {{
  *   tipId: string,
  *   title: string,
- *   description: string,
+ *   description: import("react").ReactNode,
  *   icon: import("react").ReactNode,
  *   to?: string,
  *   actionLabel?: string,
+ *   onAction?: () => void,
  *   visual?: import("react").ReactNode,
  *   dismissAriaLabel?: string,
  *   style?: import("react").CSSProperties,
@@ -52,12 +54,14 @@ export function UiTipBanner({
   icon,
   to,
   actionLabel,
+  onAction,
   visual,
   dismissAriaLabel = "Dismiss tip",
   style,
 }) {
   const [visible, setVisible] = useState(() => shouldShowUiTip(tipId))
-  const showAction = Boolean(to && actionLabel)
+  const showLinkAction = Boolean(to && actionLabel)
+  const showButtonAction = Boolean(!to && actionLabel && onAction)
 
   if (!visible) {
     return null
@@ -69,66 +73,31 @@ export function UiTipBanner({
   }
 
   return (
-    <div
-      className="ui-tip-banner"
-      style={{
-        padding: "16px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: 20,
-        flexWrap: "wrap",
-        background:
-          "linear-gradient(90deg, #e6f4ff 0%, #f0f7ff 55%, #f7fbff 100%)",
-        border: "1px solid #91caff",
-        borderRadius: 8,
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          flexShrink: 0,
-          width: 48,
-          height: 48,
-          borderRadius: 10,
-          background: "#fff",
-          border: "1px solid #bae0ff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#1677ff",
-          fontSize: 22,
-        }}
-      >
-        {icon}
-      </div>
+    <div className="ui-tip-banner" style={style}>
+      <div className="ui-tip-banner-icon">{icon}</div>
 
-      <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-        <Title level={5} style={{ margin: "0 0 4px", color: "#003a8c" }}>
+      <div className="ui-tip-banner-copy">
+        <Title level={5} className="ui-tip-banner-title">
           {title}
         </Title>
-        <Text style={{ color: "#0958d9" }}>{description}</Text>
+        <div className="ui-tip-banner-desc">{description}</div>
       </div>
 
-      {visual ? (
-        <div
-          style={{
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            opacity: 0.9,
-          }}
-        >
-          {visual}
-        </div>
-      ) : null}
+      {visual ? <div className="ui-tip-banner-visual">{visual}</div> : null}
 
-      {showAction ? (
+      {showLinkAction ? (
         <Link to={to} style={{ flexShrink: 0 }}>
           <Button type="primary">
             {actionLabel}
             <ArrowRightOutlined />
           </Button>
         </Link>
+      ) : null}
+
+      {showButtonAction ? (
+        <Button type="primary" style={{ flexShrink: 0 }} onClick={onAction}>
+          {actionLabel}
+        </Button>
       ) : null}
 
       <div className="ui-tip-banner-actions">

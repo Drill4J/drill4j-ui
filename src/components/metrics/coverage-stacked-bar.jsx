@@ -16,15 +16,16 @@
 import { Tooltip, Typography } from "antd"
 import {
   COVERAGE_SEGMENT_COLORS,
+  COVERAGE_SEGMENT_FILLS,
   buildCoverageSegments,
 } from "../../modules/metrics/coverage-segments"
 import "./coverage-stacked-bar.css"
 
 const { Text } = Typography
 
-const BAR_HEIGHT = 10
+const BAR_HEIGHT = 12
 
-/** Total covered uses the same blue family as “this build”. */
+/** Total covered uses the same mint family as “this build”. */
 const COVERED_COLOR = COVERAGE_SEGMENT_COLORS.own
 
 /**
@@ -121,13 +122,9 @@ export function CoverageStackedBar({
     </div>
   )
 
-  const parts = [
-    { key: "own", value: own, color: COVERAGE_SEGMENT_COLORS.own },
-    ...(includeOtherBuilds
-      ? [{ key: "other", value: other, color: COVERAGE_SEGMENT_COLORS.other }]
-      : []),
-    { key: "gap", value: gap, color: COVERAGE_SEGMENT_COLORS.gap },
-  ].filter((part) => part.value > 0 || total === 0)
+  const coveredWidthPct = total > 0 ? (covered / total) * 100 : 0
+  const ownWidthPct = total > 0 ? (own / total) * 100 : 0
+  const showOtherUnderlay = includeOtherBuilds && other > 0 && covered > 0
 
   return (
     <Tooltip
@@ -135,61 +132,41 @@ export function CoverageStackedBar({
       color="#ffffff"
       overlayClassName="coverage-stacked-bar-tooltip-overlay"
     >
-      <span
-        style={{
-          display: "block",
-          width: "100%",
-          maxWidth: "100%",
-          minWidth: 0,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            minWidth: 0,
-            maxWidth: "100%",
-            width,
-            overflow: "hidden",
-          }}
-        >
+      <span className="coverage-stacked-bar-wrap">
+        <div className="coverage-stacked-bar-row" style={{ width }}>
           <div
-            style={{
-              flex: 1,
-              minWidth: 24,
-              height: BAR_HEIGHT,
-              borderRadius: 2,
-              overflow: "hidden",
-              display: "flex",
-              background: total === 0 ? "#f0f0f0" : undefined,
-            }}
+            className={`coverage-stacked-bar-track${total === 0 ? " coverage-stacked-bar-track--empty" : ""}`}
+            style={{ height: BAR_HEIGHT }}
+            role="img"
+            aria-label={`Coverage ${percentLabel}`}
           >
-            {total > 0
-              ? parts.map((part) => (
+            {total > 0 && covered > 0 ? (
+              <>
+                {/* Other-builds (or sole coverage) as full covered run under own */}
+                <div
+                  className={`coverage-stacked-bar-fill coverage-stacked-bar-fill--${showOtherUnderlay ? "other" : "own"}`}
+                  style={{
+                    width: `${coveredWidthPct}%`,
+                    background: showOtherUnderlay
+                      ? COVERAGE_SEGMENT_FILLS.other
+                      : COVERAGE_SEGMENT_FILLS.own,
+                  }}
+                />
+                {/* This-build covered on top — round edge overlays the other-builds run */}
+                {showOtherUnderlay && own > 0 ? (
                   <div
-                    key={part.key}
+                    className="coverage-stacked-bar-fill coverage-stacked-bar-fill--own coverage-stacked-bar-fill--overlay"
                     style={{
-                      width: `${(part.value / total) * 100}%`,
-                      background: part.color,
-                      height: "100%",
+                      width: `${ownWidthPct}%`,
+                      background: COVERAGE_SEGMENT_FILLS.own,
                     }}
                   />
-                ))
-              : null}
+                ) : null}
+              </>
+            ) : null}
           </div>
           {showPercent ? (
-            <Text
-              style={{
-                flexShrink: 0,
-                marginLeft: 8,
-                fontVariantNumeric: "tabular-nums",
-                fontSize: 12,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {percentLabel}
-            </Text>
+            <Text className="coverage-stacked-bar-percent">{percentLabel}</Text>
           ) : null}
         </div>
       </span>

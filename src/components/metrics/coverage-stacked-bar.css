@@ -1,21 +1,24 @@
 .coverage-stacked-bar-tooltip-overlay .ant-tooltip-inner {
-  color: rgba(0, 0, 0, 0.88);
-  background: #ffffff;
+  color: var(--d4j-ink, #0c2438);
+  background: var(--d4j-surface, #ffffff);
   padding: 8px 12px;
   min-width: 220px;
   max-width: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  border: 1px solid var(--d4j-line, #d3dee8);
+  box-shadow: 0 8px 24px rgba(12, 36, 56, 0.1);
 }
 
 .coverage-stacked-bar-tooltip-overlay .ant-tooltip-arrow::before {
-  background: #ffffff;
+  background: var(--d4j-surface, #ffffff);
 }
 
 .coverage-stacked-bar-tooltip__title {
   margin-bottom: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.88);
+  font-family: var(--d4j-display, "Space Grotesk", sans-serif);
+  color: var(--d4j-ink, #0c2438);
 }
 
 .coverage-stacked-bar-tooltip {
@@ -33,7 +36,7 @@
 .coverage-stacked-bar-tooltip__label {
   padding-right: 28px;
   white-space: nowrap;
-  color: rgba(0, 0, 0, 0.88);
+  color: var(--d4j-ink, #0c2438);
 }
 
 .coverage-stacked-bar-tooltip__label-inner {
@@ -47,12 +50,67 @@
   flex-shrink: 0;
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .coverage-stacked-bar-tooltip__value {
   text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  color: rgba(0, 0, 0, 0.88);
+  color: var(--d4j-ink, #0c2438);
+}
+
+.coverage-stacked-bar-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.coverage-stacked-bar-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.coverage-stacked-bar-track {
+  flex: 1;
+  min-width: 24px;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  display: block;
+  /* Flat “not covered” track — coverage fills on top */
+  background: var(--d4j-coverage-gap, #c5d0db);
+  box-shadow: inset 0 0 0 1px rgba(12, 36, 56, 0.04);
+}
+
+.coverage-stacked-bar-track--empty {
+  background: var(--d4j-coverage-gap, #c5d0db);
+}
+
+.coverage-stacked-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  min-width: 0;
+  border-radius: 999px;
+}
+
+.coverage-stacked-bar-fill--overlay {
+  z-index: 1;
+}
+
+.coverage-stacked-bar-percent {
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  white-space: nowrap;
+  font-family: var(--d4j-display, "Space Grotesk", sans-serif);
+  color: var(--d4j-muted, #5a7186);
 }

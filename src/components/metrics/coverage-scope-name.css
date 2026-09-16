@@ -21,7 +21,7 @@
 .coverage-scope-name__link {
   flex: none;
   opacity: 0;
-  color: #1677ff;
+  color: var(--d4j-blue, #2f8eea);
   cursor: pointer;
   transition: opacity 0.15s ease-in-out;
 }
@@ -40,5 +40,5 @@ tr:hover > td > div > div > .coverage-scope-name > .coverage-scope-name__link {
 }
 
 .coverage-scope-name__link:hover {
-  color: #0958d9;
+  color: var(--d4j-blue-deep, #1a6fc7);
 }

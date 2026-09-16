@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Layout, Card } from 'antd';
+import { Layout, Card } from "antd"
+import "../auth/auth-layout.css"
 
-const { Content } = Layout;
+const { Content } = Layout
 
 const ErrorLayout = ({ errorTitle, errorText }) => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Card title={errorTitle} style={{ width: 500 }}>
-        <p>{errorText}</p>
+  <Layout className="auth-layout">
+    <Content>
+      <Card title={errorTitle} style={{ width: 500, maxWidth: "100%" }}>
+        <p style={{ color: "var(--d4j-muted, #5a7186)", margin: 0 }}>{errorText}</p>
       </Card>
     </Content>
   </Layout>
-);
+)
 
-export default ErrorLayout;
+export default ErrorLayout

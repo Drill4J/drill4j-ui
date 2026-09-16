@@ -102,7 +102,7 @@ export function SiderMenu({ location }) {
   )
 
   return (
-    <>
+    <div className="sider-menu-scroll">
       <Menu
         theme="dark"
         mode="inline"
@@ -114,6 +114,6 @@ export function SiderMenu({ location }) {
       <div className="sider-project-links">
         <ProjectLinks onDark />
       </div>
-    </>
+    </div>
   )
 }

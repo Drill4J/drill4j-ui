@@ -20,7 +20,10 @@ import {
   ExperimentOutlined,
   FileSearchOutlined,
   LineChartOutlined,
+  PieChartOutlined,
   StopOutlined,
+  SwapOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons"
 import { Link } from "react-router-dom"
 
@@ -200,9 +203,9 @@ export function getMetricsMenuItems(location) {
         children.push(
           divider("app-build-divider"),
           contextSection(`build-${buildId}`, "Build", [
-            linkItem(p.build, "Coverage"),
-            linkItem(p.buildTests, "Tests"),
-            linkItem(p.buildComparison, "Comparison"),
+            linkItem(p.build, "Coverage", <PieChartOutlined />),
+            linkItem(p.buildTests, "Tests", <ThunderboltOutlined />),
+            linkItem(p.buildComparison, "Comparison", <SwapOutlined />),
           ])
         )
       }
@@ -220,7 +223,7 @@ export function getMetricsMenuItems(location) {
         children.push(
           divider("session-build-divider"),
           contextSection(`session-build-${buildId}`, "Build", [
-            linkItem(p.sessionResults, "Session coverage"),
+            linkItem(p.sessionResults, "Session coverage", <PieChartOutlined />),
           ])
         )
       }

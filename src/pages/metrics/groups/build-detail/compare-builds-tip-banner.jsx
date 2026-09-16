@@ -29,34 +29,34 @@ function MockCompareVisual() {
         cx="38"
         cy="36"
         r="22"
-        fill="#e6f4ff"
-        stroke="#91caff"
+        fill="#eaf4fc"
+        stroke="#cfe4fb"
         strokeWidth="2"
       />
-      <path d="M38 14 A22 22 0 0 1 56 48 L38 36 Z" fill="#227FD2" />
+      <path d="M38 14 A22 22 0 0 1 56 48 L38 36 Z" fill="#2f8eea" />
       <path d="M38 14 A22 22 0 0 0 20 48 L38 36 Z" fill="#87BCEC" />
 
       <circle
         cx="86"
         cy="36"
         r="22"
-        fill="#e6f4ff"
-        stroke="#91caff"
+        fill="#eaf4fc"
+        stroke="#cfe4fb"
         strokeWidth="2"
       />
-      <path d="M86 14 A22 22 0 1 1 70 48 L86 36 Z" fill="#227FD2" />
+      <path d="M86 14 A22 22 0 1 1 70 48 L86 36 Z" fill="#2f8eea" />
       <path d="M86 14 A22 22 0 0 0 74 22 L86 36 Z" fill="#87BCEC" />
 
       <path
         d="M58 36 H66"
-        stroke="#1677ff"
+        stroke="#2f8eea"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M63 31 L68 36 L63 41"
         fill="none"
-        stroke="#1677ff"
+        stroke="#2f8eea"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

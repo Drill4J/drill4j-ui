@@ -84,6 +84,8 @@ export function MetricsRefreshForm({ groupId, disabled = false, onSuccess }) {
         okText: "I understand, proceed",
         okButtonProps: { danger: true },
         cancelText: "Cancel",
+        centered: true,
+        autoFocusButton: "cancel",
         onOk: () => submitRefresh(values),
       })
       return
@@ -95,6 +97,7 @@ export function MetricsRefreshForm({ groupId, disabled = false, onSuccess }) {
         "Metrics update runs on the server and may take some time depending on the amount of data. You can keep using the app while it runs.",
       okText: "Update metrics",
       cancelText: "Cancel",
+      centered: true,
       onOk: () => submitRefresh(values),
     })
   }

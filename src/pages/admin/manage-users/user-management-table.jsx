@@ -98,7 +98,7 @@ export const UserManagementTable = () => {
       </div>
     ),
     filterIcon: (filtered) => (
-      <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      <SearchOutlined style={{ color: filtered ? "var(--d4j-blue)" : undefined }} />
     ),
     onFilter: (value, record) =>
       record[dataIndex]
@@ -119,7 +119,7 @@ export const UserManagementTable = () => {
           .split(new RegExp(`(${searchText})`, 'gi'))
           .map((fragment, i) =>
             fragment.toLowerCase() === searchText.toLowerCase() ? (
-              <span key={i} style={{ backgroundColor: "#ffc069" }}>{fragment}</span>
+              <span key={i} style={{ backgroundColor: "var(--d4j-warn-soft)" }}>{fragment}</span>
             ) : (
               fragment
             )

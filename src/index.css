@@ -1,8 +1,327 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+:root {
+  --d4j-ink: #0c2438;
+  --d4j-ink-soft: #16324a;
+  --d4j-mist: #e8f1f7;
+  --d4j-paper: #f6fafc;
+  --d4j-line: #d3dee8;
+  --d4j-muted: #5a7186;
+  --d4j-blue: #2f8eea;
+  --d4j-blue-deep: #1a6fc7;
+  --d4j-blue-soft: #cfe4fb;
+  --d4j-blue-mist: #eaf4fc;
+  --d4j-blue-rgb: 47, 142, 234;
+  --d4j-cyan: #1aabb8;
+  --d4j-mint: #1bbf9a;
+  --d4j-mint-deep: #149a7c;
+  --d4j-warn: #c9992e;
+  --d4j-warn-deep: #a67b1f;
+  --d4j-warn-soft: #e6c56a;
+  --d4j-warn-bg: #fff8e8;
+  --d4j-warn-border: #efd89a;
+  --d4j-danger: #e4565c;
+  --d4j-danger-hover: #d3484e;
+  --d4j-danger-bg: #fef1f2;
+  --d4j-danger-border: #f5c2c5;
+  --d4j-success-bg: #e8f8f3;
+  --d4j-success-border: #a8e6d4;
+  --d4j-info-bg: #e8f6f8;
+  --d4j-info-border: #a5dce3;
+  --d4j-coverage-own: #2f8eea;
+  --d4j-coverage-other: #90caf9;
+  --d4j-coverage-gap: #f0a04b;
+  --d4j-surface: #ffffff;
+  --d4j-font: "Figtree", "Segoe UI", sans-serif;
+  --d4j-display: "Space Grotesk", "Figtree", "Segoe UI", sans-serif;
+  --d4j-radius: 12px;
+  --d4j-shadow: 0 8px 24px rgba(12, 36, 56, 0.06);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--d4j-font);
+  color: var(--d4j-ink);
+  background: var(--d4j-paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: var(--d4j-display);
+  letter-spacing: -0.02em;
+  color: var(--d4j-ink);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Content panel used by app shell */
+.app-content-panel {
+  padding: 24px;
+  min-height: 360px;
+  background: var(--d4j-surface);
+  border: 1px solid var(--d4j-line);
+  border-radius: var(--d4j-radius);
+  box-shadow: var(--d4j-shadow);
+}
+
+.app-shell-layout {
+  min-height: 100vh;
+  background: var(--d4j-paper);
+}
+
+.app-shell-sider.ant-layout-sider {
+  background: var(--d4j-ink) !important;
+}
+
+.app-shell-content.ant-layout-content {
+  margin: 16px;
+  background: transparent;
+}
+
+/* Soft Ant table header typography */
+.ant-table-thead > tr > th {
+  font-family: var(--d4j-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ant-statistic-content {
+  font-family: var(--d4j-display);
+}
+
+.ant-tabs-tab {
+  font-family: var(--d4j-display);
+  font-weight: 600;
+}
+
+/* Modals, confirms, popovers — match app chrome */
+.ant-modal .ant-modal-content,
+.ant-modal-confirm .ant-modal-content {
+  border: 1px solid var(--d4j-line);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(12, 36, 56, 0.12);
+  overflow: hidden;
+}
+
+.ant-modal .ant-modal-header {
+  border-bottom: 1px solid var(--d4j-line);
+  margin-bottom: 0;
+  padding-bottom: 16px;
+}
+
+.ant-modal .ant-modal-title,
+.ant-modal-confirm .ant-modal-confirm-title {
+  font-family: var(--d4j-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--d4j-ink);
+}
+
+.ant-modal .ant-modal-footer {
+  border-top: 1px solid var(--d4j-line);
+  margin-top: 0;
+  padding-top: 16px;
+}
+
+.ant-modal-confirm .ant-modal-confirm-body > .anticon {
+  color: var(--d4j-danger);
+}
+
+.ant-modal-confirm-btns {
+  margin-top: 20px;
+}
+
+.ant-modal-confirm-btns .ant-btn,
+.ant-modal .ant-modal-footer .ant-btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.ant-modal-confirm .ant-modal-confirm-content,
+.ant-modal .ant-modal-body {
+  color: var(--d4j-muted);
+}
+
+.ant-popover .ant-popover-inner,
+.ant-popconfirm .ant-popover-inner {
+  border: 1px solid var(--d4j-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(12, 36, 56, 0.12);
+  padding: 12px 14px;
+}
+
+.ant-popconfirm .ant-popconfirm-title,
+.ant-popconfirm .ant-popconfirm-message-title {
+  font-family: var(--d4j-display);
+  font-weight: 700;
+  color: var(--d4j-ink);
+}
+
+.ant-popconfirm .ant-popconfirm-description,
+.ant-popconfirm .ant-popconfirm-message-content {
+  color: var(--d4j-muted);
+}
+
+.ant-popconfirm .ant-popconfirm-buttons .ant-btn {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.ant-dropdown .ant-dropdown-menu {
+  border: 1px solid var(--d4j-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(12, 36, 56, 0.1);
+  padding: 6px;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  border-radius: 8px;
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger,
+.ant-dropdown .ant-dropdown-menu-item-danger:hover {
+  color: var(--d4j-danger);
+}
+
+.ant-dropdown .ant-dropdown-menu-item-danger:hover {
+  background: var(--d4j-danger-bg);
+}
+
+/* Toast messages — soft typed surfaces matching Alert / brand palette */
+.ant-message .ant-message-notice-content {
+  border: 1px solid var(--d4j-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(12, 36, 56, 0.12);
+  color: var(--d4j-ink);
+  font-family: var(--d4j-font);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.ant-message .ant-message-custom-content {
+  gap: 8px;
+}
+
+.ant-message .ant-message-notice-content:has(.ant-message-success) {
+  background: var(--d4j-success-bg);
+  border-color: var(--d4j-success-border);
+}
+
+.ant-message .ant-message-notice-content:has(.ant-message-error) {
+  background: var(--d4j-danger-bg);
+  border-color: var(--d4j-danger-border);
+}
+
+.ant-message .ant-message-notice-content:has(.ant-message-warning) {
+  background: var(--d4j-warn-bg);
+  border-color: var(--d4j-warn-border);
+}
+
+.ant-message .ant-message-notice-content:has(.ant-message-info),
+.ant-message .ant-message-notice-content:has(.ant-message-loading) {
+  background: var(--d4j-info-bg);
+  border-color: var(--d4j-info-border);
+}
+
+.ant-message .ant-message-success .anticon {
+  color: var(--d4j-mint);
+}
+
+.ant-message .ant-message-error .anticon {
+  color: var(--d4j-danger);
+}
+
+.ant-message .ant-message-warning .anticon {
+  color: var(--d4j-warn);
+}
+
+.ant-message .ant-message-info .anticon,
+.ant-message .ant-message-loading .anticon {
+  color: var(--d4j-cyan);
+}
+
+.ant-notification .ant-notification-notice {
+  border: 1px solid var(--d4j-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(12, 36, 56, 0.12);
+  padding: 14px 16px;
+  font-family: var(--d4j-font);
+}
+
+.ant-notification .ant-notification-notice-message {
+  font-family: var(--d4j-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--d4j-ink);
+  margin-bottom: 4px;
+}
+
+.ant-notification .ant-notification-notice-description {
+  color: var(--d4j-muted);
+}
+
+.ant-notification .ant-notification-notice:has(.ant-notification-notice-icon-success) {
+  background: var(--d4j-success-bg);
+  border-color: var(--d4j-success-border);
+}
+
+.ant-notification .ant-notification-notice:has(.ant-notification-notice-icon-error) {
+  background: var(--d4j-danger-bg);
+  border-color: var(--d4j-danger-border);
+}
+
+.ant-notification .ant-notification-notice:has(.ant-notification-notice-icon-warning) {
+  background: var(--d4j-warn-bg);
+  border-color: var(--d4j-warn-border);
+}
+
+.ant-notification .ant-notification-notice:has(.ant-notification-notice-icon-info) {
+  background: var(--d4j-info-bg);
+  border-color: var(--d4j-info-border);
+}
+
+.ant-notification .ant-notification-notice-icon-success {
+  color: var(--d4j-mint);
+}
+
+.ant-notification .ant-notification-notice-icon-error {
+  color: var(--d4j-danger);
+}
+
+.ant-notification .ant-notification-notice-icon-warning {
+  color: var(--d4j-warn);
+}
+
+.ant-notification .ant-notification-notice-icon-info {
+  color: var(--d4j-cyan);
+}
+
+.ant-btn-dangerous.ant-btn-primary {
+  background: var(--d4j-danger);
+  border-color: var(--d4j-danger);
+}
+
+.ant-btn-dangerous.ant-btn-primary:not(:disabled):hover {
+  background: var(--d4j-danger-hover) !important;
+  border-color: var(--d4j-danger-hover) !important;
+}
+
+.ant-btn-dangerous:not(.ant-btn-primary):not(:disabled) {
+  color: var(--d4j-danger);
+  border-color: var(--d4j-danger);
+}
+
+.ant-btn-dangerous:not(.ant-btn-primary):not(:disabled):hover {
+  color: var(--d4j-danger-hover) !important;
+  border-color: var(--d4j-danger-hover) !important;
+  background: var(--d4j-danger-bg) !important;
 }

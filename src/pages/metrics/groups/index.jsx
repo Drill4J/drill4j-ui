@@ -50,7 +50,9 @@ export const GroupsPage = () => {
 
   return (
     <>
-      <Title level={3}>Select group</Title>
+      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
+        Groups
+      </Title>
       <WhatIsGroupTipBanner />
       <Table
         columns={columns}

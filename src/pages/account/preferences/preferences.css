@@ -2,6 +2,16 @@
   max-width: 640px;
 }
 
+.preferences-page .ant-card {
+  border-radius: 12px;
+  border-color: var(--d4j-line, #d3dee8);
+}
+
+.preferences-page .ant-typography h4,
+.preferences-page .ant-typography h5 {
+  font-family: var(--d4j-display, "Space Grotesk", sans-serif);
+}
+
 .preferences-copy {
   display: flex;
   flex-direction: column;

@@ -122,41 +122,6 @@ function buildTestSessionsColumns(
       render: renderResultTag,
     },
     {
-      title: "Definitions",
-      dataIndex: "testDefinitions",
-      key: "testDefinitions",
-    },
-    {
-      title: "Launches",
-      dataIndex: "testLaunches",
-      key: "testLaunches",
-    },
-    {
-      title: "Duration",
-      dataIndex: "testDurationFormatted",
-      key: "testDurationFormatted",
-    },
-    {
-      title: "Passed",
-      dataIndex: "passed",
-      key: "passed",
-    },
-    {
-      title: "Failed",
-      dataIndex: "failed",
-      key: "failed",
-    },
-    {
-      title: "Skipped",
-      dataIndex: "skipped",
-      key: "skipped",
-    },
-    {
-      title: "Smart skipped",
-      dataIndex: "smartSkipped",
-      key: "smartSkipped",
-    },
-    {
       title: "Time saved",
       dataIndex: "timeSavedFormatted",
       key: "timeSavedFormatted",

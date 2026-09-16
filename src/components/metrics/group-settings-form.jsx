@@ -90,6 +90,8 @@ export function GroupSettingsForm({ groupId, disabled = false }) {
       okText: "Clear settings",
       okButtonProps: { danger: true },
       cancelText: "Cancel",
+      centered: true,
+      autoFocusButton: "cancel",
       onOk: async () => {
         setResetting(true)
         try {
