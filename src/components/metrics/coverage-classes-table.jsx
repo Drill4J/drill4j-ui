@@ -170,9 +170,8 @@ function classColumns(
       title: "Class",
       dataIndex: "className",
       key: "className",
-      onCell: (record) => ({
-        colSpan: expandedMethodsKey === record.fullClassName ? 3 : 1,
-        style: { verticalAlign: "top" },
+      onCell: () => ({
+        style: { verticalAlign: "top", overflow: "visible" },
       }),
       render: (value, record) => {
         const isExpanded = expandedMethodsKey === record.fullClassName
@@ -186,59 +185,19 @@ function classColumns(
           record.className === scopedClassName
             ? { sortBy: methodsSortBy, sortOrder: methodsSortOrder }
             : { sortBy: null, sortOrder: null }
-        const methodSegments = buildCoverageSegments({
-          probesCount: record.methodsCount,
-          coveredProbes: record.coveredMethods,
-          coveredProbesAggregated: record.coveredMethodsInOtherBuilds,
-          includeOtherBuilds,
-        })
-        const coveredMethods = methodSegments?.covered ?? record.coveredMethods ?? 0
 
         return (
           <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                gap: 16,
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <CoverageScopeName name={value} onCopyLink={() => handleClassNameClick(record)} />
-                {record.methodsCount > 0 && (
-                  <Link
-                    type="secondary"
-                    onClick={() => toggleMethodsPanel(record)}
-                    style={{ fontSize: 12 }}
-                  >
-                    {record.methodsCount} {methodsLabel} ({isExpanded ? "hide" : "show"})
-                  </Link>
-                )}
-              </div>
-              {isExpanded && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                    flexShrink: 0,
-                    marginLeft: "auto",
-                  }}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <CoverageScopeName name={value} onCopyLink={() => handleClassNameClick(record)} />
+              {record.methodsCount > 0 && (
+                <Link
+                  type="secondary"
+                  onClick={() => toggleMethodsPanel(record)}
+                  style={{ fontSize: 12 }}
                 >
-                  <span style={{ width: 110, textAlign: "left" }}>
-                    {`${coveredMethods} / ${record.methodsCount}`}
-                  </span>
-                  <div style={{ width: 180 }}>
-                    <CoverageStackedBar
-                      probesCount={record.probesCount}
-                      coveredProbes={record.coveredProbes}
-                      coveredProbesAggregated={record.coveredProbesInOtherBuilds}
-                      includeOtherBuilds={includeOtherBuilds}
-                    />
-                  </div>
-                </div>
+                  {record.methodsCount} {methodsLabel} ({isExpanded ? "hide" : "show"})
+                </Link>
               )}
             </div>
             {isExpanded && (
@@ -281,8 +240,8 @@ function classColumns(
       ),
       key: "methods",
       width: 110,
-      onCell: (record) => ({
-        colSpan: expandedMethodsKey === record.fullClassName ? 0 : 1,
+      onCell: () => ({
+        style: { verticalAlign: "top" },
       }),
       render: (_, row) => {
         const segments = buildCoverageSegments({
@@ -307,8 +266,8 @@ function classColumns(
       ),
       key: "probesCoverage",
       width: 180,
-      onCell: (record) => ({
-        colSpan: expandedMethodsKey === record.fullClassName ? 0 : 1,
+      onCell: () => ({
+        style: { verticalAlign: "top" },
       }),
       render: (_, row) => (
         <CoverageStackedBar
@@ -906,6 +865,7 @@ export function CoverageClassesTable({
       columns={columns}
       pagination={{ page, pageSize, total }}
       onTableChange={handleTableChange}
+      tableLayout="fixed"
       onRow={(record) => ({
         id: classRowId(record.fullClassName),
         className:

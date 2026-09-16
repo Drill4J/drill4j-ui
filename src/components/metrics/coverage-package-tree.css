@@ -18,13 +18,42 @@
   animation: coverage-package-row-flash 3s ease-out forwards;
 }
 
+.coverage-package-tree .ant-table,
+.coverage-package-classes-panel .ant-table,
+.coverage-class-methods-panel .ant-table {
+  table-layout: fixed;
+}
+
+.coverage-package-tree .ant-table-cell,
+.coverage-package-classes-panel .ant-table-cell,
+.coverage-class-methods-panel .ant-table-cell {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Nested panels break out under sibling columns; cells must not clip them. */
+.coverage-package-tree td.ant-table-cell:has(.coverage-package-classes-panel),
+.coverage-package-classes-panel td.ant-table-cell:has(.coverage-class-methods-panel) {
+  overflow: visible !important;
+}
+
+/*
+ * Nested panels live in the first column. Extend them under fixed-width
+ * sibling columns + horizontal cell paddings so nested coverage bars stay
+ * the same width as the parent row.
+ */
 .coverage-package-classes-panel {
+  /* Coverage column 180 + 16px cell padding */
+  width: calc(100% + 196px);
   margin-top: 8px;
   padding: 10px 0 6px;
   border-top: 1px solid var(--d4j-line, #d3dee8);
   border-bottom: 1px solid var(--d4j-line, #d3dee8);
   background: var(--d4j-paper, #f6fafc);
   border-radius: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .coverage-package-classes-panel__header {
@@ -35,8 +64,13 @@
 }
 
 .coverage-class-methods-panel {
+  /* Methods 110 + Coverage 180 + 16px cell padding */
+  width: calc(100% + 306px);
   margin-top: 8px;
   padding: 8px 0 4px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .coverage-class-methods-panel__header {
@@ -47,12 +81,13 @@
   color: var(--d4j-muted, #5a7186);
 }
 
-.coverage-package-classes-panel .ant-table,
-.coverage-class-methods-panel .ant-table {
-  table-layout: fixed;
-}
-
-.coverage-package-classes-panel .ant-table-cell,
-.coverage-class-methods-panel .ant-table-cell {
-  overflow: hidden;
+/*
+ * Ant Design nest-table styles add ~40px margin-inline-start when a nested
+ * `.ant-table-wrapper:only-child` sits under a tbody. Cancel only that.
+ */
+.coverage-package-classes-panel .ant-table-wrapper:only-child .ant-table,
+.coverage-class-methods-panel .ant-table-wrapper:only-child .ant-table {
+  margin-block: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
 }

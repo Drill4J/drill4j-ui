@@ -359,9 +359,8 @@ export function CoveragePackageTree({
         title: "Package",
         dataIndex: "name",
         key: "name",
-        onCell: (record) => ({
-          colSpan: expandedClassesKey === record.key ? 2 : 1,
-          style: { verticalAlign: "top" },
+        onCell: () => ({
+          style: { verticalAlign: "top", overflow: "visible" },
         }),
         render: (value, record) => {
           const isExpanded = expandedClassesKey === record.key
@@ -369,39 +368,19 @@ export function CoveragePackageTree({
 
           return (
             <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                  <CoverageScopeName
-                    name={formatPackageLabel(value)}
-                    onCopyLink={() => handlePackageNameClick(record)}
-                  />
-                  {record.classesCount > 0 && (
-                    <Link
-                      type="secondary"
-                      onClick={() => toggleClassesPanel(record)}
-                      style={{ fontSize: 12 }}
-                    >
-                      {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
-                    </Link>
-                  )}
-                </div>
-                {isExpanded && (
-                  <div style={{ width: 180, flexShrink: 0, marginLeft: "auto" }}>
-                    <CoverageStackedBar
-                      probesCount={record.probesCount}
-                      coveredProbes={record.coveredProbes}
-                      coveredProbesAggregated={record.coveredProbesAggregated}
-                      includeOtherBuilds={includeOtherBuilds}
-                    />
-                  </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                <CoverageScopeName
+                  name={formatPackageLabel(value)}
+                  onCopyLink={() => handlePackageNameClick(record)}
+                />
+                {record.classesCount > 0 && (
+                  <Link
+                    type="secondary"
+                    onClick={() => toggleClassesPanel(record)}
+                    style={{ fontSize: 12 }}
+                  >
+                    {record.classesCount} {classesLabel} ({isExpanded ? "hide" : "show"})
+                  </Link>
                 )}
               </div>
               {isExpanded && (
@@ -446,8 +425,7 @@ export function CoveragePackageTree({
         title: "Coverage",
         key: "probesCoverage",
         width: 180,
-        onCell: (record) => ({
-          colSpan: expandedClassesKey === record.key ? 0 : 1,
+        onCell: () => ({
           style: { verticalAlign: "top" },
         }),
         render: (_, row) => (
@@ -485,26 +463,29 @@ export function CoveragePackageTree({
   )
 
   return (
-    <MetricsDataTable
-      rowKey="key"
-      loading={loading}
-      dataSource={treeData}
-      columns={columns}
-      pagination={false}
-      expandable={{
-        expandedRowKeys,
-        onExpandedRowsChange: (keys) => {
-          closeClassesPanel()
-          setExpandedRowKeys(keys)
-        },
-      }}
-      onRow={(record) => ({
-        id: packageRowId(record.key),
-        className:
-          record.key === highlightedKey
-            ? `coverage-package-row-highlight-${highlightTick % 2}`
-            : undefined,
-      })}
-    />
+    <div className="coverage-package-tree">
+      <MetricsDataTable
+        rowKey="key"
+        loading={loading}
+        dataSource={treeData}
+        columns={columns}
+        pagination={false}
+        tableLayout="fixed"
+        expandable={{
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => {
+            closeClassesPanel()
+            setExpandedRowKeys(keys)
+          },
+        }}
+        onRow={(record) => ({
+          id: packageRowId(record.key),
+          className:
+            record.key === highlightedKey
+              ? `coverage-package-row-highlight-${highlightTick % 2}`
+              : undefined,
+        })}
+      />
+    </div>
   )
 }

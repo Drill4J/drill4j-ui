@@ -297,6 +297,7 @@ export function CoverageMethodsTable({
       columns={columns}
       pagination={pagination}
       onTableChange={onTableChange}
+      tableLayout="fixed"
       onRow={(record) => ({
         id: methodRowId(record.methodId),
         className:
