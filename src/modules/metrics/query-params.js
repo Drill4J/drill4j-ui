@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testResults"]
+export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testResults", "testProjectIds"]
 
-export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
+export const TEST_SESSIONS_LIST_QUERY_KEYS = [
+  "testTaskIds",
+  "testProjectIds",
+  "createdBys",
+  "results",
+]
 
 export const TEST_SESSION_DETAIL_LIST_QUERY_KEYS = [
   "testResults",
@@ -39,7 +44,7 @@ export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
 
 export const COMPARISON_LIST_QUERY_KEYS = ["changeTypes"]
 
-export const APP_TRENDS_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
+export const APP_TRENDS_LIST_QUERY_KEYS = ["branches", "envIds", "testTags", "testProjectIds"]
 
 export const LIST_QUERY_PARAM_KEYS = new Set([
   ...COVERAGE_LIST_QUERY_KEYS,
@@ -211,6 +216,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   includeOtherBuilds?: boolean,
  *   packageName?: string,
  *   className?: string,
@@ -238,6 +244,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   includeOtherBuilds?: boolean,
  * }} ComparisonQueryState
  */
@@ -313,6 +320,7 @@ export function buildComparisonSearchParams(state) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testProjectIds?: string[],
  * }} AppTrendsQueryState
  */
 

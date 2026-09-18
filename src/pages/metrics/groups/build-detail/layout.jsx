@@ -51,10 +51,11 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { branches, envIds, testResults, includeOtherBuilds, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
+  const { branches, envIds, testResults, testProjectIds, includeOtherBuilds, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
     useBuildDetailSearchParams()
   const {
     testTaskIds,
+    testProjectIds: sessionTestProjectIds,
     createdBys,
     results,
     updateQueryParams: updateSessionQueryParams,
@@ -138,13 +139,16 @@ export const BuildDetailLayout = () => {
         <BuildCoverageFiltersBar
           groupId={groupId}
           appId={appId}
+          buildId={buildId}
           branches={branches}
           envIds={envIds}
           testResults={testResults}
+          testProjectIds={testProjectIds}
           includeOtherBuilds={includeOtherBuilds}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestResultsChange={(value) => updateQueryParams({ testResults: value })}
+          onTestProjectIdsChange={(value) => updateQueryParams({ testProjectIds: value })}
           onIncludeOtherBuildsChange={(value) =>
             updateQueryParams({ includeOtherBuilds: value })
           }
@@ -156,9 +160,13 @@ export const BuildDetailLayout = () => {
           groupId={groupId}
           buildId={buildId}
           testTaskIds={testTaskIds}
+          testProjectIds={sessionTestProjectIds}
           createdBys={createdBys}
           results={results}
           onTestTaskIdsChange={(value) => updateSessionQueryParams({ testTaskIds: value, page: 1 })}
+          onTestProjectIdsChange={(value) =>
+            updateSessionQueryParams({ testProjectIds: value, page: 1 })
+          }
           onCreatedBysChange={(value) => updateSessionQueryParams({ createdBys: value, page: 1 })}
           onResultsChange={(value) => updateSessionQueryParams({ results: value, page: 1 })}
           onClear={clearSessionFilters}

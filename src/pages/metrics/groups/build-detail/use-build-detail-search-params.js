@@ -58,6 +58,7 @@ export function useBuildDetailSearchParams() {
   const branchesSerialized = serializeListQueryParam(searchParams, "branches")
   const envIdsSerialized = serializeListQueryParam(searchParams, "envIds")
   const testResultsSerialized = serializeListQueryParam(searchParams, "testResults")
+  const testProjectIdsSerialized = serializeListQueryParam(searchParams, "testProjectIds")
 
   const branches = useMemo(
     () => deserializeListQueryParam(branchesSerialized),
@@ -71,10 +72,14 @@ export function useBuildDetailSearchParams() {
     () => deserializeListQueryParam(testResultsSerialized),
     [testResultsSerialized]
   )
+  const testProjectIds = useMemo(
+    () => deserializeListQueryParam(testProjectIdsSerialized),
+    [testProjectIdsSerialized]
+  )
 
   const coverageFilters = useMemo(
-    () => ({ branches, envIds, testResults }),
-    [branches, envIds, testResults]
+    () => ({ branches, envIds, testResults, testProjectIds }),
+    [branches, envIds, testResults, testProjectIds]
   )
 
   const updateQueryParams = useCallback(
@@ -84,6 +89,7 @@ export function useBuildDetailSearchParams() {
         branches,
         envIds,
         testResults,
+        testProjectIds,
         includeOtherBuilds,
         packageName,
         className,
@@ -111,6 +117,7 @@ export function useBuildDetailSearchParams() {
       branches,
       envIds,
       testResults,
+      testProjectIds,
       includeOtherBuilds,
       packageName,
       className,
@@ -129,6 +136,7 @@ export function useBuildDetailSearchParams() {
       branches: undefined,
       envIds: undefined,
       testResults: undefined,
+      testProjectIds: undefined,
       includeOtherBuilds: undefined,
       sortBy: undefined,
       sortOrder: undefined,
@@ -154,6 +162,7 @@ export function useBuildDetailSearchParams() {
     branches,
     envIds,
     testResults,
+    testProjectIds,
     includeOtherBuilds,
     packageName,
     className,

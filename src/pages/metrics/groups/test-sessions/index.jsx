@@ -26,6 +26,7 @@ export const TestSessionsPage = () => {
   const navigate = useNavigate()
   const {
     testTaskIds,
+    testProjectIds,
     createdBys,
     results,
     updateQueryParams,
@@ -44,9 +45,13 @@ export const TestSessionsPage = () => {
       <TestSessionsFiltersBar
         groupId={groupId}
         testTaskIds={testTaskIds}
+        testProjectIds={testProjectIds}
         createdBys={createdBys}
         results={results}
         onTestTaskIdsChange={(value) => updateQueryParams({ testTaskIds: value, page: 1 })}
+        onTestProjectIdsChange={(value) =>
+          updateQueryParams({ testProjectIds: value, page: 1 })
+        }
         onCreatedBysChange={(value) => updateQueryParams({ createdBys: value, page: 1 })}
         onResultsChange={(value) => updateQueryParams({ results: value, page: 1 })}
         onClear={clearFilters}

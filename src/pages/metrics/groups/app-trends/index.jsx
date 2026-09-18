@@ -155,6 +155,7 @@ export const AppTrendsPage = () => {
     branches,
     envIds,
     testTags,
+    testProjectIds,
     updateQueryParams,
   } = useAppTrendsSearchParams()
 
@@ -175,9 +176,10 @@ export const AppTrendsPage = () => {
       branches,
       envIds,
       testTags,
+      testProjectIds,
       size,
     }),
-    [groupId, appId, branches, envIds, testTags, size]
+    [groupId, appId, branches, envIds, testTags, testProjectIds, size]
   )
 
   const selectedBaselineBuild = useMemo(
@@ -197,6 +199,15 @@ export const AppTrendsPage = () => {
   const loadTestTags = useCallback(
     (params) => API.getAppTestTags(groupId, appId, params),
     [appId, groupId]
+  )
+  const loadTestProjects = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        field: "testProjectIds",
+        ...params,
+      }),
+    [groupId]
   )
 
   const loadPickerBuilds = useCallback(async () => {
@@ -368,14 +379,19 @@ export const AppTrendsPage = () => {
           branches={branches}
           envIds={envIds}
           testTags={testTags}
+          testProjectIds={testProjectIds}
           loadBranches={loadBranches}
           loadEnvIds={loadEnvIds}
           loadTestTags={loadTestTags}
+          loadTestProjects={loadTestProjects}
           onBranchesChange={(value) =>
             updateQueryParams({ branches: value })
           }
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
+          onTestProjectIdsChange={(value) =>
+            updateQueryParams({ testProjectIds: value })
+          }
         />
         <Space align="center" size={6}>
           <Text type="secondary">Builds</Text>

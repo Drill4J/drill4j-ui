@@ -32,6 +32,7 @@ function formatSessionDate(value) {
  *   testSessionId?: string,
  *   sessionStartedAt?: string,
  *   testTaskId?: string,
+ *   testProjectId?: string,
  *   branch?: string,
  *   result?: string,
  *   groupId?: string,
@@ -43,6 +44,7 @@ export function TestSessionContextBar({
   testSessionId,
   sessionStartedAt,
   testTaskId,
+  testProjectId,
   branch,
   result,
   groupId,
@@ -75,6 +77,10 @@ export function TestSessionContextBar({
       <Text>
         <Text type="secondary">Test task </Text>
         <Text strong>{testTaskId || "—"}</Text>
+      </Text>
+      <Text>
+        <Text type="secondary">Test project </Text>
+        <Text strong>{testProjectId || "—"}</Text>
       </Text>
       {buildId && (
         <Text>

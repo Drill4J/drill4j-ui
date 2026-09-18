@@ -122,6 +122,7 @@ export const TestSessionBuildsPage = () => {
         testSessionId={session?.testSessionId ?? testSessionId}
         sessionStartedAt={session?.sessionStartedAt}
         testTaskId={session?.testTaskId}
+        testProjectId={session?.testProjectId}
         result={session?.result}
       />
       <Title level={5} style={{ marginBottom: 16 }}>

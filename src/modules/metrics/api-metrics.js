@@ -194,6 +194,7 @@ export async function getAppTestTags(groupId, appId, params = {}) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testProjectIds?: string[],
  *   size?: number,
  * }} params
  * @returns {Promise<object[]>}
@@ -205,6 +206,7 @@ export async function getAppCoverageTrends(params) {
     branches = [],
     envIds = [],
     testTags = [],
+    testProjectIds = [],
     size = 100,
   } = params
   const key = [
@@ -214,6 +216,7 @@ export async function getAppCoverageTrends(params) {
     branches.join(","),
     envIds.join(","),
     testTags.join(","),
+    testProjectIds.join(","),
     size,
   ].join(":")
   return dedupedRequest(key, async () => {
@@ -225,6 +228,7 @@ export async function getAppCoverageTrends(params) {
           branches,
           envIds,
           testTags,
+          testProjectIds,
           size,
         }),
         paramsSerializer: axiosListParamsSerializer,
@@ -241,6 +245,7 @@ export async function getAppCoverageTrends(params) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testProjectIds?: string[],
  *   baselineBuildId: string,
  *   size?: number,
  * }} params
@@ -253,6 +258,7 @@ export async function getAppChangesTrends(params) {
     branches = [],
     envIds = [],
     testTags = [],
+    testProjectIds = [],
     baselineBuildId,
     size = 100,
   } = params
@@ -263,6 +269,7 @@ export async function getAppChangesTrends(params) {
     branches.join(","),
     envIds.join(","),
     testTags.join(","),
+    testProjectIds.join(","),
     baselineBuildId || "",
     size,
   ].join(":")
@@ -275,6 +282,7 @@ export async function getAppChangesTrends(params) {
           branches,
           envIds,
           testTags,
+          testProjectIds,
           baselineBuildId,
           size,
         }),
@@ -299,11 +307,11 @@ export async function getBuildDetail(buildId) {
 
 /**
  * @param {string} buildId
- * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testResults?: string[] }} [filters]
+ * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testResults?: string[], testProjectIds?: string[] }} [filters]
  */
 export async function getBuildCoverageByProbes(buildId, filters = {}) {
-  const { baselineBuildId, envIds, branches, testResults } = filters
-  const key = `coverage-probes:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}`
+  const { baselineBuildId, envIds, branches, testResults, testProjectIds } = filters
+  const key = `coverage-probes:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}:${testProjectIds?.join(",")}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-probes`, {
@@ -312,6 +320,7 @@ export async function getBuildCoverageByProbes(buildId, filters = {}) {
           envIds,
           branches,
           testResults,
+          testProjectIds,
         }),
         paramsSerializer: axiosListParamsSerializer,
       })
@@ -322,11 +331,11 @@ export async function getBuildCoverageByProbes(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
- * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testResults?: string[] }} [filters]
+ * @param {{ baselineBuildId?: string, envIds?: string[], branches?: string[], testResults?: string[], testProjectIds?: string[] }} [filters]
  */
 export async function getBuildCoverageByMethods(buildId, filters = {}) {
-  const { baselineBuildId, envIds, branches, testResults } = filters
-  const key = `coverage-methods:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}`
+  const { baselineBuildId, envIds, branches, testResults, testProjectIds } = filters
+  const key = `coverage-methods:${buildId}:${baselineBuildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}:${testProjectIds?.join(",")}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
       axios.get(`/metrics/builds/${encodeURIComponent(buildId)}/coverage-by-methods`, {
@@ -335,6 +344,7 @@ export async function getBuildCoverageByMethods(buildId, filters = {}) {
           envIds,
           branches,
           testResults,
+          testProjectIds,
         }),
         paramsSerializer: axiosListParamsSerializer,
       })
@@ -387,6 +397,7 @@ export async function getBuildTestSessionStats(buildId) {
  * @param {{
  *   groupId: string,
  *   testTaskIds?: string[],
+ *   testProjectIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
  *   sortBy?: string,
@@ -400,6 +411,7 @@ export async function getGroupTestSessions(params) {
   const {
     groupId,
     testTaskIds = [],
+    testProjectIds = [],
     createdBys = [],
     results = [],
     sortBy,
@@ -411,6 +423,7 @@ export async function getGroupTestSessions(params) {
     "group-test-sessions",
     groupId,
     testTaskIds.join(","),
+    testProjectIds.join(","),
     createdBys.join(","),
     results.join(","),
     sortBy,
@@ -424,6 +437,7 @@ export async function getGroupTestSessions(params) {
         params: serializeListQueryParams({
           groupId,
           testTaskIds,
+          testProjectIds,
           createdBys,
           results,
           page,
@@ -445,6 +459,7 @@ export async function getGroupTestSessions(params) {
  *   groupId: string,
  *   buildId: string,
  *   testTaskIds?: string[],
+ *   testProjectIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
  *   sortBy?: string,
@@ -459,6 +474,7 @@ export async function getBuildTestSessions(params) {
     groupId,
     buildId,
     testTaskIds = [],
+    testProjectIds = [],
     createdBys = [],
     results = [],
     sortBy,
@@ -471,6 +487,7 @@ export async function getBuildTestSessions(params) {
     groupId,
     buildId,
     testTaskIds.join(","),
+    testProjectIds.join(","),
     createdBys.join(","),
     results.join(","),
     sortBy,
@@ -484,6 +501,7 @@ export async function getBuildTestSessions(params) {
         params: serializeListQueryParams({
           groupId,
           testTaskIds,
+          testProjectIds,
           createdBys,
           results,
           page,
@@ -1006,6 +1024,7 @@ function impactedTestsScopeKey(body) {
     body.testRunner || "",
     body.testTag || "",
     body.testTaskId || "",
+    body.testProjectId || "",
     (body.coverageBranches || []).join(","),
     (body.coverageAppEnvIds || []).join(","),
     body.sortBy || "",
@@ -1030,7 +1049,7 @@ export async function postImpactedTests(body) {
 
 /**
  * @param {object} body Same build/coverage fields as postImpactedTests
- * @returns {Promise<{ testPaths: string[], testNames: string[], testRunners: string[], testTags: string[], testTaskIds: string[] }>}
+ * @returns {Promise<{ testPaths: string[], testNames: string[], testRunners: string[], testTags: string[], testTaskIds: string[], testProjectIds: string[] }>}
  */
 export async function postImpactedTestsFilterOptions(body) {
   const key = `impacted-tests-filter-options:${impactedTestsScopeKey(body)}`
@@ -1050,6 +1069,7 @@ export async function postImpactedTestsFilterOptions(body) {
  *   commitSha?: string,
  *   baselineBuildVersion?: string,
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   envIds?: string[],
  *   branches?: string[],
  *   changeTypes?: string[],
@@ -1072,6 +1092,7 @@ export async function getBuildChanges(params) {
     rest.commitSha,
     rest.baselineBuildVersion,
     rest.testResults?.join(","),
+    rest.testProjectIds?.join(","),
     rest.envIds?.join(","),
     rest.branches?.join(","),
     rest.changeTypes?.join(","),
@@ -1098,9 +1119,17 @@ export async function getBuildChanges(params) {
 }
 
 function coverageFilterKey(buildId, filters = {}) {
-  const { envIds, branches, testResults, packageName, className, testSessionId, testDefinitionId } =
-    filters
-  return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}:${packageName}:${className}:${testSessionId}:${testDefinitionId}`
+  const {
+    envIds,
+    branches,
+    testResults,
+    testProjectIds,
+    packageName,
+    className,
+    testSessionId,
+    testDefinitionId,
+  } = filters
+  return `${buildId}:${envIds?.join(",")}:${branches?.join(",")}:${testResults?.join(",")}:${testProjectIds?.join(",")}:${packageName}:${className}:${testSessionId}:${testDefinitionId}`
 }
 
 /**
@@ -1109,6 +1138,7 @@ function coverageFilterKey(buildId, filters = {}) {
  *   envIds?: string[],
  *   branches?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   packageNamePattern?: string,
  *   classNamePattern?: string,
  *   rootId?: string,
@@ -1122,6 +1152,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
     envIds,
     branches,
     testResults,
+    testProjectIds,
     packageNamePattern,
     classNamePattern,
     rootId,
@@ -1135,6 +1166,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
     envIds?.join(","),
     branches?.join(","),
     testResults?.join(","),
+    testProjectIds?.join(","),
     packageNamePattern,
     classNamePattern,
     rootId,
@@ -1150,6 +1182,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
           envIds,
           branches,
           testResults,
+          testProjectIds,
           packageNamePattern,
           classNamePattern,
           rootId,
@@ -1166,7 +1199,7 @@ export async function getCoverageTreemap(buildId, filters = {}) {
 
 /**
  * @param {string} buildId
- * @param {{ envIds?: string[], branches?: string[], testResults?: string[] }} [filters]
+ * @param {{ envIds?: string[], branches?: string[], testResults?: string[], testProjectIds?: string[] }} [filters]
  */
 export async function getCoverageByPackage(buildId, filters = {}) {
   const { testTags: _testTags, ...safeFilters } = filters
@@ -1189,6 +1222,7 @@ export async function getCoverageByPackage(buildId, filters = {}) {
  *   envIds?: string[],
  *   branches?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   page?: number,
  *   pageSize?: number,
  *   sortBy?: string,
@@ -1226,6 +1260,7 @@ export async function getCoverageByClass(buildId, params = {}) {
  *   envIds?: string[],
  *   branches?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   page?: number,
  *   pageSize?: number,
  *   sortBy?: string,
