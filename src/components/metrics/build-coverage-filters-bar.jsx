@@ -29,6 +29,8 @@ const COVERAGE_FILTER_HINTS = {
   branches:
     "When aggregating coverage across builds, only includes builds from the selected branches.",
   envIds: "Shows coverage collected only in the selected environments.",
+  testProjectIds:
+    "Shows coverage contributed only by tests from the selected test projects.",
   testResults: "Shows coverage contributed only by tests with the selected results.",
 }
 
@@ -42,30 +44,36 @@ const INCLUDE_OTHER_BUILDS_HINT =
  * @param {{
  *   groupId: string,
  *   appId: string,
+ *   buildId?: string,
  *   branches?: string[],
  *   envIds?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   includeOtherBuilds?: boolean,
  *   onBranchesChange: (value?: string[]) => void,
  *   onEnvIdsChange: (value?: string[]) => void,
  *   onTestResultsChange: (value?: string[]) => void,
+ *   onTestProjectIdsChange?: (value?: string[]) => void,
  *   onIncludeOtherBuildsChange?: (value: boolean) => void,
  *   onClear?: () => void,
  *   scopeHint?: string,
- *   filterHints?: { branches?: string, envIds?: string, testResults?: string },
+ *   filterHints?: { branches?: string, envIds?: string, testResults?: string, testProjectIds?: string },
  *   sticky?: boolean,
  * }} props
  */
 export function BuildCoverageFiltersBar({
   groupId,
   appId,
+  buildId,
   branches,
   envIds,
   testResults,
+  testProjectIds,
   includeOtherBuilds = true,
   onBranchesChange,
   onEnvIdsChange,
   onTestResultsChange,
+  onTestProjectIdsChange,
   onIncludeOtherBuildsChange,
   onClear,
   scopeHint = FILTER_SCOPE_HINT,
@@ -76,6 +84,7 @@ export function BuildCoverageFiltersBar({
     branches?.length ||
       envIds?.length ||
       testResults?.length ||
+      testProjectIds?.length ||
       includeOtherBuilds === false
   )
 
@@ -89,6 +98,17 @@ export function BuildCoverageFiltersBar({
   )
 
   const loadTestResults = useCallback((params) => loadCoverageTestResultsPage(params), [])
+
+  const loadTestProjects = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "testProjectIds",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
 
   return (
     <div
@@ -119,13 +139,16 @@ export function BuildCoverageFiltersBar({
         branches={branches}
         envIds={envIds}
         testResults={testResults}
+        testProjectIds={testProjectIds}
         loadBranches={loadBranches}
         loadEnvIds={loadEnvIds}
         loadTestResults={loadTestResults}
+        loadTestProjects={onTestProjectIdsChange ? loadTestProjects : undefined}
         filterHints={filterHints}
         onBranchesChange={onBranchesChange}
         onEnvIdsChange={onEnvIdsChange}
         onTestResultsChange={onTestResultsChange}
+        onTestProjectIdsChange={onTestProjectIdsChange}
       />
       {onIncludeOtherBuildsChange && (
         <Tooltip title={INCLUDE_OTHER_BUILDS_HINT}>

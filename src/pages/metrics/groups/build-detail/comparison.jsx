@@ -46,6 +46,7 @@ const SECTION_ITEMS = [
 const COMPARISON_FILTER_HINTS = {
   branches: "Applies to changed-coverage overview charts and the Changes table.",
   envIds: "Applies to changed-coverage overview charts and the Changes table.",
+  testProjectIds: "Applies to changed-coverage overview charts and the Changes table.",
   testResults: "Applies to changed-coverage overview charts and the Changes table.",
 }
 
@@ -67,6 +68,7 @@ export const BuildComparisonPage = () => {
     branches,
     envIds,
     testResults,
+    testProjectIds,
     includeOtherBuilds,
     coverageFilters,
     updateQueryParams,
@@ -107,6 +109,7 @@ export const BuildComparisonPage = () => {
       branches,
       envIds,
       testResults,
+      testProjectIds,
       includeOtherBuilds,
     }),
     [
@@ -123,6 +126,7 @@ export const BuildComparisonPage = () => {
       sortOrder,
       testDefinitionId,
       testResults,
+      testProjectIds,
       urlPage,
       urlPageSize,
     ]
@@ -390,15 +394,18 @@ export const BuildComparisonPage = () => {
           sticky={false}
           groupId={build.groupId}
           appId={build.appId}
+          buildId={build.buildId}
           branches={branches}
           envIds={envIds}
           testResults={testResults}
+          testProjectIds={testProjectIds}
           includeOtherBuilds={includeOtherBuilds}
           scopeHint="Applies to changed-coverage charts and the Changes table."
           filterHints={COMPARISON_FILTER_HINTS}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestResultsChange={(value) => updateQueryParams({ testResults: value })}
+          onTestProjectIdsChange={(value) => updateQueryParams({ testProjectIds: value })}
           onIncludeOtherBuildsChange={(value) =>
             updateQueryParams({ includeOtherBuilds: value })
           }

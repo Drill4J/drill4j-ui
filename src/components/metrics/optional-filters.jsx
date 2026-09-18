@@ -23,16 +23,19 @@ import { FilterMultiSelect } from "./filter-multi-select"
  *   envIds?: string[],
  *   testTags?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   loadBranches: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   loadEnvIds: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   loadTestTags?: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   loadTestResults?: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadTestProjects?: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   size?: "small" | "middle" | "large",
- *   filterHints?: { branches?: string, envIds?: string, testTags?: string, testResults?: string },
+ *   filterHints?: { branches?: string, envIds?: string, testTags?: string, testResults?: string, testProjectIds?: string },
  *   onBranchesChange: (value?: string[]) => void,
  *   onEnvIdsChange: (value?: string[]) => void,
  *   onTestTagsChange?: (value?: string[]) => void,
  *   onTestResultsChange?: (value?: string[]) => void,
+ *   onTestProjectIdsChange?: (value?: string[]) => void,
  * }} props
  */
 export function OptionalFilters({
@@ -40,16 +43,19 @@ export function OptionalFilters({
   envIds,
   testTags,
   testResults,
+  testProjectIds,
   loadBranches,
   loadEnvIds,
   loadTestTags,
   loadTestResults,
+  loadTestProjects,
   size = "middle",
   filterHints,
   onBranchesChange,
   onEnvIdsChange,
   onTestTagsChange,
   onTestResultsChange,
+  onTestProjectIdsChange,
 }) {
   return (
     <Space wrap align="center" size={size === "small" ? "small" : "middle"}>
@@ -83,6 +89,20 @@ export function OptionalFilters({
             onChange={onTestTagsChange}
           />
           {filterHints?.testTags && <HintIcon title={filterHints.testTags} />}
+        </Space>
+      )}
+      {onTestProjectIdsChange && loadTestProjects && (
+        <Space align="center" size={size === "small" ? 4 : 6}>
+          <FilterMultiSelect
+            size={size}
+            placeholder="Test project"
+            loadPage={loadTestProjects}
+            value={testProjectIds}
+            onChange={onTestProjectIdsChange}
+          />
+          {filterHints?.testProjectIds && (
+            <HintIcon title={filterHints.testProjectIds} />
+          )}
         </Space>
       )}
       {onTestResultsChange && loadTestResults && (

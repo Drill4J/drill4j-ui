@@ -22,10 +22,11 @@ import * as API from "../../modules/metrics/api-metrics"
 const { Text } = Typography
 
 const FILTER_SCOPE_HINT =
-  "Test task, creator, and result filters apply to the sessions table on this page."
+  "Test task, test project, creator, and result filters apply to the sessions table on this page."
 
 const TEST_SESSION_FILTER_HINTS = {
   testTaskIds: "Shows only sessions started under the selected test tasks.",
+  testProjectIds: "Shows only sessions from the selected test projects.",
   createdBys: "Shows only sessions created by the selected users.",
   results: "Shows only sessions with the selected overall result.",
 }
@@ -39,9 +40,11 @@ const TEST_SESSION_FILTER_HINTS = {
  *   groupId: string,
  *   buildId?: string,
  *   testTaskIds?: string[],
+ *   testProjectIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
  *   onTestTaskIdsChange: (value?: string[]) => void,
+ *   onTestProjectIdsChange: (value?: string[]) => void,
  *   onCreatedBysChange: (value?: string[]) => void,
  *   onResultsChange: (value?: string[]) => void,
  *   onClear?: () => void,
@@ -51,15 +54,20 @@ export function TestSessionsFiltersBar({
   groupId,
   buildId,
   testTaskIds,
+  testProjectIds,
   createdBys,
   results,
   onTestTaskIdsChange,
+  onTestProjectIdsChange,
   onCreatedBysChange,
   onResultsChange,
   onClear,
 }) {
   const hasActiveFilters = Boolean(
-    testTaskIds?.length || createdBys?.length || results?.length
+    testTaskIds?.length ||
+      testProjectIds?.length ||
+      createdBys?.length ||
+      results?.length
   )
 
   const loadTestTasks = useCallback(
@@ -68,6 +76,16 @@ export function TestSessionsFiltersBar({
         groupId,
         buildId,
         field: "testTaskIds",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
+  const loadTestProjects = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "testProjectIds",
         ...params,
       }),
     [buildId, groupId]
@@ -120,13 +138,16 @@ export function TestSessionsFiltersBar({
       <TestSessionFilters
         size="small"
         testTaskIds={testTaskIds}
+        testProjectIds={testProjectIds}
         createdBys={createdBys}
         results={results}
         loadTestTasks={loadTestTasks}
+        loadTestProjects={loadTestProjects}
         loadCreatedBys={loadCreatedBys}
         loadResults={loadResults}
         filterHints={TEST_SESSION_FILTER_HINTS}
         onTestTaskIdsChange={onTestTaskIdsChange}
+        onTestProjectIdsChange={onTestProjectIdsChange}
         onCreatedBysChange={onCreatedBysChange}
         onResultsChange={onResultsChange}
       />

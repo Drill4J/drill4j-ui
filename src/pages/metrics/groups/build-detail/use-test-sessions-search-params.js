@@ -37,6 +37,10 @@ export function useTestSessionsSearchParams() {
     () => getListQueryParam(searchParams, "testTaskIds"),
     [searchString]
   )
+  const testProjectIds = useMemo(
+    () => getListQueryParam(searchParams, "testProjectIds"),
+    [searchString]
+  )
   const createdBys = useMemo(
     () => getListQueryParam(searchParams, "createdBys"),
     [searchString]
@@ -106,6 +110,7 @@ export function useTestSessionsSearchParams() {
   const clearFilters = useCallback(() => {
     updateQueryParams({
       testTaskIds: undefined,
+      testProjectIds: undefined,
       createdBys: undefined,
       results: undefined,
       page: 1,
@@ -127,6 +132,7 @@ export function useTestSessionsSearchParams() {
     page,
     pageSize,
     testTaskIds,
+    testProjectIds,
     createdBys,
     results,
     sessionsSortBy,

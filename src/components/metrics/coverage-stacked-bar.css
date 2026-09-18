@@ -71,13 +71,16 @@
 .coverage-stacked-bar-row {
   display: flex;
   align-items: center;
+  gap: 8px;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
 }
 
 .coverage-stacked-bar-track {
-  flex: 1;
+  flex: 1 1 0;
+  width: 0; /* keep track width stable; percent label is fixed */
   min-width: 24px;
   border-radius: 999px;
   overflow: hidden;
@@ -106,11 +109,17 @@
 }
 
 .coverage-stacked-bar-percent {
-  flex-shrink: 0;
-  margin-left: 8px;
+  /* Fixed slot for "0%"…"100%" so the track width stays constant across rows */
+  flex: 0 0 36px;
+  width: 36px;
+  max-width: 36px;
+  margin-left: 0;
+  text-align: right;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
+  line-height: 1;
   white-space: nowrap;
+  overflow: hidden;
   font-family: var(--d4j-display, "Space Grotesk", sans-serif);
   color: var(--d4j-muted, #5a7186);
 }

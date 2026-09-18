@@ -53,14 +53,18 @@ export function useComparisonSearchParams() {
   )
   const envIds = useMemo(() => getListQueryParam(searchParams, "envIds"), [searchParams])
   const testResults = useMemo(() => getListQueryParam(searchParams, "testResults"), [searchParams])
+  const testProjectIds = useMemo(
+    () => getListQueryParam(searchParams, "testProjectIds"),
+    [searchParams]
+  )
   const changeTypes = useMemo(
     () => getListQueryParam(searchParams, "changeTypes"),
     [searchParams]
   )
 
   const coverageFilters = useMemo(
-    () => ({ branches, envIds, testResults, baselineBuildId }),
-    [baselineBuildId, branches, envIds, testResults]
+    () => ({ branches, envIds, testResults, testProjectIds, baselineBuildId }),
+    [baselineBuildId, branches, envIds, testResults, testProjectIds]
   )
 
   const updateQueryParams = useCallback(
@@ -80,6 +84,7 @@ export function useComparisonSearchParams() {
         branches,
         envIds,
         testResults,
+        testProjectIds,
         includeOtherBuilds,
       }
       const merged = { ...current }
@@ -110,6 +115,7 @@ export function useComparisonSearchParams() {
       branches,
       envIds,
       testResults,
+      testProjectIds,
       includeOtherBuilds,
       searchString,
       setSearchParams,
@@ -121,6 +127,7 @@ export function useComparisonSearchParams() {
       branches: undefined,
       envIds: undefined,
       testResults: undefined,
+      testProjectIds: undefined,
       includeOtherBuilds: undefined,
     })
   }, [updateQueryParams])
@@ -140,6 +147,7 @@ export function useComparisonSearchParams() {
     branches,
     envIds,
     testResults,
+    testProjectIds,
     includeOtherBuilds,
     coverageFilters,
     updateQueryParams,

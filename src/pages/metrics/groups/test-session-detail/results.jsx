@@ -549,7 +549,8 @@ export const TestSessionResultsPage = () => {
             : session.testSessionId
         ),
       },
-      { label: "Test task", value: session?.testTaskId },
+      { label: "Test task", value: session?.testTaskId || "—" },
+      { label: "Test project", value: session?.testProjectId || "—" },
       {
         label: "Started at",
         value: session?.sessionStartedAt

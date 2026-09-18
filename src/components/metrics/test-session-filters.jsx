@@ -20,28 +20,34 @@ import { FilterMultiSelect } from "./filter-multi-select"
 /**
  * @param {{
  *   testTaskIds?: string[],
+ *   testProjectIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
  *   loadTestTasks: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
+ *   loadTestProjects: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   loadCreatedBys: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   loadResults: (params: { query?: string, page: number, pageSize: number }) => Promise<{ data: unknown[], paging: { total: number } }>,
  *   size?: "small" | "middle" | "large",
- *   filterHints?: { testTaskIds?: string, createdBys?: string, results?: string },
+ *   filterHints?: { testTaskIds?: string, testProjectIds?: string, createdBys?: string, results?: string },
  *   onTestTaskIdsChange: (value?: string[]) => void,
+ *   onTestProjectIdsChange: (value?: string[]) => void,
  *   onCreatedBysChange: (value?: string[]) => void,
  *   onResultsChange: (value?: string[]) => void,
  * }} props
  */
 export function TestSessionFilters({
   testTaskIds,
+  testProjectIds,
   createdBys,
   results,
   loadTestTasks,
+  loadTestProjects,
   loadCreatedBys,
   loadResults,
   size = "middle",
   filterHints,
   onTestTaskIdsChange,
+  onTestProjectIdsChange,
   onCreatedBysChange,
   onResultsChange,
 }) {
@@ -56,6 +62,16 @@ export function TestSessionFilters({
           onChange={onTestTaskIdsChange}
         />
         {filterHints?.testTaskIds && <HintIcon title={filterHints.testTaskIds} />}
+      </Space>
+      <Space align="center" size={size === "small" ? 4 : 6}>
+        <FilterMultiSelect
+          size={size}
+          placeholder="Test project"
+          loadPage={loadTestProjects}
+          value={testProjectIds}
+          onChange={onTestProjectIdsChange}
+        />
+        {filterHints?.testProjectIds && <HintIcon title={filterHints.testProjectIds} />}
       </Space>
       <Space align="center" size={size === "small" ? 4 : 6}>
         <FilterMultiSelect
