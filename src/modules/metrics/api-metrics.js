@@ -1298,7 +1298,7 @@ export async function getLastProcessedTimestamp(groupId) {
   return dedupedRequest(`last-processed-timestamp:${groupId}`, async () => {
     try {
       const response = await axios.get(
-        "/metrics/refresh/last-processed-timestamp",
+        "/metrics/jobs/last-processed-timestamp",
         { params: { groupId } }
       )
       const value = response.data?.data?.lastProcessedTimestamp
@@ -1321,10 +1321,10 @@ export async function getLastProcessedTimestamp(groupId) {
  */
 export async function getDailyRefreshStatuses(groupId, params = {}) {
   const { fromDay, toDay } = params
-  const key = `refresh-status:${groupId}:${fromDay ?? ""}:${toDay ?? ""}`
+  const key = `jobs-status:${groupId}:${fromDay ?? ""}:${toDay ?? ""}`
   return dedupedRequest(key, async () => {
     const response = await runCatching(
-      axios.get("/metrics/refresh/status", {
+      axios.get("/metrics/jobs/status", {
         params: {
           groupId,
           ...(fromDay ? { fromDay } : {}),
@@ -1337,21 +1337,47 @@ export async function getDailyRefreshStatuses(groupId, params = {}) {
 }
 
 /**
+ * Incremental ETL sync for the current day (force-run today's watermark catch-up).
+ * @param {string} groupId
+ * @param {{ testSessionId?: string }} [params]
+ * @returns {Promise<string>} Success message from the API
+ */
+export async function syncMetrics(groupId, params = {}) {
+  const { testSessionId } = params
+  const response = await runCatching(
+    axios.post("/metrics/sync", null, {
+      params: {
+        groupId,
+        ...(testSessionId ? { testSessionId } : {}),
+      },
+    })
+  )
+  const data = response.data?.data
+  if (typeof data === "string") {
+    return data
+  }
+  return response.data?.message ?? "Metrics synchronized successfully"
+}
+
+/**
+ * Full or day-scoped ETL reload (replaces the former POST /metrics/refresh).
  * @param {string} groupId
  * @param {{
  *   reset?: boolean,
  *   fromDay?: string,
  *   toDay?: string,
  *   workers?: number,
+ *   testSessionId?: string,
  * }} [params]
  * @returns {Promise<string>} Success message from the API
  */
-export async function refreshMetrics(groupId, params = {}) {
-  const { reset, fromDay, toDay, workers } = params
+export async function reloadMetrics(groupId, params = {}) {
+  const { reset, fromDay, toDay, workers, testSessionId } = params
   const response = await runCatching(
-    axios.post("/metrics/refresh", null, {
+    axios.post("/metrics/reload", null, {
       params: {
         groupId,
+        ...(testSessionId ? { testSessionId } : {}),
         ...(reset != null ? { reset } : {}),
         ...(fromDay ? { fromDay } : {}),
         ...(toDay ? { toDay } : {}),
@@ -1360,8 +1386,8 @@ export async function refreshMetrics(groupId, params = {}) {
     })
   )
   return (
-    response.data?.data ??
     response.data?.message ??
-    "Metrics refreshed successfully"
+    (typeof response.data?.data === "string" ? response.data.data : null) ??
+    "Metrics reloaded successfully"
   )
 }
