@@ -13,18 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Tooltip } from "antd"
-import { QuestionCircleOutlined } from "@ant-design/icons"
-
-const DEFAULT_STYLE = { fontSize: 12, color: "rgba(0, 0, 0, 0.45)" }
+import { TitleHelpTooltip } from "../metrics/title-help-tooltip"
 
 /**
- * @param {{ title: string, style?: import("react").CSSProperties }} props
+ * Light-themed (i) help tooltip. Thin wrapper around {@link TitleHelpTooltip}
+ * for filter bars and legacy call sites that may pass a style wrapper.
+ *
+ * @param {{
+ *   title: import("react").ReactNode,
+ *   style?: import("react").CSSProperties,
+ *   ariaLabel?: string,
+ * }} props
  */
-export function HintIcon({ title, style }) {
-  return (
-    <Tooltip title={title}>
-      <QuestionCircleOutlined style={{ ...DEFAULT_STYLE, ...style }} />
-    </Tooltip>
+export function HintIcon({ title, style, ariaLabel }) {
+  const tooltip = (
+    <TitleHelpTooltip
+      title={title}
+      ariaLabel={ariaLabel}
+      className="title-help-tooltip__trigger--flush"
+    />
   )
+
+  if (!style) {
+    return tooltip
+  }
+
+  return <span style={style}>{tooltip}</span>
 }

@@ -107,7 +107,14 @@ User-controlled values must never become executable SQL, commands, or identifier
 - Map `sortBy` / column names through a server allowlist — never interpolate client strings into `ORDER BY`, table, or schema names.
 - Do not concatenate query/path/body fields into SQL fragments, shell commands, or file paths.
 
-### 6. Deduplicate shared logic
+### 6. No custom ellipsis that alters text
+
+Do not rewrite values for display by splicing and inserting `…` / `...` (e.g. `` `${id.slice(0, 8)}…${id.slice(-4)}` ``, `truncateId`). Show the full string in the DOM.
+
+- **OK:** CSS `text-overflow: ellipsis`, Ant Table `ellipsis: true`, `Typography.Text ellipsis` (content stays complete).
+- **Not OK:** JS helpers that return a shortened label with an embedded ellipsis character.
+
+### 7. Deduplicate shared logic
 
 Before adding a helper in a page or component file:
 
@@ -115,13 +122,13 @@ Before adding a helper in a page or component file:
 - If duplicated, **extract once** to a `util` / `utils` file at the **corresponding directory level** (e.g. `src/modules/metrics/query-params.js`, `src/pages/metrics/groups/build-detail/utils.js`).
 - Reuse existing shared modules (`query-params.js`, hooks, API client) rather than copying.
 
-### 7. Components live in `components/`
+### 8. Components live in `components/`
 
 - Presentational / reusable UI → `src/components/...` (mirror domain, e.g. `components/metrics/`).
 - Pages orchestrate data, routing, and layout → `src/pages/...` — keep pages **thin**; business logic lives in hooks, utils, or components.
 - Do not define new reusable components inline in page files.
 
-### 8. Deep linking — URL query params for interactive state
+### 9. Deep linking — URL query params for interactive state
 
 Anything that changes what the user sees in tables or trees must be **reflected in the URL** so the page is shareable and survives refresh:
 
@@ -146,7 +153,7 @@ Implementation pattern:
 
 Nested tables (e.g. per expanded class): use namespaced keys or a documented encoding if multiple instances share one URL — prefer one active nested scope in URL matching existing build-detail patterns.
 
-### 9. Preserve existing behavior and match references
+### 10. Preserve existing behavior and match references
 
 - **Existing interactions** must keep working: scroll-to-row, row highlight, link copy, expand/collapse.
 - **Scroll-to across pages:** if the target row is not on the current page, resolve the correct page via the API (same approach as classes-table scroll-to-class).

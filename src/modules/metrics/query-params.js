@@ -64,8 +64,10 @@ export const TEST_SESSIONS_QUERY_KEYS = [
 
 export const TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE = 20
 export const TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE = 10
+export const TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE = 20
 
 export const TEST_SESSION_DETAIL_QUERY_KEYS = [
+  "buildId",
   "path",
   "launchId",
   "page",
@@ -76,6 +78,8 @@ export const TEST_SESSION_DETAIL_QUERY_KEYS = [
   "launchesPageSize",
   "launchesSortBy",
   "launchesSortOrder",
+  "buildsPage",
+  "buildsPageSize",
   ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
 ]
 
@@ -356,10 +360,13 @@ const TEST_SESSION_DETAIL_PAGE_DEFAULTS = {
   pageSize: TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE,
   launchesPage: 1,
   launchesPageSize: TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE,
+  buildsPage: 1,
+  buildsPageSize: TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE,
 }
 
 /**
  * @typedef {{
+ *   buildId?: string,
  *   path?: string,
  *   launchId?: string,
  *   page?: number,
@@ -370,6 +377,8 @@ const TEST_SESSION_DETAIL_PAGE_DEFAULTS = {
  *   launchesPageSize?: number,
  *   launchesSortBy?: string,
  *   launchesSortOrder?: string,
+ *   buildsPage?: number,
+ *   buildsPageSize?: number,
  *   testResults?: string[],
  *   testTags?: string[],
  *   testNames?: string[],

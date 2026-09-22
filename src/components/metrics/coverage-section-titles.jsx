@@ -22,7 +22,8 @@ const APP_STRUCTURE_HELP = (
   <div style={{ width: 420, lineHeight: 1.55 }}>
     <p style={{ margin: "0 0 8px" }}>
       Interactive treemap of packages, classes, and methods. Tile size reflects
-      probe count; colors show coverage.
+      the size of that package, class, or method in probes (roughly maps to code
+      lines). Colors show coverage.
     </p>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
       <li style={{ marginBottom: 8 }}>
@@ -33,10 +34,14 @@ const APP_STRUCTURE_HELP = (
         <b>Double-click</b> a package or class to drill into it. Use the
         breadcrumbs above the map to go back up.
       </li>
+      <li style={{ marginBottom: 8 }}>
+        Use <b>max depth</b> to set how many nested levels are shown.
+      </li>
+      <li style={{ marginBottom: 8 }}>
+        Optionally highlight tiles below a coverage <b>threshold</b>.
+      </li>
       <li>
-        Use <b>max depth</b> to set how many nested levels are shown. Optionally
-        highlight tiles below a coverage threshold, or switch to a colorblind
-        palette.
+        Switch to a colorblind palette if needed.
       </li>
     </ul>
   </div>

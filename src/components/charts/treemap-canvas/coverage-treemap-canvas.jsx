@@ -16,8 +16,7 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import axios from "axios"
-import { Typography, Spin, InputNumber, Tooltip, Select, Checkbox, Divider } from "antd"
-import { InfoCircleOutlined } from "@ant-design/icons"
+import { Typography, Spin, InputNumber, Select, Checkbox, Divider } from "antd"
 
 import { normalizeTreemapRoots, buildNodeMap, layoutTreemap } from "./layout"
 import { drawTreemap, drawHoverOverlay } from "./canvas-renderer"
@@ -28,6 +27,7 @@ import { TreemapTooltip } from "./tooltip"
 import { buildBreadcrumbPath, TreemapBreadcrumbs } from "./breadcrumbs.jsx"
 import { resolveScopeFromNode, canDrillIntoNode } from "./node-scope"
 import { COVERAGE_LIST_QUERY_KEYS } from "../../../modules/metrics/query-params"
+import { TitleHelpTooltip } from "../../metrics/title-help-tooltip"
 
 const { Option } = Select
 
@@ -522,9 +522,10 @@ export const CoverageTreemapCanvas = ({
             />
             <Typography.Text>
               Max Depth
-              <Tooltip title="Controls how deep the packages tree is rendered from the current root node. Min value - 2. Max value - 10">
-                <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
-              </Tooltip>
+              <TitleHelpTooltip
+                title="Controls how deep the packages tree is rendered from the current root node. Min value - 2. Max value - 10."
+                ariaLabel="About max depth"
+              />
             </Typography.Text>
             {modeChrome != null ? (
               modeChrome
@@ -533,9 +534,10 @@ export const CoverageTreemapCanvas = ({
                 <Divider type="vertical" style={{ borderColor: "#999" }} />
                 <Checkbox checked={highlightEnabled} onChange={(e) => setHighlightEnabled(e.target.checked)}>
                   Highlight Threshold
-                  <Tooltip title="Elements with coverage percentage below set value will be highlighted.">
-                    <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
-                  </Tooltip>
+                  <TitleHelpTooltip
+                    title="Elements with coverage percentage below set value will be highlighted."
+                    ariaLabel="About highlight threshold"
+                  />
                   <InputNumber
                     min={0.1}
                     max={100.0}
@@ -561,9 +563,10 @@ export const CoverageTreemapCanvas = ({
                 </Select>
                 <Typography.Text>
                   Colorblind Palette
-                  <Tooltip title="Select a colorblind-friendly palette for better accessibility.">
-                    <InfoCircleOutlined style={{ color: "#999", paddingLeft: "0.5em" }} />
-                  </Tooltip>
+                  <TitleHelpTooltip
+                    title="Select a colorblind-friendly palette for better accessibility."
+                    ariaLabel="About colorblind palette"
+                  />
                 </Typography.Text>
               </>
             )}

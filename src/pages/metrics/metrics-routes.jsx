@@ -18,14 +18,15 @@ import { GroupMetricsLayout } from "./group-metrics-layout"
 import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
 import { DataManagementPage } from "./groups/data-management"
+import { AppDetailLayout } from "./groups/app-detail"
 import { AppHubRoute } from "./groups/app-hub"
 import { AppTrendsPage } from "./groups/app-trends"
 import { MethodIgnoreRulesPage } from "./groups/method-ignore-rules"
 import { BuildDetailLayout, BuildSummaryPage, BuildTestsPage, BuildComparisonPage } from "./groups/build-detail"
 import { TestSessionsPage } from "./groups/test-sessions"
 import {
-  TestSessionBuildLayout,
-  TestSessionBuildsPage,
+  TestSessionLayout,
+  TestSessionLegacyBuildRedirect,
   TestSessionResultsPage,
 } from "./groups/test-session-detail"
 
@@ -42,7 +43,7 @@ function SettingsToDataManagementRedirect() {
  */
 export const metricsRoutes = (
   <>
-    <Route index element={<GroupsPage />} />
+    <Route index handle={{ breadcrumb: "Groups" }} element={<GroupsPage />} />
     <Route path=":groupId" handle={{ breadcrumb: "groupId" }} element={<GroupMetricsLayout />}>
       <Route index element={<GroupAppsPage />} />
       <Route
@@ -55,17 +56,19 @@ export const metricsRoutes = (
         element={<SettingsToDataManagementRedirect />}
       />
       <Route path="apps/:appId" handle={{ breadcrumb: "appId" }} element={<Outlet />}>
-        <Route index element={<AppHubRoute />} />
-        <Route
-          path="trends"
-          handle={{ breadcrumb: "Trends" }}
-          element={<AppTrendsPage />}
-        />
-        <Route
-          path="method-ignore-rules"
-          handle={{ breadcrumb: "Exclusion rules" }}
-          element={<MethodIgnoreRulesPage />}
-        />
+        <Route element={<AppDetailLayout />}>
+          <Route index element={<AppHubRoute />} />
+          <Route
+            path="trends"
+            handle={{ breadcrumb: "Trends" }}
+            element={<AppTrendsPage />}
+          />
+          <Route
+            path="method-ignore-rules"
+            handle={{ breadcrumb: "Exclusion rules" }}
+            element={<MethodIgnoreRulesPage />}
+          />
+        </Route>
         <Route
           path="builds/:buildId"
           handle={{ breadcrumb: "buildId" }}
@@ -81,12 +84,13 @@ export const metricsRoutes = (
         <Route
           path=":testSessionId"
           handle={{ breadcrumb: "testSessionId" }}
-          element={<Outlet />}
+          element={<TestSessionLayout />}
         >
-          <Route index element={<TestSessionBuildsPage />} />
-          <Route path="builds/:buildId" handle={{ breadcrumb: "buildId" }} element={<TestSessionBuildLayout />}>
-            <Route index element={<TestSessionResultsPage />} />
-          </Route>
+          <Route index element={<TestSessionResultsPage />} />
+          <Route
+            path="builds/:buildId"
+            element={<TestSessionLegacyBuildRedirect />}
+          />
         </Route>
       </Route>
     </Route>

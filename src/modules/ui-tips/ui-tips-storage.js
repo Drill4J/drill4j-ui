@@ -22,6 +22,10 @@ export const UI_TIPS_ENABLED_KEY = "uiTips.enabled"
  * Add new tip ids here as more tips are introduced.
  */
 export const UI_TIPS = {
+  /** First-login intro explaining tip banners and (i) help icons. */
+  uiTipsIntro: {
+    key: "uiTips.uiTipsIntro.dismissed",
+  },
   trendsPromo: {
     key: "uiTips.trendsPromo.dismissed",
     /** Older keys still cleared / checked for compatibility. */
@@ -29,6 +33,15 @@ export const UI_TIPS = {
   },
   compareBuilds: {
     key: "uiTips.compareBuilds.dismissed",
+  },
+  buildComparison: {
+    key: "uiTips.buildComparison.dismissed",
+  },
+  buildCoverage: {
+    key: "uiTips.buildCoverage.dismissed",
+  },
+  buildTests: {
+    key: "uiTips.buildTests.dismissed",
   },
   whatIsGroup: {
     key: "uiTips.whatIsGroup.dismissed",

@@ -24,6 +24,7 @@ import { TableColumnSortHeader } from "../../../../../components/metrics/table-c
 import * as API from "../../../../../modules/metrics/api-metrics"
 import { buildComparisonQueryParams, buildComparisonRequestBody } from "../comparison-build-params"
 import { METHOD_PARAMS_COLUMN, METHOD_RETURN_TYPE_COLUMN } from "./method-display"
+import "./changes-table.css"
 
 const { Link } = Typography
 
@@ -33,7 +34,15 @@ const SCROLL_RETRY_MAX_FRAMES = 120
 const CHANGE_TYPE_COLORS = {
   NEW: "green",
   MODIFIED: "gold",
-  DELETED: "red",
+}
+
+const DELETED_CHANGE_TYPE = "DELETED"
+
+function ChangeTypeTag({ value }) {
+  if (value === DELETED_CHANGE_TYPE) {
+    return <Tag className="comparison-change-type-tag--deleted">{value}</Tag>
+  }
+  return <Tag color={CHANGE_TYPE_COLORS[value]}>{value}</Tag>
 }
 
 const CHANGE_TYPE_FILTER_OPTIONS = [
@@ -456,7 +465,7 @@ export function ComparisonChangesTable({
         dataIndex: "changeType",
         key: "changeType",
         width: 110,
-        render: (value) => <Tag color={CHANGE_TYPE_COLORS[value]}>{value}</Tag>,
+        render: (value) => <ChangeTypeTag value={value} />,
       },
       {
         title: (

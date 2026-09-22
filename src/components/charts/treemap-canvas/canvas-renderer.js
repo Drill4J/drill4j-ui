@@ -5,10 +5,17 @@ import { coveragePaintStrategy } from "./paint-strategies"
 
 const HOVER_OVERLAY = "rgba(0, 0, 0, 0.15)"
 const TEXT_COLOR = "#333333"
+const TEXT_COLOR_COLORBLIND = "#ffffff"
 const MIN_LABEL_WIDTH = 36
 const MIN_LABEL_HEIGHT = 20
 const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
+
+function getLabelColor(colorblindMode) {
+  return colorblindMode && colorblindMode !== "DEFAULT"
+    ? TEXT_COLOR_COLORBLIND
+    : TEXT_COLOR
+}
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -58,10 +65,12 @@ export function drawTreemap(
     const showParentLabel = !isLeaf && width >= MIN_LABEL_WIDTH && height >= HEADER_HEIGHT + MIN_LABEL_HEIGHT
     const showLeafLabel = isLeaf && width >= MIN_LABEL_WIDTH && height >= MIN_LABEL_HEIGHT
 
+    const labelColor = getLabelColor(colorblindMode)
+
     if (showParentLabel) {
-      drawParentLabel(ctx, node.name, x, y, width)
+      drawParentLabel(ctx, node.name, x, y, width, labelColor)
     } else if (showLeafLabel) {
-      drawLabel(ctx, node.name, paintStrategy.getLabelSuffix(strategyArgs), x, y, width, height)
+      drawLabel(ctx, node.name, paintStrategy.getLabelSuffix(strategyArgs), x, y, width, height, labelColor)
     }
   })
 
@@ -84,11 +93,11 @@ export function drawHoverOverlay(ctx, positionedNodes, dpr, hoveredNodeId) {
   ctx.restore()
 }
 
-function drawParentLabel(ctx, name, x, y, width) {
+function drawParentLabel(ctx, name, x, y, width, labelColor = TEXT_COLOR) {
   const padding = 4
   const fontSize = 11
 
-  ctx.fillStyle = TEXT_COLOR
+  ctx.fillStyle = labelColor
   ctx.textBaseline = "top"
   ctx.textAlign = "left"
   ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`
@@ -110,7 +119,7 @@ function truncateToWidth(ctx, text, maxWidth) {
   return truncated + ellipsis
 }
 
-function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
+function drawLabel(ctx, name, secondaryLabel, x, y, width, height, labelColor = TEXT_COLOR) {
   const padding = 4
   const maxWidth = width - padding * 2
   const maxHeight = height - padding * 2
@@ -120,7 +129,7 @@ function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
   }
 
   const fontSize = Math.min(12, Math.max(8, Math.floor(Math.min(width, height) / 5)))
-  ctx.fillStyle = TEXT_COLOR
+  ctx.fillStyle = labelColor
   ctx.textBaseline = "top"
   ctx.textAlign = "left"
 

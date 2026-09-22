@@ -1,0 +1,24 @@
+.build-detail-layout__tabs.ant-tabs {
+  margin-top: -4px;
+  margin-bottom: 0;
+}
+
+.build-detail-layout__tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.build-detail-layout__tabs .ant-tabs-tab {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.build-detail-layout__tabs .ant-tabs-ink-bar {
+  height: 2px;
+}
+
+.build-detail-layout .build-identity-summary {
+  margin-top: 8px;
+}

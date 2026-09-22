@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 import { useState } from "react"
-import { Typography } from "antd"
 import { GenerateApiKeyForm } from "./generate-api-key-form"
 import { UserApiKeysTable } from "./my-api-keys-table"
-import { MyApiKeysTipBanner } from "./my-api-keys-tip-banner"
-
-const { Title } = Typography
 
 const MyApiKeys = () => {
   const [refreshFlag, refreshData] = useState("")
   return (
     <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-        My API Keys
-      </Title>
-      <MyApiKeysTipBanner />
-      <GenerateApiKeyForm refreshData={() => refreshData(Date.now().toString())} />
-      <div style={{ marginTop: 15 }} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: 12,
+        }}
+      >
+        <GenerateApiKeyForm refreshData={() => refreshData(Date.now().toString())} />
+      </div>
       <UserApiKeysTable
         refreshData={() => refreshData(Date.now().toString())}
         refreshFlag={refreshFlag}

@@ -38,9 +38,11 @@ import {
   CatalogBuildPickerDialog,
 } from "../../../../modules/method-ignore-rules/catalog-build-select"
 import { generateExclusionRuleFromNode } from "../../../../modules/method-ignore-rules/exclusion-rule-generator"
+import { formatCompactCount } from "../../../../modules/metrics/format-count"
 import { RawMethodsPackageTree } from "./raw-methods-package-tree"
+import "./method-ignore-summary.css"
 
-const { Text, Title } = Typography
+const { Title } = Typography
 const PATTERN_FIELDS = [
   ["classnamePattern", "Class name regex"],
   ["namePattern", "Method name regex"],
@@ -49,56 +51,41 @@ const EXCLUSION_ACTION_LABEL = "Generate exclusion rule"
 const RULES_PAGE_SIZE = 20
 const BUILDS_PAGE_SIZE = 8
 
-const RegexExample = ({ children }) => (
-  <code
-    style={{
-      fontFamily: "Courier New, Courier, monospace",
-      background: "rgba(255, 255, 255, 0.12)",
-      padding: "1px 5px",
-      borderRadius: 3,
-      fontSize: 12,
-      whiteSpace: "nowrap",
-    }}
-  >
-    {children}
-  </code>
-)
+const RegexExample = ({ children }) => <code>{children}</code>
 
 /**
  * @param {{ groupId: string }} props
  */
 const ExclusionRulesHelp = ({ groupId }) => (
-  <div style={{ width: 500, lineHeight: 1.55 }}>
-    <p style={{ margin: "0 0 8px" }}>
-      Rules are regular expressions used to match <i>methods</i>, either by class name or by method name.
- 
+  <div>
+    <p>
+      Rules are regular expressions used to match <i>methods</i>, either by class
+      name or by method name.
     </p>
-    <p style={{ margin: "0 0 12px" }}>
+    <p>
       Rule changes apply <b>to new builds only</b>. To apply rules to earlier
       builds, save the rule and then launch recalculation on the{" "}
-      <RouterLink
-        to={`/metrics/${groupId}/data-management`}
-        style={{ color: "#cfe4fb" }}
-      >
+      <RouterLink to={`/metrics/${groupId}/data-management`}>
         Data Management
       </RouterLink>{" "}
       page.
     </p>
-    <div style={{ fontWeight: 600, marginBottom: 6 }}>Examples</div>
-    <ul style={{ margin: 0, paddingLeft: 18 }}>
-      <li style={{ marginBottom: 8 }}>
+    <p>
+      <b>Examples</b>
+    </p>
+    <ul>
+      <li>
         To exclude all methods in a package — set a classname pattern that
         matches the package path (package is part of the class name), e.g.{" "}
         <RegexExample>^com/example/.*</RegexExample>
       </li>
-      <li style={{ marginBottom: 8 }}>
+      <li>
         To exclude all methods in a class — set a classname pattern, e.g.{" "}
         <RegexExample>^com/example/MyService$</RegexExample>
       </li>
-      <li style={{ marginBottom: 8 }}>
+      <li>
         To exclude a method by name in any class or package — set a method name
-        pattern, e.g.{" "}
-        <RegexExample>^toString$</RegexExample> or{" "}
+        pattern, e.g. <RegexExample>^toString$</RegexExample> or{" "}
         <RegexExample>^get.*</RegexExample>
       </li>
       <li>
@@ -112,35 +99,36 @@ const ExclusionRulesHelp = ({ groupId }) => (
 )
 
 const APP_STRUCTURE_HELP = (
-  <div style={{ width: 420, lineHeight: 1.55 }}>
-    <p style={{ margin: "0 0 8px" }}>
+  <div>
+    <p>
       Interactive treemap of packages, classes, and methods for the selected
       build. Tile size reflects method count; colors show excluded methods.
     </p>
-    <ul style={{ margin: 0, paddingLeft: 18 }}>
-      <li style={{ marginBottom: 8 }}>
+    <ul>
+      <li>
         <b>Click</b> a package or class to drill into it. Use the breadcrumbs
         above the map to go back up.
       </li>
-      <li style={{ marginBottom: 8 }}>
+      <li>
         Use <b>max depth</b> control to set the depth of the treemap.
       </li>
       <li>
         <b>Right-click</b> a package, class, or method to{" "}
-        <b>Generate exclusion rule</b> — generate pattern for the selected element.
+        <b>Generate exclusion rule</b> — generate pattern for the selected
+        element.
       </li>
     </ul>
   </div>
 )
 
 const PACKAGE_TREE_HELP = (
-  <div style={{ width: 420, lineHeight: 1.55 }}>
-    <p style={{ margin: "0 0 8px" }}>
-      Nested tables of packages → classes → methods.
-      Excluded methods stay visible and are highlighted.
+  <div>
+    <p>
+      Nested tables of packages → classes → methods. Excluded methods stay
+      visible and are highlighted.
     </p>
-    <ul style={{ margin: 0, paddingLeft: 18 }}>
-      <li style={{ marginBottom: 8 }}>
+    <ul>
+      <li>
         Expand package rows for nested packages. Use{" "}
         <b>N classes (show)</b> / <b>N methods (show)</b> to open classes and
         load methods.
@@ -179,11 +167,16 @@ export const MethodIgnoreRulesPage = () => {
   const [buildsLoading, setBuildsLoading] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [selectedBuild, setSelectedBuild] = useState(null)
+  const [sessionStats, setSessionStats] = useState(null)
   const [treeData, setTreeData] = useState([])
   const [affectedMethods, setAffectedMethods] = useState(0)
   const [totalMethods, setTotalMethods] = useState(0)
+  const [totalClasses, setTotalClasses] = useState(null)
+  const [totalProbes, setTotalProbes] = useState(null)
   const [loadingRules, setLoadingRules] = useState(true)
   const [loadingTree, setLoadingTree] = useState(false)
+  const [loadingBuildStats, setLoadingBuildStats] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [editing, setEditing] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
   const [formScrollToken, setFormScrollToken] = useState(0)
@@ -270,10 +263,11 @@ export const MethodIgnoreRulesPage = () => {
   useEffect(() => {
     if (!buildId) {
       setSelectedBuild(null)
+      setSessionStats(null)
       return
     }
     setSelectedBuild((current) => {
-      if (current?.buildId === buildId) {
+      if (current?.buildId === buildId && current?.buildVersion) {
         return current
       }
       return { buildId }
@@ -317,11 +311,72 @@ export const MethodIgnoreRulesPage = () => {
       setTreeData([])
       setAffectedMethods(0)
       setTotalMethods(0)
+      setTotalClasses(null)
+      setTotalProbes(null)
       setLoadingTree(false)
+      setLoadingBuildStats(false)
       return
     }
     loadTree()
   }, [buildId, loadTree])
+
+  useEffect(() => {
+    if (!buildId) {
+      return
+    }
+    let cancelled = false
+    setLoadingBuildStats(true)
+    MetricsAPI.getBuildDetail(buildId)
+      .then((detail) => {
+        if (cancelled) {
+          return
+        }
+        setSelectedBuild(detail)
+        setTotalClasses(detail?.totalClasses ?? null)
+        setTotalProbes(detail?.totalProbes ?? null)
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to load build stats. ${error.message}`)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingBuildStats(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [buildId])
+
+  useEffect(() => {
+    if (!buildId) {
+      setSessionStats(null)
+      return undefined
+    }
+    let cancelled = false
+    setStatsLoading(true)
+    MetricsAPI.getBuildTestSessionStats(buildId)
+      .then((data) => {
+        if (!cancelled) {
+          setSessionStats(data)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch test session stats. ${error?.message}`)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setStatsLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [buildId])
 
   const openExclusionForm = useCallback(
     (node) => {
@@ -430,14 +485,6 @@ export const MethodIgnoreRulesPage = () => {
 
   return (
     <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-        Exclusion rules
-        <TitleHelpTooltip
-          title={<ExclusionRulesHelp groupId={groupId} />}
-          ariaLabel="How exclusion rules work"
-        />
-      </Title>
-
       <div
         style={{
           display: "flex",
@@ -449,6 +496,10 @@ export const MethodIgnoreRulesPage = () => {
       >
         <Title level={5} style={{ margin: 0 }}>
           Saved rules
+          <TitleHelpTooltip
+            title={<ExclusionRulesHelp groupId={groupId} />}
+            ariaLabel="How exclusion rules work"
+          />
         </Title>
         {!editing && (
           <Button
@@ -566,10 +617,17 @@ export const MethodIgnoreRulesPage = () => {
       />
 
       <CatalogBuildFilter
-        selectedBuild={selectedBuild}
+        groupId={groupId}
+        appId={appId}
+        build={selectedBuild}
+        sessionCount={sessionStats?.sessionCount}
+        testRunCount={sessionStats?.testRunCount}
+        loading={Boolean(buildId) && loadingBuildStats && !selectedBuild?.buildVersion}
+        statsLoading={statsLoading}
         onOpenPicker={() => setPickerOpen(true)}
         onClear={() => {
           setSelectedBuild(null)
+          setSessionStats(null)
           setBuildId(undefined)
         }}
       />
@@ -591,25 +649,70 @@ export const MethodIgnoreRulesPage = () => {
 
       {buildId && (
         <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "baseline",
-              marginBottom: 8,
-            }}
-          >
-            <Title level={5} style={{ margin: 0 }}>
-              App structure
-              <TitleHelpTooltip
-                title={APP_STRUCTURE_HELP}
-                ariaLabel="How to use the app structure treemap"
-              />
-            </Title>
-            <Text type="secondary">
-              {affectedMethods} excluded methods / {totalMethods} total methods 
-            </Text>
+          <div className="method-ignore-summary" aria-label="Build scan summary">
+            <div
+              className={`method-ignore-summary__tile${
+                loadingBuildStats ? " method-ignore-summary__tile--loading" : ""
+              }`}
+            >
+              <span className="method-ignore-summary__value">
+                {loadingBuildStats ? "…" : formatCompactCount(totalClasses)}
+              </span>
+              <span className="method-ignore-summary__label">Classes</span>
+            </div>
+
+            <div
+              className={`method-ignore-summary__tile method-ignore-summary__tile--methods${
+                loadingTree ? " method-ignore-summary__tile--loading" : ""
+              }`}
+              aria-label={
+                loadingTree
+                  ? "Methods loading"
+                  : `${formatCompactCount(affectedMethods)} excluded of ${formatCompactCount(totalMethods)} methods`
+              }
+            >
+              {loadingTree ? (
+                <span className="method-ignore-summary__value">…</span>
+              ) : (
+                <div className="method-ignore-summary__pair">
+                  <div className="method-ignore-summary__stat">
+                    <span className="method-ignore-summary__value">
+                      {formatCompactCount(affectedMethods)}
+                    </span>
+                    <span className="method-ignore-summary__label">Excluded</span>
+                  </div>
+                  <span className="method-ignore-summary__slash" aria-hidden>
+                    /
+                  </span>
+                  <div className="method-ignore-summary__stat">
+                    <span className="method-ignore-summary__value">
+                      {formatCompactCount(totalMethods)}
+                    </span>
+                    <span className="method-ignore-summary__label">Methods</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div
+              className={`method-ignore-summary__tile${
+                loadingBuildStats ? " method-ignore-summary__tile--loading" : ""
+              }`}
+            >
+              <span className="method-ignore-summary__value">
+                {loadingBuildStats ? "…" : formatCompactCount(totalProbes)}
+              </span>
+              <span className="method-ignore-summary__label">Probes</span>
+            </div>
           </div>
+
+          <Title level={5} style={{ marginTop: 0, marginBottom: 8 }}>
+            App structure
+            <TitleHelpTooltip
+              title={APP_STRUCTURE_HELP}
+              ariaLabel="How to use the app structure treemap"
+            />
+          </Title>
           <div style={{ marginBottom: 24 }}>
             <IgnoreRulesTreemap
               roots={treeData}

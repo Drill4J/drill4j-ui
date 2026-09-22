@@ -66,7 +66,11 @@ export function SessionCoverageFiltersBar({
         style={{ whiteSpace: "nowrap", flexShrink: 0, lineHeight: "24px" }}
       >
         Coverage filters
-        <HintIcon title={FILTER_SCOPE_HINT} style={{ marginLeft: 6 }} />
+        <HintIcon
+          title={FILTER_SCOPE_HINT}
+          ariaLabel="About coverage filters"
+          style={{ marginLeft: 6 }}
+        />
       </Text>
       <TestDefinitionSelect
         groupId={groupId}

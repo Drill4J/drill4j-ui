@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { message, Tabs } from "antd"
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
-import { BuildContextBar } from "../../../../components/metrics/build-context-bar"
+import { BaselineBuildPickerDialog } from "../../../../components/metrics/baseline-build-select"
 import { BuildCoverageFiltersBar } from "../../../../components/metrics/build-coverage-filters-bar"
+import { BuildIdentitySummary } from "../../../../components/metrics/build-identity-summary"
 import { TestSessionsFiltersBar } from "../../../../components/metrics/test-sessions-filters-bar"
 import * as API from "../../../../modules/metrics/api-metrics"
 import { useBuildDetailSearchParams } from "./use-build-detail-search-params"
 import { useTestSessionsSearchParams } from "./use-test-sessions-search-params"
 import { clearTestSessionsQueryParams } from "../../../../modules/metrics/query-params"
 import { clearComparisonQueryParams } from "./use-comparison-search-params"
+import { BuildComparisonTipBanner } from "./build-comparison-tip-banner"
+import { BuildCoverageTipBanner } from "./build-coverage-tip-banner"
+import { BuildTestsTipBanner } from "./build-tests-tip-banner"
+import "./build-detail-layout.css"
 
-const TABS_WITH_COVERAGE_FILTERS = new Set(["coverage"])
 const TABS_WITH_SESSION_FILTERS = new Set(["tests"])
 
 const TAB_ITEMS = [
@@ -51,8 +55,27 @@ export const BuildDetailLayout = () => {
 
   const [build, setBuild] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { branches, envIds, testResults, testProjectIds, includeOtherBuilds, packageName, className, updateQueryParams, clearCoverageFilters, clearCoverageScope } =
-    useBuildDetailSearchParams()
+  const [sessionStats, setSessionStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [similarBuilds, setSimilarBuilds] = useState([])
+  const [baselineBuild, setBaselineBuild] = useState()
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [baselineLoading, setBaselineLoading] = useState(false)
+  const [similarLoading, setSimilarLoading] = useState(false)
+
+  const {
+    baselineBuildId,
+    branches,
+    envIds,
+    testResults,
+    testProjectIds,
+    includeOtherBuilds,
+    packageName,
+    className,
+    updateQueryParams,
+    clearCoverageFilters,
+    clearCoverageScope,
+  } = useBuildDetailSearchParams()
   const {
     testTaskIds,
     testProjectIds: sessionTestProjectIds,
@@ -61,6 +84,11 @@ export const BuildDetailLayout = () => {
     updateQueryParams: updateSessionQueryParams,
     clearFilters: clearSessionFilters,
   } = useTestSessionsSearchParams()
+
+  const activeKey = resolveActiveTab(location.pathname)
+  const isComparisonTab = activeKey === "comparison"
+  const isCoverageTab = activeKey === "coverage"
+  const isTestsTab = activeKey === "tests"
 
   useEffect(() => {
     let cancelled = false
@@ -89,13 +117,118 @@ export const BuildDetailLayout = () => {
     }
   }, [buildId])
 
-  const activeKey = resolveActiveTab(location.pathname)
+  useEffect(() => {
+    let cancelled = false
+
+    const loadStats = async () => {
+      setStatsLoading(true)
+      try {
+        const data = await API.getBuildTestSessionStats(buildId)
+        if (!cancelled) {
+          setSessionStats(data)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error(`Failed to fetch test session stats. ${error?.message}`)
+        }
+      } finally {
+        if (!cancelled) {
+          setStatsLoading(false)
+        }
+      }
+    }
+
+    loadStats()
+    return () => {
+      cancelled = true
+    }
+  }, [buildId])
+
+  const loadSimilarBuilds = useCallback(async () => {
+    if (!buildId) {
+      return
+    }
+    setSimilarLoading(true)
+    try {
+      const data = await API.getSimilarBuilds(buildId)
+      setSimilarBuilds(data)
+    } catch (error) {
+      message.error(`Failed to fetch similar builds. ${error?.message}`)
+    } finally {
+      setSimilarLoading(false)
+    }
+  }, [buildId])
+
+  const handleOpenPicker = useCallback(() => {
+    setPickerOpen(true)
+    loadSimilarBuilds()
+  }, [loadSimilarBuilds])
+
+  useEffect(() => {
+    if (!isComparisonTab) {
+      return
+    }
+    if (baselineBuildId) {
+      return
+    }
+    handleOpenPicker()
+  }, [isComparisonTab, baselineBuildId, handleOpenPicker])
+
+  useEffect(() => {
+    if (!isComparisonTab || !baselineBuildId) {
+      setBaselineBuild(undefined)
+      return undefined
+    }
+
+    let cancelled = false
+
+    const loadBaselineBuild = async () => {
+      setBaselineLoading(true)
+      try {
+        const detail = await API.getBuildDetail(baselineBuildId)
+        if (!cancelled) {
+          setBaselineBuild(detail)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error(`Failed to fetch baseline build. ${error?.message}`)
+        }
+      } finally {
+        if (!cancelled) {
+          setBaselineLoading(false)
+        }
+      }
+    }
+
+    loadBaselineBuild()
+    return () => {
+      cancelled = true
+    }
+  }, [isComparisonTab, baselineBuildId])
+
+  useEffect(() => {
+    if (isComparisonTab && baselineBuildId && similarBuilds.length === 0) {
+      loadSimilarBuilds()
+    }
+  }, [isComparisonTab, baselineBuildId, similarBuilds.length, loadSimilarBuilds])
 
   useEffect(() => {
     if (activeKey !== "coverage" && (packageName || className)) {
       clearCoverageScope()
     }
   }, [activeKey, packageName, className, clearCoverageScope])
+
+  const selectedBaselineBuild = useMemo(() => {
+    const fromSimilar = similarBuilds.find((item) => item.buildId === baselineBuildId)
+    if (baselineBuild && fromSimilar) {
+      return {
+        ...fromSimilar,
+        ...baselineBuild,
+        identityRatio: fromSimilar.identityRatio,
+      }
+    }
+    return fromSimilar ?? baselineBuild
+  }, [similarBuilds, baselineBuildId, baselineBuild])
 
   const handleTabChange = (key) => {
     const tab = TAB_ITEMS.find((item) => item.key === key)
@@ -118,14 +251,28 @@ export const BuildDetailLayout = () => {
     navigate({ pathname: target, search: search ? `?${search}` : "" })
   }
 
+  const exclusionsHref = `/metrics/${groupId}/apps/${encodeURIComponent(appId)}/method-ignore-rules?buildId=${encodeURIComponent(buildId)}`
+
+  const showCoverageFilters = activeKey === "coverage" || activeKey === "comparison"
+  const coverageFilterHints = isComparisonTab
+    ? {
+        branches: "Applies to changed-coverage overview charts and the Changes table.",
+        envIds: "Applies to changed-coverage overview charts and the Changes table.",
+        testProjectIds: "Applies to changed-coverage overview charts and the Changes table.",
+        testResults: "Applies to changed-coverage overview charts and the Changes table.",
+      }
+    : undefined
+  const coverageScopeHint = isComparisonTab
+    ? "Applies to changed-coverage charts and the Changes table."
+    : undefined
+
   return (
-    <>
-      <BuildContextBar
-        buildVersion={build?.buildVersion}
-        branch={build?.branch}
-        commitSha={build?.commitSha}
-      />
+    <div className="build-detail-layout">
+      {isCoverageTab ? <BuildCoverageTipBanner /> : null}
+      {isTestsTab ? <BuildTestsTipBanner /> : null}
+      {isComparisonTab ? <BuildComparisonTipBanner /> : null}
       <Tabs
+        className="build-detail-layout__tabs"
         activeKey={activeKey}
         items={TAB_ITEMS.map(({ key, label, disabled }) => ({
           key,
@@ -133,9 +280,8 @@ export const BuildDetailLayout = () => {
           disabled,
         }))}
         onChange={handleTabChange}
-        style={{ marginBottom: 0 }}
       />
-      {TABS_WITH_COVERAGE_FILTERS.has(activeKey) ? (
+      {showCoverageFilters ? (
         <BuildCoverageFiltersBar
           groupId={groupId}
           appId={appId}
@@ -145,6 +291,8 @@ export const BuildDetailLayout = () => {
           testResults={testResults}
           testProjectIds={testProjectIds}
           includeOtherBuilds={includeOtherBuilds}
+          scopeHint={coverageScopeHint}
+          filterHints={coverageFilterHints}
           onBranchesChange={(value) => updateQueryParams({ branches: value })}
           onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
           onTestResultsChange={(value) => updateQueryParams({ testResults: value })}
@@ -172,7 +320,38 @@ export const BuildDetailLayout = () => {
           onClear={clearSessionFilters}
         />
       ) : null}
-      <Outlet context={{ build, buildLoading: loading }} />
-    </>
+      <BuildIdentitySummary
+        build={build}
+        sessionCount={sessionStats?.sessionCount}
+        testRunCount={sessionStats?.testRunCount}
+        testsHref={`${buildBasePath}/tests`}
+        exclusionsHref={exclusionsHref}
+        loading={loading}
+        statsLoading={statsLoading}
+        compareMode={isComparisonTab}
+        baselineBuild={selectedBaselineBuild}
+        baselineBuildId={baselineBuildId}
+        baselineLoading={Boolean(baselineBuildId) && (baselineLoading || !selectedBaselineBuild?.buildVersion)}
+        onBaselineSelect={handleOpenPicker}
+      />
+      <Outlet
+        context={{
+          build,
+          buildLoading: loading,
+          baselineBuild: selectedBaselineBuild,
+          baselineLoading,
+        }}
+      />
+      {isComparisonTab ? (
+        <BaselineBuildPickerDialog
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          builds={similarBuilds}
+          selectedBuildId={baselineBuildId}
+          loading={similarLoading}
+          onSelect={(value) => updateQueryParams({ baselineBuildId: value })}
+        />
+      ) : null}
+    </div>
   )
 }

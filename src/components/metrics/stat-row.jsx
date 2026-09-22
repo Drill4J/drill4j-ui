@@ -23,11 +23,12 @@ import { Card, Col, Row, Statistic } from "antd"
  *     onClick?: () => void,
  *     loading?: boolean,
  *   }[],
+ *   style?: import("react").CSSProperties,
  * }} props
  */
-export function StatRow({ stats }) {
+export function StatRow({ stats, style }) {
   return (
-    <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+    <Row gutter={[16, 16]} style={{ marginBottom: 24, ...style }}>
       {stats.map(({ title, value, onClick, loading }) => (
         <Col key={title} xs={12} sm={8} md={6} lg={4}>
           <Card

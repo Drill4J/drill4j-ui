@@ -27,7 +27,7 @@ export function MyApiKeysTipBanner() {
       description="Manage your personal API keys used by agents and CI/CD to report coverage and test data to Drill4J."
       icon={<KeyOutlined />}
       dismissAriaLabel="Dismiss my API keys tip"
-      style={{ marginTop: 0, marginBottom: 16 }}
+      style={{ marginTop: 0, marginBottom: 0 }}
     />
   )
 }

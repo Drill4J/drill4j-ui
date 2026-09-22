@@ -262,7 +262,7 @@ export function TrendChart({
   )
 
   return (
-    <Card title={cardTitle} size="small" loading={loading} style={{ marginBottom: 16 }}>
+    <Card title={cardTitle} size="small" bordered={false} loading={loading} style={{ marginBottom: 16 }}>
       {isEmpty ? (
         <Text type="secondary" style={{ display: "block", textAlign: "center", padding: 48 }}>
           No data

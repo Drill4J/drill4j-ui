@@ -13,44 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Outlet, useLocation, useParams } from "react-router-dom"
+import { Outlet, useParams } from "react-router-dom"
+import { AppSectionChrome } from "../../components/app-breadcrumb/app-breadcrumb"
 import { MetricsBreadcrumb } from "../../components/metrics/metrics-breadcrumb"
 import { MetricsFreshnessBar } from "../../components/metrics/metrics-freshness-bar"
 
-/** Test session build results page has its own coverage context. */
-function isTestSessionBuildPage(pathname) {
-  const segments = pathname.split("/").filter(Boolean)
-  const testSessionsIndex = segments.indexOf("test-sessions")
-  if (testSessionsIndex === -1) {
-    return false
-  }
-  const buildsIndex = segments.indexOf("builds", testSessionsIndex + 1)
-  if (buildsIndex === -1) {
-    return false
-  }
-  return segments.length > buildsIndex + 1
-}
-
 export function MetricsLayout() {
   const { groupId } = useParams()
-  const location = useLocation()
-  const showFreshnessBar = groupId && !isTestSessionBuildPage(location.pathname)
 
   return (
     <div className="metrics-layout">
-      <div className="metrics-layout__chrome">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+      <AppSectionChrome>
+        <div className="app-section-chrome__row">
           <MetricsBreadcrumb style={{ marginBottom: 0, minWidth: 0 }} />
-          {showFreshnessBar ? <MetricsFreshnessBar groupId={groupId} /> : null}
+          {groupId && <MetricsFreshnessBar groupId={groupId} />}
         </div>
-      </div>
+      </AppSectionChrome>
       <Outlet />
     </div>
   )

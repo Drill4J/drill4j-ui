@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 import { useCallback } from "react"
-import { Button, Switch, Tooltip, Typography } from "antd"
+import { Button, Switch, Typography } from "antd"
 import { HintIcon } from "../hint-icon"
 import { OptionalFilters } from "./optional-filters"
+import { TitleHelpTooltip } from "./title-help-tooltip"
 import { loadCoverageTestResultsPage } from "./coverage-test-results"
 import * as API from "../../modules/metrics/api-metrics"
+import "./build-coverage-filters-bar.css"
 
 const { Text } = Typography
 
@@ -112,81 +114,55 @@ export function BuildCoverageFiltersBar({
 
   return (
     <div
-      style={{
-        position: sticky ? "sticky" : "static",
-        top: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-        background: "#fff",
-        paddingTop: 10,
-        paddingBottom: 10,
-        marginBottom: 12,
-        borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
-      }}
+      className={`build-coverage-filters-bar${sticky ? " build-coverage-filters-bar--sticky" : ""}`}
     >
-      <Text
-        type="secondary"
-        style={{ whiteSpace: "nowrap", flexShrink: 0, lineHeight: "24px" }}
-      >
-        Coverage filters
-        <HintIcon title={scopeHint} style={{ marginLeft: 6 }} />
+      <Text type="secondary" className="build-coverage-filters-bar__label">
+        Filters
+        <HintIcon title={scopeHint} ariaLabel="About coverage filters" />
       </Text>
-      <OptionalFilters
-        size="small"
-        branches={branches}
-        envIds={envIds}
-        testResults={testResults}
-        testProjectIds={testProjectIds}
-        loadBranches={loadBranches}
-        loadEnvIds={loadEnvIds}
-        loadTestResults={loadTestResults}
-        loadTestProjects={onTestProjectIdsChange ? loadTestProjects : undefined}
-        filterHints={filterHints}
-        onBranchesChange={onBranchesChange}
-        onEnvIdsChange={onEnvIdsChange}
-        onTestResultsChange={onTestResultsChange}
-        onTestProjectIdsChange={onTestProjectIdsChange}
-      />
-      {onIncludeOtherBuildsChange && (
-        <Tooltip title={INCLUDE_OTHER_BUILDS_HINT}>
-          <label
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-              lineHeight: "24px",
-            }}
-          >
+      <div className="build-coverage-filters-bar__controls">
+        <OptionalFilters
+          size="small"
+          branches={branches}
+          envIds={envIds}
+          testResults={testResults}
+          testProjectIds={testProjectIds}
+          loadBranches={loadBranches}
+          loadEnvIds={loadEnvIds}
+          loadTestResults={loadTestResults}
+          loadTestProjects={onTestProjectIdsChange ? loadTestProjects : undefined}
+          filterHints={filterHints}
+          onBranchesChange={onBranchesChange}
+          onEnvIdsChange={onEnvIdsChange}
+          onTestResultsChange={onTestResultsChange}
+          onTestProjectIdsChange={onTestProjectIdsChange}
+        />
+        {onIncludeOtherBuildsChange ? (
+          <label className="build-coverage-filters-bar__switch">
             <Switch
               size="small"
               checked={includeOtherBuilds}
               onChange={onIncludeOtherBuildsChange}
             />
-            <Text style={{ fontSize: 12 }}>Other builds</Text>
+            <Text className="build-coverage-filters-bar__switch-label">Other builds</Text>
+            <TitleHelpTooltip
+              title={INCLUDE_OTHER_BUILDS_HINT}
+              ariaLabel="About other builds"
+              className="title-help-tooltip__trigger--flush"
+            />
           </label>
-        </Tooltip>
-      )}
-      {onClear && hasActiveFilters && (
-        <Button
-          size="small"
-          type="link"
-          onClick={onClear}
-          style={{
-            height: 24,
-            padding: "0 4px",
-            lineHeight: "24px",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
-        >
-          Clear
-        </Button>
-      )}
+        ) : null}
+        {onClear && hasActiveFilters ? (
+          <Button
+            size="small"
+            type="link"
+            onClick={onClear}
+            className="build-coverage-filters-bar__clear"
+          >
+            Clear
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }

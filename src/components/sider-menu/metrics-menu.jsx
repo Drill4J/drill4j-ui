@@ -37,10 +37,6 @@ const PATH_ROUTES = {
   "apps/:appId/trends": { level: "app", page: "trends" },
   "apps/:appId/method-ignore-rules": { level: "app", page: "exclusion-rules" },
   "apps/:appId": { level: "app", page: "builds" },
-  "test-sessions/:testSessionId/builds/:buildId": {
-    level: "test-sessions",
-    page: "session-results",
-  },
   "test-sessions/:testSessionId": { level: "test-sessions", page: "test-session" },
   "test-sessions": { level: "test-sessions", page: "test-sessions" },
   "data-management": { level: "group", page: "data-management" },
@@ -50,13 +46,13 @@ const PATH_ROUTES = {
 
 function matchPattern(pattern, segments) {
   const keys = pattern === "" ? [] : pattern.split("/")
-  if (keys.length !== segments.length) return null
+  if (keys.length !== segments.length) return undefined
   const params = {}
   for (let i = 0; i < keys.length; i += 1) {
     if (keys[i].startsWith(":")) {
       params[keys[i].slice(1)] = decodeURIComponent(segments[i])
     } else if (keys[i] !== segments[i]) {
-      return null
+      return undefined
     }
   }
   return params
@@ -66,10 +62,10 @@ function parseMetricsPath(pathname) {
   const empty = {
     level: "root",
     page: "root",
-    groupId: null,
-    appId: null,
-    buildId: null,
-    testSessionId: null,
+    groupId: undefined,
+    appId: undefined,
+    buildId: undefined,
+    testSessionId: undefined,
   }
   if (!pathname.startsWith("/metrics")) return empty
 
@@ -79,7 +75,16 @@ function parseMetricsPath(pathname) {
   const groupId = decodeURIComponent(groupSeg)
   for (const [pattern, meta] of Object.entries(PATH_ROUTES)) {
     const params = matchPattern(pattern, rest)
-    if (params) return { groupId, appId: null, buildId: null, testSessionId: null, ...params, ...meta }
+    if (params) {
+      return {
+        groupId,
+        appId: undefined,
+        buildId: undefined,
+        testSessionId: undefined,
+        ...params,
+        ...meta,
+      }
+    }
   }
   return empty
 }
@@ -90,7 +95,6 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
   const app = groupId && appId && `${group}/apps/${appId}`
   const build = app && buildId && `${app}/builds/${encodeURIComponent(buildId)}`
   const session = sessions && testSessionId && `${sessions}/${encodeURIComponent(testSessionId)}`
-  const sessionBuild = session && buildId && `${session}/builds/${encodeURIComponent(buildId)}`
 
   return {
     group,
@@ -103,7 +107,6 @@ function metricsPaths({ groupId, appId, buildId, testSessionId }) {
     buildTests: build && `${build}/tests`,
     buildComparison: build && `${build}/comparison`,
     session,
-    sessionResults: sessionBuild,
   }
 }
 
@@ -143,7 +146,6 @@ export function getMetricsSelectedKeys(location) {
     "data-management": p.dataManagement,
     "test-sessions": p.sessions,
     "test-session": p.session,
-    "session-results": p.sessionResults,
     builds: p.app,
     "exclusion-rules": p.exclusionRules,
     trends: p.trends,
@@ -194,8 +196,8 @@ export function getMetricsMenuItems(location) {
         divider("group-app-divider"),
         contextSection(`app-${appId}`, appId, [
           linkItem(p.app, "Builds", <ApartmentOutlined />),
-          linkItem(p.exclusionRules, "Exclusion rules", <StopOutlined />),
           linkItem(p.trends, "Trends", <LineChartOutlined />),
+          linkItem(p.exclusionRules, "Exclusion rules", <StopOutlined />),
         ])
       )
 
@@ -215,18 +217,9 @@ export function getMetricsMenuItems(location) {
       children.push(
         divider("group-session-divider"),
         contextSection(`session-${testSessionId}`, "Test Session", [
-          linkItem(p.session, "Affected Builds", <FileSearchOutlined />),
+          linkItem(p.session, "Session details", <FileSearchOutlined />),
         ])
       )
-
-      if (buildId) {
-        children.push(
-          divider("session-build-divider"),
-          contextSection(`session-build-${buildId}`, "Build", [
-            linkItem(p.sessionResults, "Session coverage", <PieChartOutlined />),
-          ])
-        )
-      }
     }
   }
 

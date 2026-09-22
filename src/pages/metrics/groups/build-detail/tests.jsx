@@ -22,7 +22,7 @@ export const BuildTestsPage = () => {
 
   const handleRowClick = (session) => {
     navigate(
-      `/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}/builds/${encodeURIComponent(buildId)}`
+      `/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}?buildId=${encodeURIComponent(buildId)}`
     )
   }
 

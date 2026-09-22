@@ -15,25 +15,54 @@
  */
 import { InfoCircleOutlined } from "@ant-design/icons"
 import { Tooltip } from "antd"
+import "./title-help-tooltip.css"
 
-const TITLE_HELP_ICON_STYLE = {
-  color: "rgba(0, 0, 0, 0.45)",
-  marginLeft: 8,
-  fontSize: 14,
-  verticalAlign: "middle",
-  cursor: "help",
+const OVERFLOW_ADJUST = {
+  adjustX: true,
+  adjustY: true,
+  shiftX: true,
+  shiftY: true,
 }
 
-export function TitleHelpTooltip({ title, ariaLabel }) {
+/** Keep width in style so rc-trigger measures the capped box, not max-content. */
+const OVERLAY_STYLE = {
+  width: "min(360px, calc(100vw - 32px))",
+  maxWidth: "min(360px, calc(100vw - 32px))",
+}
+
+/**
+ * @param {{
+ *   title: import("react").ReactNode,
+ *   ariaLabel?: string,
+ *   className?: string,
+ *   placement?: import("antd").TooltipProps["placement"],
+ * }} props
+ */
+export function TitleHelpTooltip({
+  title,
+  ariaLabel,
+  className,
+  placement = "bottomLeft",
+}) {
+  const triggerClassName = ["title-help-tooltip__trigger", className]
+    .filter(Boolean)
+    .join(" ")
+
   return (
     <Tooltip
-      title={title}
-      placement="bottomLeft"
+      title={<div className="title-help-tooltip__body">{title}</div>}
+      placement={placement}
       mouseEnterDelay={0.15}
       mouseLeaveDelay={0.35}
-      overlayStyle={{ maxWidth: 540 }}
+      autoAdjustOverflow={OVERFLOW_ADJUST}
+      destroyTooltipOnHide
+      getPopupContainer={() => document.body}
+      overlayClassName="title-help-tooltip-overlay"
+      overlayStyle={OVERLAY_STYLE}
     >
-      <InfoCircleOutlined aria-label={ariaLabel} style={TITLE_HELP_ICON_STYLE} />
+      <span className={triggerClassName} aria-label={ariaLabel}>
+        <InfoCircleOutlined className="title-help-tooltip__icon" aria-hidden />
+      </span>
     </Tooltip>
   )
 }

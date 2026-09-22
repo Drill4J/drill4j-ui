@@ -1,0 +1,36 @@
+.app-detail-layout__tips {
+  box-sizing: border-box;
+}
+
+.app-detail-layout__tips:has(.ui-tip-banner) {
+  margin-bottom: 16px;
+}
+
+.app-detail-layout__tips > .ui-tip-banner {
+  margin: 0;
+}
+
+.app-detail-layout__title {
+  margin: 0 0 8px !important;
+}
+
+.app-detail-layout__tabs.ant-tabs {
+  margin-top: -4px;
+  margin-bottom: 0;
+}
+
+.app-detail-layout__tabs .ant-tabs-nav {
+  margin-bottom: 12px;
+}
+
+.app-detail-layout__tabs .ant-tabs-tab {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.app-detail-layout__tabs .ant-tabs-ink-bar {
+  height: 2px;
+}

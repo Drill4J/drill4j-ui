@@ -1,0 +1,42 @@
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.admin-layout__tips {
+  box-sizing: border-box;
+}
+
+.admin-layout__tips:has(.ui-tip-banner) {
+  margin: 0 0 16px;
+}
+
+.admin-layout__tips > .ui-tip-banner {
+  margin: 0;
+}
+
+.admin-layout__title {
+  margin: 0 0 8px !important;
+}
+
+.admin-layout__tabs.ant-tabs {
+  margin-top: -4px;
+  margin-bottom: 0;
+}
+
+.admin-layout__tabs .ant-tabs-nav {
+  margin-bottom: 12px;
+}
+
+.admin-layout__tabs .ant-tabs-tab {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.admin-layout__tabs .ant-tabs-ink-bar {
+  height: 2px;
+}

@@ -25,13 +25,14 @@ function signupUrl() {
  * Admin tip: manage user registrations.
  */
 export function ManageUsersTipBanner() {
+  const url = signupUrl()
+
   const handleCopySignupLink = async () => {
-    const url = signupUrl()
     try {
       await navigator.clipboard.writeText(url)
       message.success("Sign-up link copied")
     } catch {
-      message.error("Could not copy sign-up link")
+      // Clipboard often fails on HTTP / invalid TLS — link is shown in the banner.
     }
   }
 
@@ -47,13 +48,15 @@ export function ManageUsersTipBanner() {
             sign-up form — once they are done, the new user appears here for you
             to confirm their registration.
           </p>
+          <p style={{ marginBottom: 0, marginTop: 8, wordBreak: "break-all" }}>
+            Sign-up link: <a href={url}>{url}</a>
+          </p>
         </>
       }
       icon={<UserOutlined />}
       actionLabel="Copy sign-up link"
       onAction={handleCopySignupLink}
       dismissAriaLabel="Dismiss users tip"
-      style={{ marginTop: 0, marginBottom: 16 }}
     />
   )
 }

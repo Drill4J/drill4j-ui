@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
 import { useNavigate, useParams } from "react-router-dom"
 import { TestSessionsFiltersBar } from "../../../../components/metrics/test-sessions-filters-bar"
 import { TestSessionsListView } from "../../../../components/metrics/test-sessions-list-view"
 import { useTestSessionsSearchParams } from "../build-detail/use-test-sessions-search-params"
-
-const { Title } = Typography
 
 export const TestSessionsPage = () => {
   const { groupId } = useParams()
@@ -39,9 +36,6 @@ export const TestSessionsPage = () => {
 
   return (
     <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-        Test Sessions
-      </Title>
       <TestSessionsFiltersBar
         groupId={groupId}
         testTaskIds={testTaskIds}

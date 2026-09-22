@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Button, Input, Space, Typography, message } from "antd"
-import { LineChartOutlined } from "@ant-design/icons"
+import { message } from "antd"
 import dayjs from "dayjs"
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { AppBuildsFiltersBar } from "../../../../components/metrics/app-builds-filters-bar"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
-import { OptionalFilters } from "../../../../components/metrics/optional-filters"
 import { TableColumnSortHeader } from "../../../../components/metrics/table-column-sort-header"
 import { confirmPermanentDelete } from "../../../../components/metrics/confirm-permanent-delete"
 import { RowActionsDropdown } from "../../../../components/metrics/row-actions-dropdown"
@@ -30,10 +29,6 @@ import {
   getListQueryParam,
   setListQueryParam,
 } from "../../../../modules/metrics/query-params"
-import { TrendsPromoBanner } from "./trends-promo-banner"
-import { WhatIsBuildTipBanner } from "./what-is-build-tip-banner"
-
-const { Title } = Typography
 
 const DEFAULT_PAGE_SIZE = 20
 
@@ -135,14 +130,15 @@ export const AppHubPage = () => {
     [branches, envIds, commitSha, buildVersion, sortBy, sortOrder]
   )
 
-  const loadBranches = useCallback(
-    (params) => API.getAppBranches(groupId, appId, params),
-    [appId, groupId]
-  )
-  const loadEnvIds = useCallback(
-    (params) => API.getAppEnvIds(groupId, appId, params),
-    [appId, groupId]
-  )
+  const clearFilters = useCallback(() => {
+    updateQueryParams({
+      ...currentFilters,
+      branches: undefined,
+      envIds: undefined,
+      commitSha: undefined,
+      buildVersion: undefined,
+    })
+  }, [currentFilters, updateQueryParams])
 
   useEffect(() => {
     let cancelled = false
@@ -343,88 +339,27 @@ export const AppHubPage = () => {
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <Title level={3} style={{ margin: 0 }}>
-          {appId}
-        </Title>
-        <Space>
-          <Link to={`/metrics/${groupId}/apps/${appId}/method-ignore-rules`}>
-            <Button>Exclusion rules</Button>
-          </Link>
-          <Link to={`/metrics/${groupId}/apps/${appId}/trends`}>
-            <Button icon={<LineChartOutlined />}>Trends</Button>
-          </Link>
-        </Space>
-      </div>
-
-      <div className="ui-tip-row">
-        <WhatIsBuildTipBanner />
-        <TrendsPromoBanner
-          to={`/metrics/${groupId}/apps/${appId}/trends`}
-        />
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <Space wrap align="center">
-          <OptionalFilters
-            branches={branches}
-            envIds={envIds}
-            loadBranches={loadBranches}
-            loadEnvIds={loadEnvIds}
-            onBranchesChange={(value) =>
-              updateQueryParams({ ...currentFilters, branches: value })
-            }
-            onEnvIdsChange={(value) =>
-              updateQueryParams({ ...currentFilters, envIds: value })
-            }
-          />
-          <Input
-            allowClear
-            placeholder="Build version"
-            style={{ width: 160 }}
-            defaultValue={buildVersion}
-            onPressEnter={(event) =>
-              updateQueryParams({
-                ...currentFilters,
-                buildVersion: event.target.value.trim() || undefined,
-              })
-            }
-            onBlur={(event) =>
-              updateQueryParams({
-                ...currentFilters,
-                buildVersion: event.target.value.trim() || undefined,
-              })
-            }
-          />
-          <Input
-            allowClear
-            placeholder="Commit SHA"
-            style={{ width: 160 }}
-            defaultValue={commitSha}
-            onPressEnter={(event) =>
-              updateQueryParams({
-                ...currentFilters,
-                commitSha: event.target.value.trim() || undefined,
-              })
-            }
-            onBlur={(event) =>
-              updateQueryParams({
-                ...currentFilters,
-                commitSha: event.target.value.trim() || undefined,
-              })
-            }
-          />
-        </Space>
-      </div>
+      <AppBuildsFiltersBar
+        groupId={groupId}
+        appId={appId}
+        branches={branches}
+        envIds={envIds}
+        buildVersion={buildVersion}
+        commitSha={commitSha}
+        onBranchesChange={(value) =>
+          updateQueryParams({ ...currentFilters, branches: value })
+        }
+        onEnvIdsChange={(value) =>
+          updateQueryParams({ ...currentFilters, envIds: value })
+        }
+        onBuildVersionChange={(value) =>
+          updateQueryParams({ ...currentFilters, buildVersion: value })
+        }
+        onCommitShaChange={(value) =>
+          updateQueryParams({ ...currentFilters, commitSha: value })
+        }
+        onClear={clearFilters}
+      />
 
       <MetricsDataTable
         columns={columns}

@@ -1,0 +1,141 @@
+.coverage-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--d4j-line, #d3dee8);
+  border-radius: var(--d4j-radius, 12px);
+  background: var(--d4j-surface, #fff);
+}
+
+.coverage-progress-bar--loading {
+  min-height: 7.5rem;
+}
+
+.coverage-progress-bar__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+}
+
+.coverage-progress-bar__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coverage-progress-bar__title {
+  margin: 0;
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--d4j-ink, #0c2438);
+}
+
+.coverage-progress-bar__hero {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.coverage-progress-bar__percent {
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--d4j-ink, #0c2438);
+  font-variant-numeric: tabular-nums;
+}
+
+.coverage-progress-bar__total {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--d4j-muted, #5a7186);
+  font-variant-numeric: tabular-nums;
+}
+
+.coverage-progress-bar__track {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--d4j-mist, #e8f1f7);
+}
+
+.coverage-progress-bar__segment {
+  display: block;
+  min-width: 0;
+  height: 100%;
+  flex-basis: 0;
+}
+
+.coverage-progress-bar__segment + .coverage-progress-bar__segment {
+  margin-left: 2px;
+}
+
+.coverage-progress-bar__segment--empty {
+  flex: 1;
+  background: var(--d4j-line, #d3dee8);
+}
+
+.coverage-progress-bar__counts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coverage-progress-bar__count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.coverage-progress-bar__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.coverage-progress-bar__count-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--d4j-muted, #5a7186);
+}
+
+.coverage-progress-bar__count-value {
+  font-family: var(--d4j-display, "Space Grotesk", "Figtree", sans-serif);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--d4j-ink, #0c2438);
+  white-space: nowrap;
+}
+
+.coverage-progress-bars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 800px) {
+  .coverage-progress-bars {
+    grid-template-columns: 1fr;
+  }
+
+  .coverage-progress-bar__hero {
+    margin-left: 0;
+  }
+}

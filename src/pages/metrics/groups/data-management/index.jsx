@@ -54,10 +54,6 @@ export const DataManagementPage = () => {
 
   return (
     <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-        Data Management
-      </Title>
-
       <Section title="Metrics update by day" first>
         <MetricsDayStatusCalendar
           groupId={groupId}

@@ -40,14 +40,5 @@
 .metrics-layout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.metrics-layout__chrome {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 12px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--d4j-line, #d3dee8);
+  gap: 20px;
 }

@@ -13,66 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import dayjs from "dayjs"
-import { Link } from "react-router-dom"
-import { Space, Typography } from "antd"
+import { Space, Tag, Typography } from "antd"
 
 const { Text } = Typography
 
-function formatSessionDate(value) {
+const RESULT_COLORS = {
+  FAILED: "error",
+  PASSED: "success",
+  SMART_SKIPPED: "processing",
+  SKIPPED: "default",
+  UNKNOWN: "default",
+}
+
+function formatStartedAt(value) {
   if (!value) {
     return "—"
   }
-  const parsed = dayjs(value)
-  return parsed.isValid() ? parsed.format("DD/MMM/YY") : "—"
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString()
 }
 
 /**
+ * Single-line session metadata (session-universal — no app/build/branch).
+ *
  * @param {{
  *   testSessionId?: string,
- *   sessionStartedAt?: string,
  *   testTaskId?: string,
  *   testProjectId?: string,
- *   branch?: string,
+ *   sessionStartedAt?: string,
+ *   createdBy?: string,
  *   result?: string,
- *   groupId?: string,
- *   appId?: string,
- *   buildId?: string,
  * }} props
  */
 export function TestSessionContextBar({
   testSessionId,
-  sessionStartedAt,
   testTaskId,
   testProjectId,
-  branch,
+  sessionStartedAt,
+  createdBy,
   result,
-  groupId,
-  appId,
-  buildId,
 }) {
-  const buildHref =
-    groupId && appId && buildId
-      && `/metrics/${groupId}/apps/${encodeURIComponent(appId)}/builds/${encodeURIComponent(buildId)}`
-  const sessionHref =
-    groupId && testSessionId
-      && `/metrics/${groupId}/test-sessions/${encodeURIComponent(testSessionId)}`
-
   return (
     <Space wrap size="large" style={{ marginBottom: 16 }}>
       <Text>
         <Text type="secondary">Session </Text>
-        {sessionHref ? (
-          <Link to={sessionHref}>
-            <Text strong>{testSessionId}</Text>
-          </Link>
-        ) : (
-          <Text strong>{testSessionId || "—"}</Text>
-        )}
-      </Text>
-      <Text>
-        <Text type="secondary">Created </Text>
-        <Text strong>{formatSessionDate(sessionStartedAt)}</Text>
+        <Text strong>{testSessionId || "—"}</Text>
       </Text>
       <Text>
         <Text type="secondary">Test task </Text>
@@ -82,27 +67,23 @@ export function TestSessionContextBar({
         <Text type="secondary">Test project </Text>
         <Text strong>{testProjectId || "—"}</Text>
       </Text>
-      {buildId && (
-        <Text>
-          <Text type="secondary">Build </Text>
-          {buildHref ? (
-            <Link to={buildHref}>
-              <Text strong>{buildId}</Text>
-            </Link>
-          ) : (
-            <Text strong>{buildId}</Text>
-          )}
-        </Text>
-      )}
-      {branch && (
-        <Text>
-          <Text type="secondary">Branch </Text>
-          <Text strong>{branch}</Text>
-        </Text>
-      )}
+      <Text>
+        <Text type="secondary">Started at </Text>
+        <Text strong>{formatStartedAt(sessionStartedAt)}</Text>
+      </Text>
+      <Text>
+        <Text type="secondary">Created by </Text>
+        <Text strong>{createdBy || "—"}</Text>
+      </Text>
       <Text>
         <Text type="secondary">Result </Text>
-        <Text strong>{result || "—"}</Text>
+        {result ? (
+          <Tag color={RESULT_COLORS[result] ?? "default"} style={{ marginInlineEnd: 0 }}>
+            {result}
+          </Tag>
+        ) : (
+          <Text strong>—</Text>
+        )}
       </Text>
     </Space>
   )

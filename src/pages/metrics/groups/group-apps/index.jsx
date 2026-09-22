@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { Button, Space, Table, Typography, message } from "antd"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { Table, message } from "antd"
+import { Link, useParams } from "react-router-dom"
 import * as API from "../../../../modules/metrics/api-metrics"
-import { WhatIsAppTipBanner } from "./what-is-app-tip-banner"
-
-const { Title } = Typography
 
 export const GroupAppsPage = () => {
   const { groupId } = useParams()
-  const navigate = useNavigate()
   const [apps, setApps] = useState([])
   const [isFetched, setIsFetched] = useState(false)
 
@@ -58,38 +54,12 @@ export const GroupAppsPage = () => {
   ]
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <Title level={3} style={{ margin: 0 }}>
-          {groupId}
-        </Title>
-        <Space>
-          <Button onClick={() => navigate(`/metrics/${groupId}/data-management`)}>
-            Data Management
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => navigate(`/metrics/${groupId}/test-sessions`)}
-          >
-            Test Sessions
-          </Button>
-        </Space>
-      </div>
-      <WhatIsAppTipBanner />
-      <Table
-        columns={columns}
-        dataSource={apps}
-        loading={!isFetched}
-        pagination={false}
-        size="small"
-      />
-    </>
+    <Table
+      columns={columns}
+      dataSource={apps}
+      loading={!isFetched}
+      pagination={false}
+      size="small"
+    />
   )
 }
