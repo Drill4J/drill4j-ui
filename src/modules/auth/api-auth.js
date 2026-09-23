@@ -15,6 +15,7 @@
  */
 import axios from "axios"
 import { runCatching } from "../util"
+import { dedupedRequest } from "../metrics/api-metrics"
 
 /**
  * @typedef {Object} OAuth2ConfigView
@@ -94,8 +95,10 @@ export async function updatePassword(changePasswordPayload) {
  * @returns {Promise<UserInfo|null>} The user information or null if not authenticated.
  */
 export async function getUserInfo() {
-  const response = await runCatching(axios.get("/user-info"))
-  return response.data.data
+  return dedupedRequest("user-info", async () => {
+    const response = await runCatching(axios.get("/user-info"))
+    return response.data.data
+  })
 }
 
 /**
@@ -103,6 +106,8 @@ export async function getUserInfo() {
  * @returns {Promise<AuthConfig>} The UI configuration or null if not available.
  */
 export async function getAuthConfig() {
-  const response = await runCatching(axios.get("/ui-config"))
-  return response.data.data.auth
+  return dedupedRequest("ui-config", async () => {
+    const response = await runCatching(axios.get("/ui-config"))
+    return response.data.data.auth
+  })
 }

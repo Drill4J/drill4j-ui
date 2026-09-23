@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useState, useEffect, createContext, useContext } from "react"
-import axios from "axios"
+import { useEffect, createContext, useContext } from "react"
 import { useImmer } from "use-immer"
+import { getUserInfo } from "../api-auth"
 
 const AuthContext = createContext()
 
@@ -29,11 +29,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      // It's not worth using getUserInfo() wrapper, since we need axios response/status/request objects 
-      const response = await axios.get("/user-info")
+      const userInfo = await getUserInfo()
       updateState((draft) => {
-        draft.userInfo = response.data.data
-        draft.isSignedIn = true,
+        draft.userInfo = userInfo
+        draft.isSignedIn = true
         draft.isFetched = true
       })
     } catch (error) {
