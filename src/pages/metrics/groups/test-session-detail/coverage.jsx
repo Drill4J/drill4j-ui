@@ -318,17 +318,13 @@ export const TestSessionCoverageSection = ({ buildId }) => {
         <CoverageProgressBar
           title="Code coverage"
           coverageUnit="probes"
-          slices={coverageUnitSlicesToChart(definitionCoverage?.probes, {
-            includeOtherBuilds: false,
-          })}
+          slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
           loading={definitionCoverageLoading}
         />
         <CoverageProgressBar
           title="Methods coverage"
           coverageUnit="methods"
-          slices={coverageUnitSlicesToChart(definitionCoverage?.methods, {
-            includeOtherBuilds: false,
-          })}
+          slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
           loading={definitionCoverageLoading}
           sliceLabel="count"
         />
