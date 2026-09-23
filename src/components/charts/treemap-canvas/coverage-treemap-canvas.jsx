@@ -196,16 +196,14 @@ export const CoverageTreemapCanvas = ({
     }
 
     const dpr = window.devicePixelRatio || 1
-    canvas.width = size.width * dpr
-    canvas.height = size.height * dpr
-    canvas.style.width = `${size.width}px`
-    canvas.style.height = `${size.height}px`
+    const pixelWidth = Math.round(size.width * dpr)
+    const pixelHeight = Math.round(size.height * dpr)
+    canvas.width = pixelWidth
+    canvas.height = pixelHeight
 
     if (overlay) {
-      overlay.width = size.width * dpr
-      overlay.height = size.height * dpr
-      overlay.style.width = `${size.width}px`
-      overlay.style.height = `${size.height}px`
+      overlay.width = pixelWidth
+      overlay.height = pixelHeight
     }
 
     const ctx = canvas.getContext("2d")
@@ -454,8 +452,8 @@ export const CoverageTreemapCanvas = ({
               ref={canvasRef}
               style={{
                 display: "block",
-                width: "100%",
-                height: "100%",
+                width: size.width ? `${size.width}px` : "100%",
+                height: size.height ? `${size.height}px` : "100%",
               }}
             />
             <canvas
@@ -469,8 +467,8 @@ export const CoverageTreemapCanvas = ({
                 position: "absolute",
                 top: 0,
                 left: 0,
-                width: "100%",
-                height: "100%",
+                width: size.width ? `${size.width}px` : "100%",
+                height: size.height ? `${size.height}px` : "100%",
                 cursor: hoveredNodeId ? "pointer" : "default",
               }}
             />
