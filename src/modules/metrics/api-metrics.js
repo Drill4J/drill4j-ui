@@ -1344,19 +1344,21 @@ export async function getDailyRefreshStatuses(groupId, params = {}) {
  */
 export async function syncMetrics(groupId, params = {}) {
   const { testSessionId } = params
-  const response = await runCatching(
-    axios.post("/metrics/sync", null, {
-      params: {
-        groupId,
-        ...(testSessionId ? { testSessionId } : {}),
-      },
-    })
-  )
-  const data = response.data?.data
-  if (typeof data === "string") {
-    return data
-  }
-  return response.data?.message ?? "Metrics synchronized successfully"
+  return dedupedRequest(`sync:${groupId}:${testSessionId || ""}`, async () => {
+    const response = await runCatching(
+      axios.post("/metrics/sync", null, {
+        params: {
+          groupId,
+          ...(testSessionId ? { testSessionId } : {}),
+        },
+      })
+    )
+    const data = response.data?.data
+    if (typeof data === "string") {
+      return data
+    }
+    return response.data?.message ?? "Metrics synchronized successfully"
+  })
 }
 
 /**
