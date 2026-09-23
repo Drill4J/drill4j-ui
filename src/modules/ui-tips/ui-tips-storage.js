@@ -61,12 +61,25 @@ export const UI_TIPS = {
   myApiKeys: {
     key: "uiTips.myApiKeys.dismissed",
   },
+  dataManagement: {
+    key: "uiTips.dataManagement.dismissed",
+  },
+  groupTestSessions: {
+    key: "uiTips.groupTestSessions.dismissed",
+  },
+  exclusionRules: {
+    key: "uiTips.exclusionRules.dismissed",
+  },
+}
+
+function defaultStorageKey(tipId) {
+  return `uiTips.${tipId}.dismissed`
 }
 
 function storageKeysForTip(tipId) {
   const tip = UI_TIPS[tipId]
   if (!tip) {
-    return []
+    return [defaultStorageKey(tipId)]
   }
   return [tip.key, ...(tip.legacyKeys || [])]
 }
@@ -104,12 +117,9 @@ export function shouldShowUiTip(tipId) {
 }
 
 export function dismissUiTip(tipId) {
-  const tip = UI_TIPS[tipId]
-  if (!tip) {
-    return
-  }
+  const key = UI_TIPS[tipId]?.key ?? defaultStorageKey(tipId)
   try {
-    localStorage.setItem(tip.key, "1")
+    localStorage.setItem(key, "1")
   } catch {
     // Ignore quota / private-mode errors; dismiss still works for this session.
   }
