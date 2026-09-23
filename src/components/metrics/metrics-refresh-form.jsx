@@ -47,12 +47,8 @@ export function MetricsRefreshForm({ groupId, disabled = false, onSuccess }) {
   const submitSync = async () => {
     setSyncing(true)
     try {
-      const resultMessage = await API.syncMetrics(groupId)
-      message.success(
-        typeof resultMessage === "string"
-          ? resultMessage
-          : "Metrics sync started"
-      )
+      const result = await API.syncMetrics(groupId)
+      message.success(result?.message ?? "Metrics sync started")
       onSuccess?.()
     } catch (error) {
       message.error(`Failed to sync metrics. ${error?.message}`)

@@ -112,8 +112,9 @@ function TestFileLaunchesPanel({
 export const TestSessionResultsPage = () => {
   const { groupId, testSessionId } = useParams()
   const { pathname, search } = useLocation()
-  const { session, sessionLoading, sessionSyncing, sessionRefreshKey } =
+  const { session, sessionLoading, sessionSyncing, sessionReportPending, sessionRefreshKey } =
     useOutletContext() ?? {}
+  const hideCoverageReport = sessionSyncing || sessionReportPending
   const { testDefinitionId, updateCoverageParams } = useTestSessionCoverageSearchParams()
   const {
     buildId,
@@ -339,7 +340,7 @@ export const TestSessionResultsPage = () => {
   }, [groupId, testSessionId, selectedPath])
 
   useEffect(() => {
-    if (sessionSyncing) {
+    if (hideCoverageReport) {
       return undefined
     }
 
@@ -377,7 +378,7 @@ export const TestSessionResultsPage = () => {
     buildsPage,
     buildsPageSize,
     sessionRefreshKey,
-    sessionSyncing,
+    hideCoverageReport,
   ])
 
   useEffect(() => {
@@ -866,7 +867,7 @@ export const TestSessionResultsPage = () => {
         <Title level={5} className="test-session-section__title">
           Affected builds
         </Title>
-        {sessionSyncing ? (
+        {hideCoverageReport ? (
           <div className="test-session-coverage-preparing" role="status" aria-live="polite">
             <div className="test-session-coverage-preparing__timer" aria-hidden="true">
               <span className="test-session-coverage-preparing__dot" />
@@ -874,11 +875,12 @@ export const TestSessionResultsPage = () => {
               <span className="test-session-coverage-preparing__dot" />
             </div>
             <Text strong className="test-session-coverage-preparing__title">
-              Preparing detailed test session coverage report
+              Detailed test report is being prepared
             </Text>
             <Text type="secondary" className="test-session-coverage-preparing__hint">
-              This can take a few minutes. Please come back later to see affected builds and
-              coverage for this session.
+              {sessionReportPending
+                ? "Come back in a minute and reload the page to see the results."
+                : "This can take a few minutes. Please come back later to see affected builds and coverage for this session."}
             </Text>
           </div>
         ) : (

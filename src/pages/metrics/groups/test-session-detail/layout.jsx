@@ -24,6 +24,7 @@ export const TestSessionLayout = () => {
   const [session, setSession] = useState()
   const [loading, setLoading] = useState(true)
   const [sessionSyncing, setSessionSyncing] = useState(true)
+  const [sessionReportPending, setSessionReportPending] = useState(false)
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -31,11 +32,17 @@ export const TestSessionLayout = () => {
 
     const syncAndRefresh = async () => {
       setSessionSyncing(true)
+      setSessionReportPending(false)
       try {
-        await API.syncMetrics(groupId, { testSessionId })
-        if (!cancelled) {
-          setSessionRefreshKey((key) => key + 1)
+        const result = await API.syncMetrics(groupId, { testSessionId })
+        if (cancelled) {
+          return
         }
+        if (result.accepted) {
+          setSessionReportPending(true)
+          return
+        }
+        setSessionRefreshKey((key) => key + 1)
       } catch {
         // Best-effort: sync requires ADMIN and must not block the page.
       } finally {
@@ -84,6 +91,7 @@ export const TestSessionLayout = () => {
         session,
         sessionLoading: loading,
         sessionSyncing,
+        sessionReportPending,
         sessionRefreshKey,
       }}
     />

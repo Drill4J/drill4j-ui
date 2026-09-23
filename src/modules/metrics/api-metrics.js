@@ -1338,9 +1338,10 @@ export async function getDailyRefreshStatuses(groupId, params = {}) {
 
 /**
  * Incremental ETL sync for the current day (force-run today's watermark catch-up).
+ * HTTP 202 means a matching job is already running and no report data is ready yet.
  * @param {string} groupId
  * @param {{ testSessionId?: string }} [params]
- * @returns {Promise<string>} Success message from the API
+ * @returns {Promise<{ message: string, accepted: boolean }>}
  */
 export async function syncMetrics(groupId, params = {}) {
   const { testSessionId } = params
@@ -1353,11 +1354,16 @@ export async function syncMetrics(groupId, params = {}) {
         },
       })
     )
+    const accepted = response.status === 202
     const data = response.data?.data
-    if (typeof data === "string") {
-      return data
-    }
-    return response.data?.message ?? "Metrics synchronized successfully"
+    const message =
+      typeof data === "string"
+        ? data
+        : response.data?.message ??
+          (accepted
+            ? "Job is running. Check the status later."
+            : "Metrics synchronized successfully")
+    return { message, accepted }
   })
 }
 
