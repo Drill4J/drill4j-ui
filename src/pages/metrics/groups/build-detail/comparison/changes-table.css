@@ -3,3 +3,35 @@
   background: transparent;
   border: 1px solid #8aa0b2;
 }
+
+.comparison-filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.comparison-filter-chip-row .ant-space-item {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.comparison-filter-chip.ant-tag {
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  padding-right: 22px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.comparison-filter-chip.ant-tag .ant-tag-close-icon {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  margin-inline-start: 0;
+}

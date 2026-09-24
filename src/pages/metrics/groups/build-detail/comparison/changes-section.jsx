@@ -64,7 +64,11 @@ export function ChangesSection({
   onImpactedMethodsTotalChange,
 }) {
   return (
-    <Space direction="vertical" size={16} style={{ display: "flex" }}>
+    <Space
+      direction="vertical"
+      size={16}
+      style={{ display: "flex", width: "100%", maxWidth: "100%", minWidth: 0 }}
+    >
       <ComparisonChangesFilterChips
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}

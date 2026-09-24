@@ -542,9 +542,14 @@ export function ComparisonChangesTable({
   return (
     <>
       {(methodSignature || testDefinitionId) && (
-        <Space wrap style={{ marginBottom: 16 }}>
+        <Space
+          wrap
+          className="comparison-filter-chip-row"
+          style={{ display: "flex", marginBottom: 16 }}
+        >
           {methodSignature && (
             <Tag
+              className="comparison-filter-chip"
               color="blue"
               closable
               onClose={(event) => {
@@ -557,6 +562,7 @@ export function ComparisonChangesTable({
           )}
           {testDefinitionId && (
             <Tag
+              className="comparison-filter-chip"
               color="blue"
               closable
               onClose={(event) => {

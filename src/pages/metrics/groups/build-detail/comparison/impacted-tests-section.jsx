@@ -20,6 +20,7 @@ import { TableColumnFilterHeader } from "../../../../../components/metrics/table
 import { TableColumnSortHeader } from "../../../../../components/metrics/table-column-sort-header"
 import * as API from "../../../../../modules/metrics/api-metrics"
 import { buildComparisonRequestBody, getComparisonScopeKey } from "../comparison-build-params"
+import "./changes-table.css"
 
 const IMPACTED_METHODS_SORT_OPTIONS = [
   {
@@ -347,8 +348,13 @@ export function ImpactedTestsSection({
   return (
     <>
       {methodSignature && (
-        <Space wrap style={{ marginBottom: 16 }}>
+        <Space
+          wrap
+          className="comparison-filter-chip-row"
+          style={{ display: "flex", marginBottom: 16 }}
+        >
           <Tag
+            className="comparison-filter-chip"
             color="blue"
             closable
             onClose={(event) => {
