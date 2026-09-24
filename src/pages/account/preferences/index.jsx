@@ -23,7 +23,7 @@ import {
 } from "../../../modules/ui-tips/ui-tips-storage"
 import "./preferences.css"
 
-const { Title, Text } = Typography
+const { Text } = Typography
 
 export const PreferencesPage = () => {
   const [tipsEnabled, setTipsEnabled] = useState(areUiTipsEnabled)
@@ -47,10 +47,6 @@ export const PreferencesPage = () => {
 
   return (
     <div className="preferences-page">
-      <Title level={3} style={{ marginTop: 0 }}>
-        Preferences
-      </Title>
-
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         <div className="preferences-row">
           <div className="preferences-copy">

@@ -1,21 +1,25 @@
-# Dashboard 10 & 12 — Tests / Session Code Coverage
+# Dashboard 10 & 12 — Session Code Coverage (section)
 
 **Metabase IDs:** 10 (Tests — Code Coverage), 12 (Session — Code Coverage)  
-**Route:** `/metrics/:groupId/test-sessions/:testSessionId/coverage`  
-**Tab:** Coverage (on test session detail page)
+**Host page:** [09-tests-results.md](./09-tests-results.md) — **not** a separate tab or route  
+**Visibility:** only when an affected build row is selected on the session page (`buildId` query param)
 
 ## Summary
 
-Coverage tables scoped to a test session (dashboard 12) with optional drill-down to a specific test definition (dashboard 10). Merged into one page with definition selector.
+Coverage UI for a test session, scoped to one build (and optionally one test definition). Lives **below** the always-visible session details / KPIs / test files block on the merged session page.
+
+When no build is selected on the session page, **do not render** this section (charts, treemap, packages / classes / methods).
 
 ## Routing, auth & sidebar
 
 | | |
 |--|--|
-| **Route** | `/metrics/:groupId/test-sessions/:testSessionId/coverage` |
-| **PrivateRoute** | Under `/metrics/*` — `roles={["user", "admin"]}` |
-| **Sidebar** | **None** — Coverage tab in `TestSessionLayout` |
-| **Register in app.jsx** | Sibling route under test session layout; add tab link in layout |
+| **Route** | None of its own — section of `/metrics/:groupId/test-sessions/:testSessionId?buildId=` |
+| **PrivateRoute** | Same as host session page |
+| **Sidebar** | **None** |
+| **Register in app.jsx** | **Do not** add `/coverage` sibling or Results \| Coverage tabs |
+
+Legacy `/metrics/:groupId/test-sessions/:testSessionId/coverage` (if any) should redirect to the session page with the same query params.
 
 ## Metabase source
 
@@ -23,6 +27,7 @@ Coverage tables scoped to a test session (dashboard 12) with optional drill-down
 
 | Card ID | Name | Type | SQL source |
 |---------|------|------|------------|
+| 167 | Test Session - Coverage | pie | `get_builds_with_coverage_by_test_session` |
 | 168 | Test Session - Package Coverage | table | `get_methods_with_coverage_by_test_session` + GROUP BY package |
 | 169 | Test Session - Classes Coverage | table | same + GROUP BY class |
 | 170 | Test Session - Methods Coverage | table | `get_methods_with_coverage_by_test_session` |
@@ -37,29 +42,36 @@ Coverage tables scoped to a test session (dashboard 12) with optional drill-down
 | 174 | Test Definition - Methods Coverage | table | same |
 | 185 | Test Definitions By Session | object | `test_session_definitions` view |
 
-**Optional query params:** `buildId`, `testDefinitionId`, `packageName`, `className`, `methodSignature`
+**Required:** `buildId` (from session page filter).  
+**Optional:** `testDefinitionId`, `packageName`, `className`, `methodSignature`
 
 ## API
 
-### New endpoints
+All calls below require `buildId` (selected on the host page).
 
 ```
-GET /api/metrics/test-sessions/:testSessionId/definitions?buildId=&query=&page=&pageSize=
+GET /api/metrics/test-sessions/:testSessionId/coverage-summary?groupId=&buildId=&testDefinitionId=
+→ ApiResponse<TestSessionCoverageSummaryView>  // probes / methods slices for pie charts
+```
+
+```
+GET /api/metrics/test-sessions/:testSessionId/definitions?groupId=&buildId=&query=&page=&pageSize=
 → PagedDataResponse<TestDefinitionView[]>
 ```
 
-`query` filters by test definition id, name, or path (case-insensitive). Defaults use server page size.
-```
-GET /api/metrics/test-sessions/:testSessionId/coverage/by-package?buildId=&testDefinitionId=
-GET /api/metrics/test-sessions/:testSessionId/coverage/by-class?buildId=&testDefinitionId=&packageName=
-GET /api/metrics/test-sessions/:testSessionId/coverage/by-method?buildId=&testDefinitionId=&packageName=&className=&page=&pageSize=
-```
-
-When `testDefinitionId` is omitted, use `get_methods_with_coverage_by_test_session`.  
-When provided, use `get_methods_with_coverage_by_test_definition`.
+`query` filters by test definition id, name, or path (case-insensitive).
 
 ```
-GET /api/metrics/test-sessions/:testSessionId/definitions/:testDefinitionId/coverage-summary?buildId=
+GET /api/metrics/test-sessions/:testSessionId/coverage/by-package?groupId=&buildId=&testDefinitionId=
+GET /api/metrics/test-sessions/:testSessionId/coverage/by-class?groupId=&buildId=&testDefinitionId=&packageName=
+GET /api/metrics/test-sessions/:testSessionId/coverage/by-method?groupId=&buildId=&testDefinitionId=&packageName=&className=&page=&pageSize=
+```
+
+When `testDefinitionId` is omitted, use session-scoped coverage functions.  
+When provided, use definition-scoped functions.
+
+```
+GET /api/metrics/test-sessions/:testSessionId/definitions/:testDefinitionId/coverage-summary?groupId=&buildId=
 → ApiResponse<CoverageSummaryView>
 ```
 
@@ -72,20 +84,36 @@ GET /api/metrics/coverage-treemap?buildId=&testSessionId=&testDefinitionId=
 
 ## UI
 
-### Layout
+### When shown (`buildId` present)
 
-- Shared test session layout (tabs)
-- `buildId` from session association or compact select (scoped to session's builds)
-- `TestDefinitionSelect` — Ant Design Select with server-side search/pagination against definitions endpoint; "All tests" (clear) for session-level view
-- Optional: `packageName`, `className` via table drill-down (query params)
-- `CoverageTreemapCanvas` at top — see [03-build-code-coverage/treemap.md](./03-build-code-coverage/treemap.md)
-- Tables below: Packages → Classes → Methods (same drill-down pattern as build coverage)
+On the host session page, below test files:
+
+1. **Coverage filters bar** — `TestDefinitionSelect` (“All tests” = session-level); optional clear  
+2. **Coverage pie charts** (probes / methods as implemented)  
+3. **`CoverageTreemapCanvas`** — see [03-build-code-coverage/treemap.md](./03-build-code-coverage/treemap.md)  
+4. **Tables:** Packages → Classes → Methods (same drill-down pattern as build coverage)
+
+`buildId` comes from the **affected builds table** row selection on the host page, not from session-details fields and not from a nested path.
+
+### When hidden (`buildId` absent)
+
+- Do not mount coverage API calls or coverage UI
+- Host page may show a brief prompt to select a build (optional)
 
 ### Components
 
-- `pages/metrics/[groupId]/test-sessions/[testSessionId]/coverage.jsx`
-- `components/dashboards/test-definition-select.jsx`
-- Reuse `coverage-tables.jsx`, `CoverageTreemapCanvas`
+- Section embedded in `pages/metrics/groups/test-session-detail/` (e.g. `coverage.jsx` / `TestSessionCoverageSection`)
+- `components/metrics/session-coverage-filters-bar.jsx`
+- `components/metrics/test-definition-select.jsx`
+- Reuse `coverage-tables.jsx`, `CoverageTreemapCanvas`, `CoveragePieChart`
+
+## Acceptance criteria
+
+- [ ] Coverage UI appears only after an affected build row is selected (`buildId`)
+- [ ] Changing or clearing the selected build hides/reloads coverage and drops coverage-only query params as needed
+- [ ] With build selected, pie / treemap / package→class→method drill-down work
+- [ ] Test-definition filter scopes coverage without leaving the session page
+- [ ] No separate Coverage tab or `/coverage` route required for the happy path
 
 ## Metabase export
 
@@ -100,7 +128,7 @@ curl -s "http://localhost:8095/api/dashboard/10" \
 curl -s "http://localhost:8095/api/dashboard/12" \
   -H "X-Metabase-Session: $SESSION"
 
-for card in 168 169 170 171 172 173 174 185; do
+for card in 167 168 169 170 171 172 173 174 185; do
   curl -s "http://localhost:8095/api/card/$card" \
     -H "X-Metabase-Session: $SESSION" \
     -o "metabase-export/card-${card}.json"

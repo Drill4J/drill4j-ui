@@ -1,0 +1,120 @@
+.ui-tips-intro-modal .ant-modal-content {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ui-tips-intro-modal .ant-modal-header {
+  margin: 0;
+  padding: 20px 24px 0;
+  border-bottom: none;
+}
+
+.ui-tips-intro-modal .ant-modal-title {
+  color: var(--d4j-blue-deep, #1a6fc7);
+  font-family: var(--d4j-font-display, "Space Grotesk", "Figtree", sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ui-tips-intro-modal .ant-modal-body {
+  padding: 12px 24px 8px;
+}
+
+.ui-tips-intro-modal .ant-modal-footer {
+  margin: 0;
+  padding: 12px 24px 20px;
+  border-top: none;
+}
+
+.ui-tips-intro-modal__lead {
+  margin: 0 0 16px;
+  color: var(--d4j-muted, #5a7186);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ui-tips-intro-modal__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ui-tips-intro-modal__section {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--d4j-blue-soft, #cfe4fb);
+  background: linear-gradient(
+    90deg,
+    var(--d4j-blue-mist, #eaf4fc) 0%,
+    #f2f9fc 100%
+  );
+}
+
+.ui-tips-intro-modal__section-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--d4j-surface, #fff);
+  border: 1px solid var(--d4j-blue-soft, #cfe4fb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--d4j-blue, #2f8eea);
+  font-size: 18px;
+}
+
+.ui-tips-intro-modal__section-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.ui-tips-intro-modal__section-title {
+  margin: 0 0 4px;
+  color: var(--d4j-blue-deep, #1a6fc7);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ui-tips-intro-modal__section-desc {
+  margin: 0;
+  color: var(--d4j-muted, #5a7186);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ui-tips-intro-modal__section-desc a {
+  color: var(--d4j-blue-deep, #1a6fc7);
+  font-weight: 500;
+}
+
+.ui-tips-intro-modal__info-section {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--d4j-line, #d3dee8);
+  background: var(--d4j-surface, #ffffff);
+}
+
+.ui-tips-intro-modal__info-sample {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.ui-tips-intro-modal__info-label {
+  color: var(--d4j-ink, #0c2438);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ui-tips-intro-modal__hint {
+  margin: 14px 0 0;
+  color: var(--d4j-muted, #5a7186);
+  font-size: 12px;
+  line-height: 1.45;
+}

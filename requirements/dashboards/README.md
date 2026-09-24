@@ -18,7 +18,7 @@ Migration of Metabase dashboards into `drill4j-ui` as a **Dashboards** section (
 /metrics
   → /metrics/:groupId                                    (apps list + link to tests)
     → /metrics/:groupId/test-sessions                    (test sessions)
-      → /metrics/:groupId/test-sessions/:testSessionId   (session detail tabs)
+      → /metrics/:groupId/test-sessions/:testSessionId   (session page; ?buildId= filter)
     → /metrics/:groupId/apps/:appId                     (app dashboard — builds table)
       → /metrics/:groupId/apps/:appId/builds
         → /metrics/:groupId/apps/:appId/builds/:buildId  (build detail tabs)
@@ -163,7 +163,7 @@ Use controlled `openKeys` / `selectedKeys` (not only `default*`) if needed so su
 | Top-level entry (no path params) | **Yes** — add `Menu.Item` | Sidebar link |
 | Requires `groupId`, `appId`, `buildId`, etc. | **No** | Breadcrumbs, tables, tabs, hub links |
 
-Nested dashboards (build tabs, session tabs, app dashboard) are **not** separate sidebar items — they are reached via in-app navigation. The sidebar provides entry to **Groups**; everything else follows the URL tree.
+Nested dashboards (build tabs, session page, app dashboard) are **not** separate sidebar items — they are reached via in-app navigation. The sidebar provides entry to **Groups**; everything else follows the URL tree.
 
 ### Per-implementation checklist (frontend)
 
@@ -187,7 +187,7 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | group-settings | Superseded by data-management |
 | group-data-management | None — group sidebar item (replaces Settings) |
 | All build detail tabs | None — tab bar in `BuildDetailLayout` |
-| All session detail tabs | None — tab bar in `TestSessionLayout` |
+| Session page (results + gated coverage) | None — single page; build via `?buildId=` ([09](./09-tests-results.md)) |
 
 ## Dashboard inventory
 
@@ -201,8 +201,8 @@ Each dashboard requirement file includes a **Routing, auth & sidebar** section. 
 | [05-build-comparison.md](./05-build-comparison.md) | 5, 6, 13, 14, 15 | Build — Comparison | `…/builds/:buildId/comparison` | None (tab) |
 | [07-apps-trends.md](./07-apps-trends.md) | 7 | Apps — Summary & Trends | `/metrics/:groupId/apps/:appId/trends` | None |
 | [08-tests.md](./08-tests.md) | 8 | Tests (sessions list) | `/metrics/:groupId/test-sessions` | None |
-| [09-tests-results.md](./09-tests-results.md) | 9 | Tests — Results | `/metrics/:groupId/test-sessions/:testSessionId` | None (tab) |
-| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Tests / Session — Code Coverage | `…/test-sessions/:testSessionId/coverage` | None (tab) |
+| [09-tests-results.md](./09-tests-results.md) | 9 | Test Session (merged page) | `/metrics/:groupId/test-sessions/:testSessionId` | None |
+| [10-tests-code-coverage.md](./10-tests-code-coverage.md) | 10, 12 | Session — Code Coverage (section) | Same route; shown after build row selected (`?buildId=`) | None |
 | [11-group-settings.md](./11-group-settings.md) | — | Group Settings *(superseded)* | `/metrics/:groupId/settings` | See [14](./14-group-data-management.md) |
 | [12-method-ignore-rules.md](./12-method-ignore-rules.md) | — | Method Ignore Rules | `/metrics/:groupId/apps/:appId/method-ignore-rules` | None — entry from app page |
 | [13-data-management.md](./13-data-management.md) | — | Row delete (builds / sessions) | None — actions on builds / test-sessions tables | None |
@@ -287,10 +287,11 @@ These endpoints are referenced by multiple dashboards; implement once in `admin-
 | `GET /api/metrics/coverage/by-package` | Aggregated package coverage |
 | `GET /api/metrics/coverage/by-class` | Aggregated class coverage |
 | `GET /api/metrics/test-sessions` | Test sessions list (group-scoped) |
-| `GET /api/metrics/test-sessions/:testSessionId` | Session details |
+| `GET /api/metrics/test-sessions/:testSessionId` | Session details (optional `buildId`) |
+| `GET /api/metrics/test-sessions/:testSessionId/builds` | Affected builds table on session page |
 | `GET /api/metrics/test-sessions/:testSessionId/launches` | Test launches |
 | `GET /api/metrics/test-sessions/:testSessionId/file-launches` | File-level launches |
-| `GET /api/metrics/test-sessions/:testSessionId/coverage-summary` | Session coverage pie |
+| `GET /api/metrics/test-sessions/:testSessionId/coverage-summary` | Session coverage pie (requires `buildId`) |
 | `GET /api/metrics/test-sessions/:testSessionId/definitions` | Paginated definitions in session (`query`, `page`, `pageSize`) |
 | `GET /api/metrics/apps/trends/coverage` | Coverage trend time-series |
 | `GET /api/metrics/apps/trends/changes` | Changes trend time-series |

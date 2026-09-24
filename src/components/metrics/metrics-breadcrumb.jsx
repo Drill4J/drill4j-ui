@@ -13,24 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Breadcrumb } from "antd"
 import { AppstoreOutlined } from "@ant-design/icons"
-import { Link, matchRoutes, useLocation } from "react-router-dom"
+import { matchRoutes, useLocation } from "react-router-dom"
+import { AppBreadcrumb } from "../app-breadcrumb/app-breadcrumb"
 import { metricsRouteTree } from "../../pages/metrics/metrics-routes"
-
-const linkStyle = { color: "var(--d4j-blue, #2f8eea)" }
-
-const currentStyle = {
-  color: "var(--d4j-ink, #0c2438)",
-  fontWeight: 600,
-  fontFamily: "var(--d4j-display, Space Grotesk, sans-serif)",
-}
-
-const separatorStyle = {
-  color: "var(--d4j-muted, #5a7186)",
-  margin: "0 8px",
-  userSelect: "none",
-}
 
 /**
  * @param {import("react-router-dom").RouteMatch} match
@@ -51,7 +37,7 @@ function resolveBreadcrumbLabel(match, labels) {
 }
 
 /**
- * Breadcrumb trail from matched routes (`handle.breadcrumb`), Report Portal style.
+ * Breadcrumb trail from matched metrics routes (`handle.breadcrumb`).
  * Uses matchRoutes (works with BrowserRouter — no data router required).
  *
  * @param {{
@@ -68,7 +54,7 @@ export function MetricsBreadcrumb({ labels = {}, currentLabel, style }) {
     .map((match, index) => ({
       key: `${match.pathname}-${index}`,
       label: resolveBreadcrumbLabel(match, labels),
-      pathname: match.pathname,
+      path: match.pathname,
     }))
     .filter((item) => item.label != null)
 
@@ -80,38 +66,16 @@ export function MetricsBreadcrumb({ labels = {}, currentLabel, style }) {
     trail[trail.length - 1].label = currentLabel
   }
 
+  // Last crumb is the current page — not a link.
+  const items = trail.map((item, index) =>
+    index === trail.length - 1 ? { ...item, path: undefined } : item
+  )
+
   return (
-    <Breadcrumb
-      style={{ marginBottom: 16, fontSize: 14, ...style }}
-      separator={<span style={separatorStyle}>&gt;</span>}
-      items={trail.map((item, index) => {
-        const isLast = index === trail.length - 1
-        const showIcon = index === 0
-
-        if (isLast) {
-          return {
-            key: item.key,
-            title: (
-              <span style={currentStyle}>
-                {showIcon && (
-                  <AppstoreOutlined style={{ marginRight: 6 }} />
-                )}
-                {item.label}
-              </span>
-            ),
-          }
-        }
-
-        return {
-          key: item.key,
-          title: (
-            <Link to={item.pathname} style={linkStyle}>
-              {showIcon && <AppstoreOutlined style={{ marginRight: 6 }} />}
-              {item.label}
-            </Link>
-          ),
-        }
-      })}
+    <AppBreadcrumb
+      items={items}
+      rootIcon={<AppstoreOutlined />}
+      style={style}
     />
   )
 }

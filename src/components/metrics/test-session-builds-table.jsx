@@ -37,7 +37,11 @@ function buildColumns(groupId) {
       ellipsis: true,
       render: (value, record) => {
         const buildPath = `/metrics/${groupId}/apps/${encodeURIComponent(record.appId)}/builds/${encodeURIComponent(record.buildId)}`
-        return <Link to={buildPath}>{value ?? "—"}</Link>
+        return (
+          <Link to={buildPath} onClick={(event) => event.stopPropagation()}>
+            {value ?? "—"}
+          </Link>
+        )
       },
     },
     {
@@ -80,6 +84,7 @@ function buildColumns(groupId) {
  *   builds: object[],
  *   loading?: boolean,
  *   pagination: { page: number, pageSize: number, total: number },
+ *   selectedBuildId?: string,
  *   onTableChange: import("antd").TableProps["onChange"],
  *   onRowClick?: (build: object) => void,
  * }} props
@@ -89,6 +94,7 @@ export function TestSessionBuildsTable({
   builds,
   loading = false,
   pagination,
+  selectedBuildId,
   onTableChange,
   onRowClick,
 }) {
@@ -101,6 +107,9 @@ export function TestSessionBuildsTable({
       dataSource={builds}
       pagination={pagination}
       onTableChange={onTableChange}
+      rowClassName={(record) =>
+        record.buildId === selectedBuildId ? "ant-table-row-selected" : undefined
+      }
       onRow={(record) => ({
         onClick: onRowClick ? () => onRowClick(record) : undefined,
         style: onRowClick ? { cursor: "pointer" } : undefined,

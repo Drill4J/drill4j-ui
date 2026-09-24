@@ -18,6 +18,7 @@ import { Table, Typography, message } from "antd"
 import { Link } from "react-router-dom"
 import * as API from "../../../modules/metrics/api-metrics"
 import { WhatIsGroupTipBanner } from "./what-is-group-tip-banner"
+import "../group-metrics-layout.css"
 
 const { Title } = Typography
 
@@ -49,11 +50,13 @@ export const GroupsPage = () => {
   ]
 
   return (
-    <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
+    <div className="group-metrics-layout">
+      <div className="group-metrics-layout__tips">
+        <WhatIsGroupTipBanner />
+      </div>
+      <Title level={3} className="group-metrics-layout__title">
         Groups
       </Title>
-      <WhatIsGroupTipBanner />
       <Table
         columns={columns}
         dataSource={groups}
@@ -61,6 +64,6 @@ export const GroupsPage = () => {
         pagination={false}
         size="small"
       />
-    </>
+    </div>
   )
 }

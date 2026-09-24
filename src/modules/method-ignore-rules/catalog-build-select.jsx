@@ -13,13 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Button, Modal, Space, Table, Typography } from "antd"
-
-const { Text } = Typography
-
-const TITLE_TEXT_STYLE = { fontSize: 20, lineHeight: 1.35 }
-const TITLE_MUTED_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 400 }
-const TITLE_DATA_STYLE = { ...TITLE_TEXT_STYLE, fontWeight: 600 }
+import { Button, Modal, Table } from "antd"
+import { BuildIdentitySummary } from "../../components/metrics/build-identity-summary"
+import "./catalog-build-select.css"
 
 /**
  * @param {{
@@ -147,43 +143,92 @@ export function CatalogBuildPickerDialog({
 }
 
 /**
+ * Preview-build identity card — same layout as build Coverage / Tests /
+ * Comparison (`BuildIdentitySummary`), with Change / Clear for catalog pick.
+ *
  * @param {{
- *   selectedBuild?: { buildVersion?: string, buildId: string, branch?: string } | null,
+ *   groupId: string,
+ *   appId: string,
+ *   build?: {
+ *     buildId?: string,
+ *     buildVersion?: string,
+ *     branch?: string,
+ *     commitSha?: string,
+ *     commitAuthor?: string,
+ *     commitMessage?: string,
+ *     committedAt?: string,
+ *     totalClasses?: number,
+ *     totalMethods?: number,
+ *     totalProbes?: number,
+ *     appEnvIds?: string[],
+ *   } | null,
+ *   sessionCount?: number,
+ *   testRunCount?: number,
+ *   loading?: boolean,
+ *   statsLoading?: boolean,
  *   onOpenPicker: () => void,
  *   onClear: () => void,
+ *   emptyEyebrow?: string,
+ *   emptyTitle?: string,
+ *   emptyHint?: string,
  * }} props
  */
-export function CatalogBuildFilter({ selectedBuild, onOpenPicker, onClear }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "baseline",
-        flexWrap: "wrap",
-        gap: 12,
-        marginBottom: 24,
-      }}
-    >
-      <div>
-        <Text type="secondary" style={TITLE_MUTED_STYLE}>
-          Preview excluded methods
-        </Text>
-        {selectedBuild && (
-          <Text strong style={TITLE_DATA_STYLE}>
-            {' '}{selectedBuild.buildId}
-          </Text>
-        )}
+export function CatalogBuildFilter({
+  groupId,
+  appId,
+  build,
+  sessionCount,
+  testRunCount,
+  loading = false,
+  statsLoading = false,
+  onOpenPicker,
+  onClear,
+  emptyEyebrow = "Preview build",
+  emptyTitle = "Select a build",
+  emptyHint = "Preview how exclusion rules apply to methods in a build",
+}) {
+  const buildId = build?.buildId
+  const hasBuild = Boolean(buildId)
+
+  if (!hasBuild && !loading) {
+    return (
+      <div className="catalog-build-filter">
+        <button
+          type="button"
+          className="catalog-build-filter__empty"
+          onClick={onOpenPicker}
+        >
+          <span className="catalog-build-filter__eyebrow">{emptyEyebrow}</span>
+          <span className="catalog-build-filter__empty-title">{emptyTitle}</span>
+          <span className="catalog-build-filter__empty-hint">{emptyHint}</span>
+        </button>
       </div>
-      <Space size={4}>
-        <Button size="small" onClick={onOpenPicker}>
-          {selectedBuild ? "Change" : "Select build"}
+    )
+  }
+
+  const buildBasePath =
+    groupId && appId && buildId
+      ? `/metrics/${groupId}/apps/${encodeURIComponent(appId)}/builds/${encodeURIComponent(buildId)}`
+      : undefined
+
+  return (
+    <div className="catalog-build-filter catalog-build-filter--selected">
+      <div className="catalog-build-filter__actions">
+        <Button type="link" size="small" onClick={onOpenPicker}>
+          Change
         </Button>
-        {selectedBuild && (
-          <Button size="small" type="link" onClick={onClear} style={{ padding: 0 }}>
-            Clear
-          </Button>
-        )}
-      </Space>
+        <Button type="link" size="small" onClick={onClear}>
+          Clear
+        </Button>
+      </div>
+      <BuildIdentitySummary
+        build={build}
+        sessionCount={sessionCount}
+        testRunCount={testRunCount}
+        testsHref={buildBasePath ? `${buildBasePath}/tests` : undefined}
+        loading={loading}
+        statsLoading={statsLoading}
+      />
     </div>
   )
 }

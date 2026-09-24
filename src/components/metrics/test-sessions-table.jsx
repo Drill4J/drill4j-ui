@@ -108,6 +108,13 @@ function buildTestSessionsColumns(
       title: "Test task",
       dataIndex: "testTaskId",
       key: "testTaskId",
+      render: (value) => value || "—",
+    },
+    {
+      title: "Test project",
+      dataIndex: "testProjectId",
+      key: "testProjectId",
+      render: (value) => value || "—",
     },
     {
       title: "Created by",

@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
 import { UserManagementTable } from "./user-management-table"
-import { ManageUsersTipBanner } from "./manage-users-tip-banner"
 
-const { Title } = Typography
-
-const AdminManageUsers = () => (
-  <>
-    <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-      Users
-    </Title>
-    <ManageUsersTipBanner />
-    <UserManagementTable />
-  </>
-)
+const AdminManageUsers = () => <UserManagementTable />
 
 export default AdminManageUsers

@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { InputNumber, Space, Typography, message } from "antd"
+import { message } from "antd"
 import { useNavigate, useParams } from "react-router-dom"
 import { TrendChart } from "../../../../components/charts/trend-chart"
-import {
-  BaselineBuildFilter,
-  BaselineBuildPickerDialog,
-} from "../../../../components/metrics/baseline-build-select"
-import { OptionalFilters } from "../../../../components/metrics/optional-filters"
+import { AppTrendsFiltersBar } from "../../../../components/metrics/app-trends-filters-bar"
+import { BaselineBuildPickerDialog } from "../../../../components/metrics/baseline-build-select"
+import { CatalogBuildFilter } from "../../../../modules/method-ignore-rules/catalog-build-select"
 import * as API from "../../../../modules/metrics/api-metrics"
 import { COVERAGE_SEGMENT_COLORS } from "../../../../modules/metrics/coverage-segments"
 import { useAppTrendsSearchParams } from "./use-app-trends-search-params"
-
-const { Title, Text } = Typography
 
 /** Stacked: own coverage + other-builds delta (sums to aggregated). */
 const COVERAGE_SERIES = [
@@ -155,6 +151,7 @@ export const AppTrendsPage = () => {
     branches,
     envIds,
     testTags,
+    testProjectIds,
     updateQueryParams,
   } = useAppTrendsSearchParams()
 
@@ -162,10 +159,12 @@ export const AppTrendsPage = () => {
   const [changePoints, setChangePoints] = useState([])
   const [pickerBuilds, setPickerBuilds] = useState([])
   const [baselineBuild, setBaselineBuild] = useState()
+  const [sessionStats, setSessionStats] = useState(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [coverageLoading, setCoverageLoading] = useState(false)
   const [changesLoading, setChangesLoading] = useState(false)
   const [baselineLoading, setBaselineLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [pickerLoading, setPickerLoading] = useState(false)
 
   const sharedFilters = useMemo(
@@ -175,29 +174,31 @@ export const AppTrendsPage = () => {
       branches,
       envIds,
       testTags,
+      testProjectIds,
       size,
     }),
-    [groupId, appId, branches, envIds, testTags, size]
+    [groupId, appId, branches, envIds, testTags, testProjectIds, size]
   )
 
-  const selectedBaselineBuild = useMemo(
-    () =>
-      pickerBuilds.find((item) => item.buildId === baselineBuildId) ?? baselineBuild,
-    [pickerBuilds, baselineBuildId, baselineBuild]
-  )
+  const selectedBaselineBuild = useMemo(() => {
+    if (!baselineBuildId) {
+      return null
+    }
+    if (baselineBuild?.buildId === baselineBuildId) {
+      return baselineBuild
+    }
+    return null
+  }, [baselineBuildId, baselineBuild])
 
-  const loadBranches = useCallback(
-    (params) => API.getAppBranches(groupId, appId, params),
-    [appId, groupId]
-  )
-  const loadEnvIds = useCallback(
-    (params) => API.getAppEnvIds(groupId, appId, params),
-    [appId, groupId]
-  )
-  const loadTestTags = useCallback(
-    (params) => API.getAppTestTags(groupId, appId, params),
-    [appId, groupId]
-  )
+  const clearFilters = useCallback(() => {
+    updateQueryParams({
+      branches: undefined,
+      envIds: undefined,
+      testTags: undefined,
+      testProjectIds: undefined,
+      size: 100,
+    })
+  }, [updateQueryParams])
 
   const loadPickerBuilds = useCallback(async () => {
     setPickerLoading(true)
@@ -261,12 +262,6 @@ export const AppTrendsPage = () => {
       return undefined
     }
 
-    const fromPicker = pickerBuilds.find((item) => item.buildId === baselineBuildId)
-    if (fromPicker?.buildVersion) {
-      setBaselineBuild(fromPicker)
-      return undefined
-    }
-
     let cancelled = false
 
     const loadBaselineBuild = async () => {
@@ -274,7 +269,7 @@ export const AppTrendsPage = () => {
       try {
         const detail = await API.getBuildDetail(baselineBuildId)
         if (!cancelled) {
-          setBaselineBuild(toPickerBuild(detail))
+          setBaselineBuild(detail)
         }
       } catch (error) {
         if (!cancelled) {
@@ -291,7 +286,37 @@ export const AppTrendsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [baselineBuildId, pickerBuilds])
+  }, [baselineBuildId])
+
+  useEffect(() => {
+    if (!baselineBuildId) {
+      setSessionStats(null)
+      return undefined
+    }
+
+    let cancelled = false
+    setStatsLoading(true)
+    API.getBuildTestSessionStats(baselineBuildId)
+      .then((data) => {
+        if (!cancelled) {
+          setSessionStats(data)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          message.error(`Failed to fetch test session stats. ${error?.message}`)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setStatsLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [baselineBuildId])
 
   useEffect(() => {
     let cancelled = false
@@ -358,40 +383,23 @@ export const AppTrendsPage = () => {
 
   return (
     <>
-      <Title level={3} style={{ marginBottom: 16 }}>
-        {appId} — Trends
-      </Title>
-
-      <Space wrap align="center" style={{ marginBottom: 16 }} size="middle">
-        <OptionalFilters
-          size="small"
-          branches={branches}
-          envIds={envIds}
-          testTags={testTags}
-          loadBranches={loadBranches}
-          loadEnvIds={loadEnvIds}
-          loadTestTags={loadTestTags}
-          onBranchesChange={(value) =>
-            updateQueryParams({ branches: value })
-          }
-          onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
-          onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
-        />
-        <Space align="center" size={6}>
-          <Text type="secondary">Builds</Text>
-          <InputNumber
-            min={1}
-            max={500}
-            size="small"
-            value={size}
-            onChange={(value) =>
-              updateQueryParams({
-                size: value && value > 0 ? value : 100,
-              })
-            }
-          />
-        </Space>
-      </Space>
+      <AppTrendsFiltersBar
+        groupId={groupId}
+        appId={appId}
+        branches={branches}
+        envIds={envIds}
+        testTags={testTags}
+        testProjectIds={testProjectIds}
+        size={size}
+        onBranchesChange={(value) => updateQueryParams({ branches: value })}
+        onEnvIdsChange={(value) => updateQueryParams({ envIds: value })}
+        onTestTagsChange={(value) => updateQueryParams({ testTags: value })}
+        onTestProjectIdsChange={(value) =>
+          updateQueryParams({ testProjectIds: value })
+        }
+        onSizeChange={(value) => updateQueryParams({ size: value })}
+        onClear={clearFilters}
+      />
 
       <TrendChart
         title="Coverage by Builds"
@@ -408,15 +416,19 @@ export const AppTrendsPage = () => {
         onPointClick={handleCoveragePointClick}
       />
 
-      <Title level={4} style={{ marginTop: 8, marginBottom: 8 }}>
-        Changes trends — compare to baseline
-      </Title>
-      <BaselineBuildFilter
-        selectedBuild={selectedBaselineBuild}
-        baselineBuildId={baselineBuildId}
-        loading={Boolean(baselineBuildId) && (baselineLoading || !selectedBaselineBuild?.buildId)}
+      <CatalogBuildFilter
+        groupId={groupId}
+        appId={appId}
+        build={selectedBaselineBuild}
+        sessionCount={sessionStats?.sessionCount}
+        testRunCount={sessionStats?.testRunCount}
+        loading={Boolean(baselineBuildId) && (baselineLoading || !selectedBaselineBuild)}
+        statsLoading={statsLoading}
         onOpenPicker={handleOpenPicker}
         onClear={() => updateQueryParams({ baselineBuildId: undefined })}
+        emptyEyebrow="Baseline"
+        emptyTitle="Select a baseline"
+        emptyHint="Pick a prior build as the leftmost point for change trends"
       />
 
       {baselineBuildId && (

@@ -46,6 +46,10 @@ export function useAppTrendsSearchParams() {
     () => getListQueryParam(searchParams, "testTags"),
     [searchString]
   )
+  const testProjectIds = useMemo(
+    () => getListQueryParam(searchParams, "testProjectIds"),
+    [searchString]
+  )
 
   const updateQueryParams = useCallback(
     (updates) => {
@@ -55,6 +59,7 @@ export function useAppTrendsSearchParams() {
         branches,
         envIds,
         testTags,
+        testProjectIds,
       }
       const merged = { ...current }
       APP_TRENDS_QUERY_KEYS.forEach((key) => {
@@ -69,7 +74,16 @@ export function useAppTrendsSearchParams() {
       }
       setSearchParams(params, { replace: true })
     },
-    [baselineBuildId, size, branches, envIds, testTags, searchString, setSearchParams]
+    [
+      baselineBuildId,
+      size,
+      branches,
+      envIds,
+      testTags,
+      testProjectIds,
+      searchString,
+      setSearchParams,
+    ]
   )
 
   return {
@@ -78,6 +92,7 @@ export function useAppTrendsSearchParams() {
     branches,
     envIds,
     testTags,
+    testProjectIds,
     updateQueryParams,
   }
 }

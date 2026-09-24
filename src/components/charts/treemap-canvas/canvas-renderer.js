@@ -5,10 +5,32 @@ import { coveragePaintStrategy } from "./paint-strategies"
 
 const HOVER_OVERLAY = "rgba(0, 0, 0, 0.15)"
 const TEXT_COLOR = "#333333"
+const TEXT_COLOR_COLORBLIND = "#ffffff"
 const MIN_LABEL_WIDTH = 36
 const MIN_LABEL_HEIGHT = 20
 const HEADER_HEIGHT = 18
 const FONT_FAMILY = "Arial, sans-serif"
+
+function getLabelColor(colorblindMode) {
+  return colorblindMode && colorblindMode !== "DEFAULT"
+    ? TEXT_COLOR_COLORBLIND
+    : TEXT_COLOR
+}
+
+function toDevice(value, dpr) {
+  return Math.round(value * dpr)
+}
+
+function deviceRect(x, y, width, height, dpr) {
+  const left = toDevice(x, dpr)
+  const top = toDevice(y, dpr)
+  return {
+    x: left,
+    y: top,
+    width: toDevice(x + width, dpr) - left,
+    height: toDevice(y + height, dpr) - top,
+  }
+}
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -31,8 +53,8 @@ export function drawTreemap(
   } = paintContext
 
   ctx.save()
-  ctx.scale(dpr, dpr)
-  ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
   positionedNodes.forEach(({ node, x, y, width, height, isLeaf, coverageRatio }) => {
     if (width < 1 || height < 1) {
@@ -47,21 +69,31 @@ export function drawTreemap(
       highlightThreshold,
     }
 
+    const rect = deviceRect(x, y, width, height, dpr)
+
     ctx.fillStyle = paintStrategy.getFill(strategyArgs)
-    ctx.fillRect(x, y, width, height)
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
 
     const border = paintStrategy.getBorder(strategyArgs)
+    const lineWidth = Math.max(1, toDevice(border.width ?? 1, dpr))
     ctx.strokeStyle = border.color
-    ctx.lineWidth = border.width ?? 1
-    ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1)
+    ctx.lineWidth = lineWidth
+    ctx.strokeRect(
+      rect.x + lineWidth / 2,
+      rect.y + lineWidth / 2,
+      rect.width - lineWidth,
+      rect.height - lineWidth
+    )
 
     const showParentLabel = !isLeaf && width >= MIN_LABEL_WIDTH && height >= HEADER_HEIGHT + MIN_LABEL_HEIGHT
     const showLeafLabel = isLeaf && width >= MIN_LABEL_WIDTH && height >= MIN_LABEL_HEIGHT
 
+    const labelColor = getLabelColor(colorblindMode)
+
     if (showParentLabel) {
-      drawParentLabel(ctx, node.name, x, y, width)
+      drawParentLabel(ctx, node.name, rect, labelColor, dpr)
     } else if (showLeafLabel) {
-      drawLabel(ctx, node.name, paintStrategy.getLabelSuffix(strategyArgs), x, y, width, height)
+      drawLabel(ctx, node.name, paintStrategy.getLabelSuffix(strategyArgs), rect, width, height, labelColor, dpr)
     }
   })
 
@@ -70,29 +102,34 @@ export function drawTreemap(
 
 export function drawHoverOverlay(ctx, positionedNodes, dpr, hoveredNodeId) {
   ctx.save()
-  ctx.scale(dpr, dpr)
-  ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr)
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
   if (hoveredNodeId) {
     const hovered = positionedNodes.find((positioned) => positioned.node.full_name === hoveredNodeId)
     if (hovered && hovered.width >= 1 && hovered.height >= 1) {
+      const rect = deviceRect(hovered.x, hovered.y, hovered.width, hovered.height, dpr)
       ctx.fillStyle = HOVER_OVERLAY
-      ctx.fillRect(hovered.x, hovered.y, hovered.width, hovered.height)
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
     }
   }
 
   ctx.restore()
 }
 
-function drawParentLabel(ctx, name, x, y, width) {
-  const padding = 4
-  const fontSize = 11
+function drawParentLabel(ctx, name, rect, labelColor = TEXT_COLOR, dpr = 1) {
+  const padding = toDevice(4, dpr)
+  const fontSize = toDevice(11, dpr)
 
-  ctx.fillStyle = TEXT_COLOR
+  ctx.fillStyle = labelColor
   ctx.textBaseline = "top"
   ctx.textAlign = "left"
   ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`
-  ctx.fillText(truncateToWidth(ctx, name, width - padding * 2), x + padding, y + 4, width - padding * 2)
+  ctx.fillText(
+    truncateToWidth(ctx, name, rect.width - padding * 2),
+    rect.x + padding,
+    rect.y + toDevice(4, dpr)
+  )
 }
 
 function truncateToWidth(ctx, text, maxWidth) {
@@ -110,17 +147,18 @@ function truncateToWidth(ctx, text, maxWidth) {
   return truncated + ellipsis
 }
 
-function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
-  const padding = 4
-  const maxWidth = width - padding * 2
-  const maxHeight = height - padding * 2
+function drawLabel(ctx, name, secondaryLabel, rect, cssWidth, cssHeight, labelColor = TEXT_COLOR, dpr = 1) {
+  const padding = toDevice(4, dpr)
+  const maxWidth = rect.width - padding * 2
+  const maxHeight = rect.height - padding * 2
 
   if (maxWidth <= 0 || maxHeight <= 0) {
     return
   }
 
-  const fontSize = Math.min(12, Math.max(8, Math.floor(Math.min(width, height) / 5)))
-  ctx.fillStyle = TEXT_COLOR
+  const cssFontSize = Math.min(12, Math.max(8, Math.floor(Math.min(cssWidth, cssHeight) / 5)))
+  const fontSize = toDevice(cssFontSize, dpr)
+  ctx.fillStyle = labelColor
   ctx.textBaseline = "top"
   ctx.textAlign = "left"
 
@@ -131,7 +169,7 @@ function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
       : typeof secondaryLabel === "number"
         ? `${secondaryLabel}%`
         : String(secondaryLabel)
-  const lineHeight = fontSize * 1.2
+  const lineHeight = toDevice(Math.round(cssFontSize * 1.2), dpr)
   const totalLines = nameLines.length + (percentLine ? 1 : 0)
   const textHeight = totalLines * lineHeight
 
@@ -139,17 +177,18 @@ function drawLabel(ctx, name, secondaryLabel, x, y, width, height) {
     return
   }
 
-  let textY = y + padding
+  const textX = rect.x + padding
+  let textY = rect.y + padding
 
   ctx.font = `${fontSize}px ${FONT_FAMILY}`
   nameLines.forEach((line) => {
-    ctx.fillText(line, x + padding, textY, maxWidth)
+    ctx.fillText(truncateToWidth(ctx, line, maxWidth), textX, textY)
     textY += lineHeight
   })
 
   if (percentLine) {
     ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`
-    ctx.fillText(percentLine, x + padding, textY, maxWidth)
+    ctx.fillText(truncateToWidth(ctx, percentLine, maxWidth), textX, textY)
   }
 }
 

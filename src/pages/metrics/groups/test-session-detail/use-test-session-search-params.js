@@ -19,6 +19,8 @@ import {
   deleteListQueryParam,
   getListQueryParam,
   setListQueryParam,
+  TEST_SESSION_COVERAGE_QUERY_KEYS,
+  TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE,
   TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE,
   TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE,
   TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
@@ -43,6 +45,7 @@ const LAUNCHES_SCOPE_KEYS = [
   "launchesPageSize",
   "launchId",
 ]
+const BUILD_SCOPE_RESET_KEYS = [...TEST_SESSION_COVERAGE_QUERY_KEYS]
 
 function setOptionalParam(params, key, value) {
   if (value) {
@@ -62,17 +65,16 @@ function setPageParam(params, key, value, defaultValue) {
 }
 
 /**
- * URL state for test session detail (results tab filters, sort, and pagination).
+ * URL state for the test session page.
  *
- * `path` — expanded test file (not the Path column filter).
- * `launchId` — deep-linked launch row (scroll/highlight); not a table filter.
- * `testNames` / `testResults` / `testTags` — launches column filters.
- * Build identity comes from the route (`/builds/:buildId`), not query params.
+ * Session results (details / test files) are build-agnostic.
+ * `buildId` — selected affected build (row click); gates coverage below the builds table.
  */
 export function useTestSessionSearchParams() {
   const [searchParams, setSearchParams] = useSearchParams()
   const searchString = searchParams.toString()
 
+  const buildId = useMemo(() => searchParams.get("buildId") ?? undefined, [searchString])
   const path = useMemo(() => searchParams.get("path") ?? undefined, [searchString])
   const launchId = useMemo(
     () => searchParams.get("launchId") ?? undefined,
@@ -107,9 +109,13 @@ export function useTestSessionSearchParams() {
   const launchesPage = Number(searchParams.get("launchesPage")) || 1
   const launchesPageSize =
     Number(searchParams.get("launchesPageSize")) || TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE
+  const buildsPage = Number(searchParams.get("buildsPage")) || 1
+  const buildsPageSize =
+    Number(searchParams.get("buildsPageSize")) || TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE
 
   const queryState = useMemo(
     () => ({
+      buildId,
       path,
       launchId,
       page,
@@ -120,6 +126,8 @@ export function useTestSessionSearchParams() {
       launchesPageSize,
       launchesSortBy,
       launchesSortOrder,
+      buildsPage,
+      buildsPageSize,
       testResults,
       testTags,
       testNames,
@@ -127,6 +135,9 @@ export function useTestSessionSearchParams() {
       fileResults,
     }),
     [
+      buildId,
+      buildsPage,
+      buildsPageSize,
       fileResults,
       launchesPage,
       launchesPageSize,
@@ -148,6 +159,15 @@ export function useTestSessionSearchParams() {
   const updateQueryParams = useCallback(
     (next) => {
       const params = new URLSearchParams(searchParams)
+
+      if ("buildId" in next) {
+        setOptionalParam(params, "buildId", next.buildId)
+        if (next.buildId !== buildId) {
+          BUILD_SCOPE_RESET_KEYS.forEach((key) => {
+            params.delete(key)
+          })
+        }
+      }
 
       if ("path" in next) {
         setOptionalParam(params, "path", next.path)
@@ -193,6 +213,17 @@ export function useTestSessionSearchParams() {
           TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE
         )
       }
+      if ("buildsPage" in next) {
+        setPageParam(params, "buildsPage", next.buildsPage, 1)
+      }
+      if ("buildsPageSize" in next) {
+        setPageParam(
+          params,
+          "buildsPageSize",
+          next.buildsPageSize,
+          TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE
+        )
+      }
 
       const filesChanged = FILE_RESET_PAGE_KEYS.some((key) => key in next)
       if (filesChanged && !("page" in next)) {
@@ -206,7 +237,7 @@ export function useTestSessionSearchParams() {
 
       setSearchParams(params, { replace: true })
     },
-    [searchParams, setSearchParams]
+    [buildId, searchParams, setSearchParams]
   )
 
   const clearSelectedPath = useCallback(() => {
@@ -219,6 +250,8 @@ export function useTestSessionSearchParams() {
 
   return {
     ...queryState,
+    sortBy,
+    sortOrder,
     queryState,
     updateQueryParams,
     clearSelectedPath,

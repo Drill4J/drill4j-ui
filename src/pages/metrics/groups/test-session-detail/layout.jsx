@@ -18,11 +18,45 @@ import { message } from "antd"
 import { Outlet, useParams } from "react-router-dom"
 import * as API from "../../../../modules/metrics/api-metrics"
 
-export const TestSessionBuildLayout = () => {
-  const { groupId, testSessionId, buildId } = useParams()
+export const TestSessionLayout = () => {
+  const { groupId, testSessionId } = useParams()
 
   const [session, setSession] = useState()
   const [loading, setLoading] = useState(true)
+  const [sessionSyncing, setSessionSyncing] = useState(true)
+  const [sessionReportPending, setSessionReportPending] = useState(false)
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const syncAndRefresh = async () => {
+      setSessionSyncing(true)
+      setSessionReportPending(false)
+      try {
+        const result = await API.syncMetrics(groupId, { testSessionId })
+        if (cancelled) {
+          return
+        }
+        if (result.accepted) {
+          setSessionReportPending(true)
+          return
+        }
+        setSessionRefreshKey((key) => key + 1)
+      } catch {
+        // Best-effort: sync requires ADMIN and must not block the page.
+      } finally {
+        if (!cancelled) {
+          setSessionSyncing(false)
+        }
+      }
+    }
+
+    syncAndRefresh()
+    return () => {
+      cancelled = true
+    }
+  }, [groupId, testSessionId])
 
   useEffect(() => {
     let cancelled = false
@@ -30,7 +64,7 @@ export const TestSessionBuildLayout = () => {
     const loadSession = async () => {
       setLoading(true)
       try {
-        const detail = await API.getTestSessionDetail(groupId, testSessionId, buildId)
+        const detail = await API.getTestSessionDetail(groupId, testSessionId)
         if (!cancelled) {
           setSession(detail)
         }
@@ -49,7 +83,17 @@ export const TestSessionBuildLayout = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, buildId])
+  }, [groupId, testSessionId, sessionRefreshKey])
 
-  return <Outlet context={{ session, sessionLoading: loading }} />
+  return (
+    <Outlet
+      context={{
+        session,
+        sessionLoading: loading,
+        sessionSyncing,
+        sessionReportPending,
+        sessionRefreshKey,
+      }}
+    />
+  )
 }

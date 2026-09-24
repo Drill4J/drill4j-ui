@@ -43,8 +43,8 @@ const HELP_BOX_STYLE = { width: 420, lineHeight: 1.55 }
 export const PROBE_COVERAGE_PIE_HELP = (
   <div style={HELP_BOX_STYLE}>
     <p style={{ margin: "0 0 8px" }}>
-      <b>Probe coverage</b> shows which parts of the application code were
-      actually executed during tests — down to individual lines and branches.
+      <b>Code coverage</b> is a fine-grained view of what tests executed —
+      down to individual lines and even code paths.
     </p>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
       <li style={{ marginBottom: 8 }}>
@@ -64,9 +64,8 @@ export const PROBE_COVERAGE_PIE_HELP = (
 export const METHODS_COVERAGE_PIE_HELP = (
   <div style={HELP_BOX_STYLE}>
     <p style={{ margin: "0 0 8px" }}>
-      <b>Methods coverage</b> shows how many functions in the application were
-      executed at least once during tests. A method counts as covered if any
-      part of it ran.
+      <b>Methods coverage</b> is a high-level view: a method counts as covered
+      if at least one line of code in it was executed.
     </p>
     <ul style={{ margin: 0, paddingLeft: 18 }}>
       <li style={{ marginBottom: 8 }}>

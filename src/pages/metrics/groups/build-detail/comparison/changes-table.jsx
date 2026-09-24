@@ -24,6 +24,7 @@ import { TableColumnSortHeader } from "../../../../../components/metrics/table-c
 import * as API from "../../../../../modules/metrics/api-metrics"
 import { buildComparisonQueryParams, buildComparisonRequestBody } from "../comparison-build-params"
 import { METHOD_PARAMS_COLUMN, METHOD_RETURN_TYPE_COLUMN } from "./method-display"
+import "./changes-table.css"
 
 const { Link } = Typography
 
@@ -33,7 +34,15 @@ const SCROLL_RETRY_MAX_FRAMES = 120
 const CHANGE_TYPE_COLORS = {
   NEW: "green",
   MODIFIED: "gold",
-  DELETED: "red",
+}
+
+const DELETED_CHANGE_TYPE = "DELETED"
+
+function ChangeTypeTag({ value }) {
+  if (value === DELETED_CHANGE_TYPE) {
+    return <Tag className="comparison-change-type-tag--deleted">{value}</Tag>
+  }
+  return <Tag color={CHANGE_TYPE_COLORS[value]}>{value}</Tag>
 }
 
 const CHANGE_TYPE_FILTER_OPTIONS = [
@@ -82,7 +91,7 @@ const SORT_OPTIONS = {
  * @param {{
  *   build: object,
  *   baselineBuild: object,
- *   coverageFilters?: { testResults?: string[], envIds?: string[], branches?: string[] },
+ *   coverageFilters?: { testResults?: string[], testProjectIds?: string[], envIds?: string[], branches?: string[] },
  *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
@@ -136,7 +145,7 @@ export function ComparisonChangesTable({
   const scrolledForMethodIdRef = useRef(null)
   const skipPageResetRef = useRef(Boolean(initialPage))
 
-  const { envIds, branches, testResults } = coverageFilters
+  const { envIds, branches, testResults, testProjectIds } = coverageFilters
 
   useEffect(() => {
     if (!testDefinitionId || !build?.buildVersion || !baselineBuild?.buildVersion) {
@@ -197,6 +206,7 @@ export function ComparisonChangesTable({
     sortOrder,
     testDefinitionId,
     testResults,
+    testProjectIds,
   ])
 
   useEffect(() => {
@@ -207,6 +217,7 @@ export function ComparisonChangesTable({
       try {
         const query = buildComparisonQueryParams(build, baselineBuild, {
           testResults,
+          testProjectIds,
           envIds,
           branches,
           changeTypes,
@@ -255,6 +266,7 @@ export function ComparisonChangesTable({
     sortOrder,
     testDefinitionId,
     testResults,
+    testProjectIds,
     onImpactedMethodsTotalChange,
   ])
 
@@ -278,6 +290,7 @@ export function ComparisonChangesTable({
       try {
         const baseQuery = {
           testResults,
+          testProjectIds,
           envIds,
           branches,
           changeTypes,
@@ -351,6 +364,7 @@ export function ComparisonChangesTable({
     sortOrder,
     testDefinitionId,
     testResults,
+    testProjectIds,
   ])
 
   useEffect(() => {
@@ -451,7 +465,7 @@ export function ComparisonChangesTable({
         dataIndex: "changeType",
         key: "changeType",
         width: 110,
-        render: (value) => <Tag color={CHANGE_TYPE_COLORS[value]}>{value}</Tag>,
+        render: (value) => <ChangeTypeTag value={value} />,
       },
       {
         title: (
@@ -528,9 +542,14 @@ export function ComparisonChangesTable({
   return (
     <>
       {(methodSignature || testDefinitionId) && (
-        <Space wrap style={{ marginBottom: 16 }}>
+        <Space
+          wrap
+          className="comparison-filter-chip-row"
+          style={{ display: "flex", marginBottom: 16 }}
+        >
           {methodSignature && (
             <Tag
+              className="comparison-filter-chip"
               color="blue"
               closable
               onClose={(event) => {
@@ -543,6 +562,7 @@ export function ComparisonChangesTable({
           )}
           {testDefinitionId && (
             <Tag
+              className="comparison-filter-chip"
               color="blue"
               closable
               onClose={(event) => {

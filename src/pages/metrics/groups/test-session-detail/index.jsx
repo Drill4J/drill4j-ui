@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { TestSessionBuildsPage } from "./builds"
-export { TestSessionBuildLayout } from "./build-layout"
+export { TestSessionLayout } from "./layout"
+export { TestSessionLegacyBuildRedirect } from "./legacy-build-redirect"
 export { TestSessionResultsPage } from "./results"

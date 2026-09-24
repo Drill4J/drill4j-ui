@@ -22,6 +22,10 @@ export const UI_TIPS_ENABLED_KEY = "uiTips.enabled"
  * Add new tip ids here as more tips are introduced.
  */
 export const UI_TIPS = {
+  /** First-login intro explaining tip banners and (i) help icons. */
+  uiTipsIntro: {
+    key: "uiTips.uiTipsIntro.dismissed",
+  },
   trendsPromo: {
     key: "uiTips.trendsPromo.dismissed",
     /** Older keys still cleared / checked for compatibility. */
@@ -29,6 +33,15 @@ export const UI_TIPS = {
   },
   compareBuilds: {
     key: "uiTips.compareBuilds.dismissed",
+  },
+  buildComparison: {
+    key: "uiTips.buildComparison.dismissed",
+  },
+  buildCoverage: {
+    key: "uiTips.buildCoverage.dismissed",
+  },
+  buildTests: {
+    key: "uiTips.buildTests.dismissed",
   },
   whatIsGroup: {
     key: "uiTips.whatIsGroup.dismissed",
@@ -48,12 +61,25 @@ export const UI_TIPS = {
   myApiKeys: {
     key: "uiTips.myApiKeys.dismissed",
   },
+  dataManagement: {
+    key: "uiTips.dataManagement.dismissed",
+  },
+  groupTestSessions: {
+    key: "uiTips.groupTestSessions.dismissed",
+  },
+  exclusionRules: {
+    key: "uiTips.exclusionRules.dismissed",
+  },
+}
+
+function defaultStorageKey(tipId) {
+  return `uiTips.${tipId}.dismissed`
 }
 
 function storageKeysForTip(tipId) {
   const tip = UI_TIPS[tipId]
   if (!tip) {
-    return []
+    return [defaultStorageKey(tipId)]
   }
   return [tip.key, ...(tip.legacyKeys || [])]
 }
@@ -91,12 +117,9 @@ export function shouldShowUiTip(tipId) {
 }
 
 export function dismissUiTip(tipId) {
-  const tip = UI_TIPS[tipId]
-  if (!tip) {
-    return
-  }
+  const key = UI_TIPS[tipId]?.key ?? defaultStorageKey(tipId)
   try {
-    localStorage.setItem(tip.key, "1")
+    localStorage.setItem(key, "1")
   } catch {
     // Ignore quota / private-mode errors; dismiss still works for this session.
   }

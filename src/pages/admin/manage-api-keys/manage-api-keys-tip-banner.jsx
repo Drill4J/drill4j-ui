@@ -43,7 +43,6 @@ export function ManageApiKeysTipBanner() {
       to="/my-api-keys"
       actionLabel="My API Keys"
       dismissAriaLabel="Dismiss API keys tip"
-      style={{ marginTop: 0, marginBottom: 16 }}
     />
   )
 }

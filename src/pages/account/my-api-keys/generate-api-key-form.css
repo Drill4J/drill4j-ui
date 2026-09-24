@@ -1,0 +1,23 @@
+/* Ant Design 5 already pads `.ant-modal-content`; reset it so header/body/footer
+   padding is applied once and fields align with the title / footer actions. */
+.generate-api-key-modal .ant-modal-content {
+  padding: 0;
+}
+
+.generate-api-key-modal .ant-modal-header {
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.generate-api-key-modal .ant-modal-body {
+  padding: 16px 20px;
+}
+
+.generate-api-key-modal .ant-modal-footer {
+  margin: 0;
+  padding: 12px 20px 16px;
+}
+
+.generate-api-key-modal .ant-form-item:last-child {
+  margin-bottom: 0;
+}

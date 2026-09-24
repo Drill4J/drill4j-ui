@@ -16,49 +16,6 @@
 import { BuildOutlined } from "@ant-design/icons"
 import { UiTipBanner } from "../../../../components/ui-tips/ui-tip-banner"
 
-function MockBuildsVisual() {
-  return (
-    <svg
-      width="120"
-      height="72"
-      viewBox="0 0 120 72"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect
-        x="12"
-        y="40"
-        width="22"
-        height="18"
-        rx="4"
-        fill="#cfe4fb"
-        stroke="#cfe4fb"
-        strokeWidth="1.5"
-      />
-      <rect
-        x="42"
-        y="28"
-        width="22"
-        height="30"
-        rx="4"
-        fill="#87BCEC"
-        stroke="#cfe4fb"
-        strokeWidth="1.5"
-      />
-      <rect
-        x="72"
-        y="16"
-        width="22"
-        height="42"
-        rx="4"
-        fill="#2f8eea"
-        stroke="#2f8eea"
-        strokeWidth="1.5"
-      />
-    </svg>
-  )
-}
-
 /**
  * Explanation tip for the app builds list page.
  */
@@ -69,8 +26,8 @@ export function WhatIsBuildTipBanner() {
       title="What is a build?"
       description="Each build is a distinct version of the selected application or service. Open a build to review coverage, tests, and comparisons for that version."
       icon={<BuildOutlined />}
-      visual={<MockBuildsVisual />}
       dismissAriaLabel="Dismiss build explanation"
+      style={{ marginTop: 0, marginBottom: 0 }}
     />
   )
 }

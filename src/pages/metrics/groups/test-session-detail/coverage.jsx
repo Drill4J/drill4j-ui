@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Alert, Col, Row, message } from "antd"
+import { Alert, Typography, message } from "antd"
 import { useLocation, useParams } from "react-router-dom"
-import {
-  CoveragePieChart,
-  coverageUnitSlicesToChart,
-} from "../../../../components/charts/coverage-pie-chart"
+import { coverageUnitSlicesToChart } from "../../../../components/charts/coverage-pie-chart"
 import { CoverageTreemapCanvas } from "../../../../components/charts/treemap-canvas"
+import { CoverageProgressBar } from "../../../../components/metrics/coverage-progress-bars"
 import {
   CoverageAppStructureTitle,
   CoveragePackagesTitle,
@@ -33,15 +31,17 @@ import {
 import { copyScopeLinkToClipboard } from "../../../../modules/metrics/copy-scope-link"
 import { useTestSessionCoverageSearchParams } from "./use-test-session-coverage-search-params"
 
+const { Title } = Typography
+
 function buildClassKey(packageName, className) {
   if (!className) {
-    return null
+    return undefined
   }
   return packageName ? `${packageName}/${className}` : className
 }
 
-export const TestSessionCoverageSection = () => {
-  const { groupId, testSessionId, buildId } = useParams()
+export const TestSessionCoverageSection = ({ buildId }) => {
+  const { groupId, testSessionId } = useParams()
   const { pathname, search } = useLocation()
   const {
     testDefinitionId,
@@ -57,11 +57,11 @@ export const TestSessionCoverageSection = () => {
 
   const [treemapRoots, setTreemapRoots] = useState([])
   const [treemapLoading, setTreemapLoading] = useState(true)
-  const [definitionCoverage, setDefinitionCoverage] = useState(null)
+  const [definitionCoverage, setDefinitionCoverage] = useState()
   const [definitionCoverageLoading, setDefinitionCoverageLoading] = useState(false)
-  const [scrollToPackageKey, setScrollToPackageKey] = useState(null)
-  const [scrollToClassKey, setScrollToClassKey] = useState(null)
-  const [scrollToMethod, setScrollToMethod] = useState(null)
+  const [scrollToPackageKey, setScrollToPackageKey] = useState()
+  const [scrollToClassKey, setScrollToClassKey] = useState()
+  const [scrollToMethod, setScrollToMethod] = useState()
 
   const coverageFilters = useMemo(
     () => ({
@@ -113,7 +113,7 @@ export const TestSessionCoverageSection = () => {
 
   useEffect(() => {
     if (!buildId) {
-      setDefinitionCoverage(null)
+      setDefinitionCoverage(undefined)
       return undefined
     }
 
@@ -172,7 +172,7 @@ export const TestSessionCoverageSection = () => {
   }, [])
 
   const handleScrollToPackageHandled = useCallback(() => {
-    setScrollToPackageKey(null)
+    setScrollToPackageKey(undefined)
   }, [])
 
   const handleClassNavigate = useCallback((classKey) => {
@@ -180,7 +180,7 @@ export const TestSessionCoverageSection = () => {
   }, [])
 
   const handleScrollToClassHandled = useCallback(() => {
-    setScrollToClassKey(null)
+    setScrollToClassKey(undefined)
   }, [])
 
   const handleMethodNavigate = useCallback(({ methodId, classKey }) => {
@@ -188,14 +188,14 @@ export const TestSessionCoverageSection = () => {
   }, [])
 
   const handleScrollToMethodHandled = useCallback(() => {
-    setScrollToMethod(null)
+    setScrollToMethod(undefined)
   }, [])
 
   const copyScopeLink = useCallback(
     (scopeUpdates) => {
       const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search)
       Object.entries(scopeUpdates).forEach(([key, value]) => {
-        if (value == null || value === "") {
+        if (value === undefined || value === "") {
           params.delete(key)
         } else {
           params.set(key, String(value))
@@ -311,27 +311,24 @@ export const TestSessionCoverageSection = () => {
 
   return (
     <>
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} md={12}>
-          <CoveragePieChart
-            title="Code coverage (probes)"
-            coverageUnit="probes"
-            slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
-            loading={definitionCoverageLoading}
-            showCenterTotal
-          />
-        </Col>
-        <Col xs={24} md={12}>
-          <CoveragePieChart
-            title="Methods coverage"
-            coverageUnit="methods"
-            slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
-            loading={definitionCoverageLoading}
-            showCenterTotal
-            sliceLabel="count"
-          />
-        </Col>
-      </Row>
+      <Title level={5} className="test-session-section__title">
+        Total coverage
+      </Title>
+      <div className="coverage-progress-bars">
+        <CoverageProgressBar
+          title="Code coverage"
+          coverageUnit="probes"
+          slices={coverageUnitSlicesToChart(definitionCoverage?.probes)}
+          loading={definitionCoverageLoading}
+        />
+        <CoverageProgressBar
+          title="Methods coverage"
+          coverageUnit="methods"
+          slices={coverageUnitSlicesToChart(definitionCoverage?.methods)}
+          loading={definitionCoverageLoading}
+          sliceLabel="count"
+        />
+      </div>
 
       <CoverageAppStructureTitle />
       <CoverageTreemapCanvas

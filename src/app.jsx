@@ -34,11 +34,13 @@ import SignIn from "./pages/auth/sign-in"
 import SignUp from "./pages/auth/sign-up"
 import AdminManageUsers from "./pages/admin/manage-users"
 import AdminManageApiKeys from "./pages/admin/manage-api-keys"
+import { AdminLayout } from "./pages/admin/admin-layout"
 import MyApiKeys from "./pages/account/my-api-keys"
 import { PrivateRoute } from "./modules/auth/private-route"
 import AuthLayout from "./layouts/auth"
 import useAuth, { AuthProvider } from "./modules/auth/hooks/use-auth-hook"
 import ErrorLayout from "./layouts/error"
+import { AccountLayout } from "./pages/account/account-layout"
 import { MyAccount } from "./pages/account/my-account"
 import { PreferencesPage } from "./pages/account/preferences"
 import { NotFoundPage } from "./pages/not-found"
@@ -54,6 +56,7 @@ import {
   useAuthConfig,
 } from "./modules/auth/hooks/use-ui-config-hook"
 import { antdTheme } from "./theme/tokens"
+import { UiTipsIntroModal } from "./components/ui-tips/ui-tips-intro-modal"
 import "./layouts/app-shell.css"
 
 const { Sider, Content } = Layout
@@ -198,6 +201,7 @@ const AppContent = ({location}) => {
 
   return (
     <Layout className="app-shell-layout">
+      <UiTipsIntroModal />
       <Sider className="app-shell-sider" theme="dark" width={220}>
         <div className="sider-logo">
           <Link to="/metrics">
@@ -214,30 +218,21 @@ const AppContent = ({location}) => {
                 path="/admin/*"
                 element={<PrivateRoute roles={adminRoles} />}
               >
-                <Route path="manage-users" element={<AdminManageUsers />} />
-                <Route
-                  path="manage-api-keys"
-                  element={<AdminManageApiKeys />}
-                />
+                <Route element={<AdminLayout />}>
+                  <Route path="manage-users" element={<AdminManageUsers />} />
+                  <Route
+                    path="manage-api-keys"
+                    element={<AdminManageApiKeys />}
+                  />
+                </Route>
               </Route>
               <Route path="/" element={<Navigate to="/metrics" />} />
-              <Route
-                path="/my-api-keys/*"
-                element={<PrivateRoute roles={userRoles} />}
-              >
-                <Route index element={<MyApiKeys />} />
-              </Route>
-              <Route
-                path="/my-account/*"
-                element={<PrivateRoute roles={userRoles} />}
-              >
-                <Route index element={<MyAccount />} />
-              </Route>
-              <Route
-                path="/preferences/*"
-                element={<PrivateRoute roles={userRoles} />}
-              >
-                <Route index element={<PreferencesPage />} />
+              <Route element={<PrivateRoute roles={userRoles} />}>
+                <Route element={<AccountLayout />}>
+                  <Route path="/my-api-keys" element={<MyApiKeys />} />
+                  <Route path="/my-account" element={<MyAccount />} />
+                  <Route path="/preferences" element={<PreferencesPage />} />
+                </Route>
               </Route>
               <Route path="/metrics" element={<PrivateRoute roles={userRoles} />}>
                 <Route element={<MetricsLayout />}>{metricsRoutes}</Route>

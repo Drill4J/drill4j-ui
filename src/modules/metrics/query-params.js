@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testResults"]
+export const COVERAGE_LIST_QUERY_KEYS = ["branches", "envIds", "testResults", "testProjectIds"]
 
-export const TEST_SESSIONS_LIST_QUERY_KEYS = ["testTaskIds", "createdBys", "results"]
+export const TEST_SESSIONS_LIST_QUERY_KEYS = [
+  "testTaskIds",
+  "testProjectIds",
+  "createdBys",
+  "results",
+]
 
 export const TEST_SESSION_DETAIL_LIST_QUERY_KEYS = [
   "testResults",
@@ -39,7 +44,7 @@ export const TEST_SESSION_COVERAGE_QUERY_KEYS = [
 
 export const COMPARISON_LIST_QUERY_KEYS = ["changeTypes"]
 
-export const APP_TRENDS_LIST_QUERY_KEYS = ["branches", "envIds", "testTags"]
+export const APP_TRENDS_LIST_QUERY_KEYS = ["branches", "envIds", "testTags", "testProjectIds"]
 
 export const LIST_QUERY_PARAM_KEYS = new Set([
   ...COVERAGE_LIST_QUERY_KEYS,
@@ -59,8 +64,10 @@ export const TEST_SESSIONS_QUERY_KEYS = [
 
 export const TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE = 20
 export const TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE = 10
+export const TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE = 20
 
 export const TEST_SESSION_DETAIL_QUERY_KEYS = [
+  "buildId",
   "path",
   "launchId",
   "page",
@@ -71,6 +78,8 @@ export const TEST_SESSION_DETAIL_QUERY_KEYS = [
   "launchesPageSize",
   "launchesSortBy",
   "launchesSortOrder",
+  "buildsPage",
+  "buildsPageSize",
   ...TEST_SESSION_DETAIL_LIST_QUERY_KEYS,
 ]
 
@@ -211,6 +220,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   includeOtherBuilds?: boolean,
  *   packageName?: string,
  *   className?: string,
@@ -238,6 +248,7 @@ function setIncludeOtherBuildsParam(params, includeOtherBuilds) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testResults?: string[],
+ *   testProjectIds?: string[],
  *   includeOtherBuilds?: boolean,
  * }} ComparisonQueryState
  */
@@ -313,6 +324,7 @@ export function buildComparisonSearchParams(state) {
  *   branches?: string[],
  *   envIds?: string[],
  *   testTags?: string[],
+ *   testProjectIds?: string[],
  * }} AppTrendsQueryState
  */
 
@@ -348,10 +360,13 @@ const TEST_SESSION_DETAIL_PAGE_DEFAULTS = {
   pageSize: TEST_SESSION_DETAIL_DEFAULT_PAGE_SIZE,
   launchesPage: 1,
   launchesPageSize: TEST_SESSION_DETAIL_DEFAULT_LAUNCHES_PAGE_SIZE,
+  buildsPage: 1,
+  buildsPageSize: TEST_SESSION_DETAIL_DEFAULT_BUILDS_PAGE_SIZE,
 }
 
 /**
  * @typedef {{
+ *   buildId?: string,
  *   path?: string,
  *   launchId?: string,
  *   page?: number,
@@ -362,6 +377,8 @@ const TEST_SESSION_DETAIL_PAGE_DEFAULTS = {
  *   launchesPageSize?: number,
  *   launchesSortBy?: string,
  *   launchesSortOrder?: string,
+ *   buildsPage?: number,
+ *   buildsPageSize?: number,
  *   testResults?: string[],
  *   testTags?: string[],
  *   testNames?: string[],

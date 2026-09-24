@@ -1,0 +1,19 @@
+.app-section-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--d4j-line, #d3dee8);
+}
+
+.app-section-chrome__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-breadcrumb__root-icon {
+  margin-right: 6px;
+}

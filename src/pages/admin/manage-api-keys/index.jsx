@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
 import { ApiKeysManagementTable } from "./manage-api-keys-table"
-import { ManageApiKeysTipBanner } from "./manage-api-keys-tip-banner"
 
-const { Title } = Typography
-
-const AdminManageApiKeys = () => (
-  <>
-    <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-      API Keys
-    </Title>
-    <ManageApiKeysTipBanner />
-    <ApiKeysManagementTable />
-  </>
-)
+const AdminManageApiKeys = () => <ApiKeysManagementTable />
 
 export default AdminManageApiKeys

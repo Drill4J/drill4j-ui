@@ -20,6 +20,7 @@ import { TableColumnFilterHeader } from "../../../../../components/metrics/table
 import { TableColumnSortHeader } from "../../../../../components/metrics/table-column-sort-header"
 import * as API from "../../../../../modules/metrics/api-metrics"
 import { buildComparisonRequestBody, getComparisonScopeKey } from "../comparison-build-params"
+import "./changes-table.css"
 
 const IMPACTED_METHODS_SORT_OPTIONS = [
   {
@@ -41,7 +42,7 @@ const IMPACTED_METHODS_SORT_OPTIONS = [
  *   build: object,
  *   baselineBuild: object,
  *   methodSignature?: string,
- *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[] },
+ *   coverageFilters: { branches?: string[], envIds?: string[], testResults?: string[], testProjectIds?: string[] },
  *   onMethodSignatureChange: (value?: string) => void,
  *   onViewMethodsForTest: (testDefinitionId: string) => void,
  *   onTotalChange: (total: number) => void,
@@ -68,18 +69,24 @@ export function ImpactedTestsSection({
   const [testRunner, setTestRunner] = useState()
   const [testTag, setTestTag] = useState()
   const [testTaskId, setTestTaskId] = useState()
+  const [testProjectId, setTestProjectId] = useState()
   const [filterOptions, setFilterOptions] = useState({
     testPaths: [],
     testNames: [],
     testRunners: [],
     testTags: [],
     testTaskIds: [],
+    testProjectIds: [],
   })
 
   const comparisonScopeKey = getComparisonScopeKey(build, baselineBuild)
 
   const toColumnFilterOptions = (options) =>
-    options.map((value) => ({ key: value, label: value, value: [value] }))
+    options.map((value) => ({
+      key: value || "__empty__",
+      label: value || "—",
+      value: [value],
+    }))
 
   const handleSortChange = ({ sortBy: nextSortBy, sortOrder: nextSortOrder }) => {
     setSortBy(nextSortBy ?? undefined)
@@ -144,8 +151,27 @@ export function ImpactedTestsSection({
             onChange={(value) => setTestTaskId(value?.[0])}
           />
         ),
-        dataIndex: "testTaskId",
-        key: "testTaskId",
+        dataIndex: "testTaskIds",
+        key: "testTaskIds",
+        width: 180,
+        ellipsis: true,
+        render: (value) => (value?.length ? value.join(", ") : "—"),
+      },
+      {
+        title: (
+          <TableColumnFilterHeader
+            searchable
+            title="Test project"
+            placeholder="Test project"
+            options={toColumnFilterOptions(filterOptions.testProjectIds)}
+            value={testProjectId === undefined ? undefined : [testProjectId]}
+            onChange={(value) =>
+              setTestProjectId(value?.length ? value[0] : undefined)
+            }
+          />
+        ),
+        dataIndex: "testProjectId",
+        key: "testProjectId",
         width: 180,
         ellipsis: true,
         render: (value) => value || "—",
@@ -204,6 +230,7 @@ export function ImpactedTestsSection({
       sortOrder,
       testName,
       testPath,
+      testProjectId,
       testRunner,
       testTag,
       testTaskId,
@@ -212,7 +239,18 @@ export function ImpactedTestsSection({
 
   useEffect(() => {
     setPage(1)
-  }, [testPath, testName, testRunner, testTag, testTaskId, methodSignature, coverageFilters, sortBy, sortOrder])
+  }, [
+    testPath,
+    testName,
+    testRunner,
+    testTag,
+    testTaskId,
+    testProjectId,
+    methodSignature,
+    coverageFilters,
+    sortBy,
+    sortOrder,
+  ])
 
   useEffect(() => {
     let cancelled = false
@@ -220,8 +258,8 @@ export function ImpactedTestsSection({
     const loadOptions = async () => {
       try {
         const body = buildComparisonRequestBody(build, baselineBuild, {
-          coverageBranches: coverageFilters.branches ?? [],
-          coverageAppEnvIds: coverageFilters.envIds ?? [],
+          coverageBranches: coverageFilters.branches,
+          coverageAppEnvIds: coverageFilters.envIds,
         })
         const options = await API.postImpactedTestsFilterOptions(body)
         if (!cancelled) {
@@ -231,6 +269,7 @@ export function ImpactedTestsSection({
             testRunners: options.testRunners ?? [],
             testTags: options.testTags ?? [],
             testTaskIds: options.testTaskIds ?? [],
+            testProjectIds: options.testProjectIds ?? [],
           })
         }
       } catch (error) {
@@ -259,8 +298,9 @@ export function ImpactedTestsSection({
           testRunner: testRunner || undefined,
           testTag: testTag || undefined,
           testTaskId: testTaskId || undefined,
-          coverageBranches: coverageFilters.branches ?? [],
-          coverageAppEnvIds: coverageFilters.envIds ?? [],
+          testProjectId: testProjectId === undefined ? undefined : testProjectId,
+          coverageBranches: coverageFilters.branches,
+          coverageAppEnvIds: coverageFilters.envIds,
           sortBy,
           sortOrder,
           page,
@@ -296,6 +336,7 @@ export function ImpactedTestsSection({
     testRunner,
     testTag,
     testTaskId,
+    testProjectId,
     coverageFilters,
     sortBy,
     sortOrder,
@@ -307,8 +348,13 @@ export function ImpactedTestsSection({
   return (
     <>
       {methodSignature && (
-        <Space wrap style={{ marginBottom: 16 }}>
+        <Space
+          wrap
+          className="comparison-filter-chip-row"
+          style={{ display: "flex", marginBottom: 16 }}
+        >
           <Tag
+            className="comparison-filter-chip"
             color="blue"
             closable
             onClose={(event) => {

@@ -3,10 +3,10 @@ name: review-changes
 description: >-
   Review git changes in the current working directory for data-loading and API
   safety rules: no client-side sort/filter on large lists, no API fallbacks or
-  legacy compat, paginated list endpoints only, no null in JS/JSX, and no SQL
-  or other injection in API endpoints. Use when reviewing a PR, diff, staged
-  changes, or when the user asks to review changes against server-side data
-  rules.
+  legacy compat, paginated list endpoints only, no null in JS/JSX, no SQL or
+  other injection in API endpoints, and no custom ellipsis that alters displayed
+  text. Use when reviewing a PR, diff, staged changes, or when the user asks to
+  review changes against server-side data rules.
 disable-model-invocation: true
 argument-hint: "[base-ref]"
 arguments: "[base-ref]"
@@ -14,7 +14,7 @@ arguments: "[base-ref]"
 
 # Review Changes (data-loading rules)
 
-Review **only what changed** in the working tree against five non-negotiable rules.
+Review **only what changed** in the working tree against six non-negotiable rules.
 
 ## Invocation
 
@@ -259,7 +259,39 @@ For each hit: confirm the `$` / concatenation is a **bound param or static ident
 
 ---
 
-## Step 7 — Report
+## Step 7 — Rule 6: No custom ellipsis that alters text
+
+Do not invent truncated display strings by splicing characters and inserting `…` / `...`. That rewrites the value and hides the real text (copy, search, a11y).
+
+### Fail
+
+| Pattern | Example |
+|---------|---------|
+| Middle / end splice with ellipsis char | `` `${id.slice(0, 8)}…${id.slice(-4)}` ``, `` `value.slice(0, n) + "…"` `` |
+| Helpers that mutate labels for display | `truncateId`, `shortenSha`, `ellipsisMiddle` returning altered strings |
+| Manual `"..."` / `"…"` append after `substring` / `substr` / `slice` for UI labels | showing `abc…xyz` instead of full id |
+
+### Pass
+
+| Pattern | Example |
+|---------|---------|
+| Full string in DOM | `{testSessionId}`, `{commitSha}` |
+| CSS / Ant overflow only | `text-overflow: ellipsis`, `ellipsis: true` on Table columns, `Typography.Text ellipsis` — text content stays complete |
+| Canvas / chart label fit | width-based draw truncation in canvas renderers (not DOM identity fields) |
+
+### Grep
+
+```bash
+rg -n '…|\.\.\.' CHANGED_FILES
+rg -n 'truncate|shorten|ellipsisMiddle|slice\(0,\s*\d+\).*slice\(-' CHANGED_FILES
+rg -n '`\$\{[^}]*slice[^`]*…' CHANGED_FILES
+```
+
+Triage: flag JS that **builds** an ellipsis string for display. CSS/`ellipsis: true` → pass.
+
+---
+
+## Step 8 — Report
 
 Use this template. **Do not** fix code unless the user asks — review only.
 
@@ -278,6 +310,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 | 3. Paginated list data | PASS / FAIL | N |
 | 4. No `null` in JS/JSX | PASS / FAIL | N |
 | 5. No injection in API endpoints | PASS / FAIL | N |
+| 6. No custom ellipsis altering text | PASS / FAIL | N |
 
 ## Violations
 
@@ -286,7 +319,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 - **File:** `path:line`
 - **What:** [quote or describe the pattern]
 - **Why it fails:** [one sentence]
-- **Fix:** [server-side sort / add API field / add page params / remove fallback chain]
+- **Fix:** [server-side sort / add API field / add page params / remove fallback chain / show full string + CSS ellipsis]
 
 (repeat per violation)
 
@@ -302,7 +335,7 @@ Use this template. **Do not** fix code unless the user asks — review only.
 
 Severity:
 
-- **Blocker** — any Rule 1–5 violation in new/changed list, table, or API flow
+- **Blocker** — any Rule 1–6 violation in new/changed list, table, or API flow
 - **Note** — pre-existing code touched but not worsened; optional cleanup
 
 ---
@@ -321,5 +354,6 @@ Copy while reviewing:
 - [ ] Count queries match list filters
 - [ ] No `null` in changed JS/JSX (use undefined, omit, or short-circuit)
 - [ ] No SQL/command/identifier interpolation of request data in changed API code
+- [ ] No custom JS ellipsis that alters displayed text (CSS overflow OK)
 - [ ] Report written with file:line references
 ```

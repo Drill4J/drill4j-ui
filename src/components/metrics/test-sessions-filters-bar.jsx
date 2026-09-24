@@ -18,14 +18,16 @@ import { Button, Typography } from "antd"
 import { HintIcon } from "../hint-icon"
 import { TestSessionFilters } from "./test-session-filters"
 import * as API from "../../modules/metrics/api-metrics"
+import "./build-coverage-filters-bar.css"
 
 const { Text } = Typography
 
 const FILTER_SCOPE_HINT =
-  "Test task, creator, and result filters apply to the sessions table on this page."
+  "Test task, test project, creator, and result filters apply to the sessions table on this page."
 
 const TEST_SESSION_FILTER_HINTS = {
   testTaskIds: "Shows only sessions started under the selected test tasks.",
+  testProjectIds: "Shows only sessions from the selected test projects.",
   createdBys: "Shows only sessions created by the selected users.",
   results: "Shows only sessions with the selected overall result.",
 }
@@ -39,9 +41,11 @@ const TEST_SESSION_FILTER_HINTS = {
  *   groupId: string,
  *   buildId?: string,
  *   testTaskIds?: string[],
+ *   testProjectIds?: string[],
  *   createdBys?: string[],
  *   results?: string[],
  *   onTestTaskIdsChange: (value?: string[]) => void,
+ *   onTestProjectIdsChange: (value?: string[]) => void,
  *   onCreatedBysChange: (value?: string[]) => void,
  *   onResultsChange: (value?: string[]) => void,
  *   onClear?: () => void,
@@ -51,15 +55,20 @@ export function TestSessionsFiltersBar({
   groupId,
   buildId,
   testTaskIds,
+  testProjectIds,
   createdBys,
   results,
   onTestTaskIdsChange,
+  onTestProjectIdsChange,
   onCreatedBysChange,
   onResultsChange,
   onClear,
 }) {
   const hasActiveFilters = Boolean(
-    testTaskIds?.length || createdBys?.length || results?.length
+    testTaskIds?.length ||
+      testProjectIds?.length ||
+      createdBys?.length ||
+      results?.length
   )
 
   const loadTestTasks = useCallback(
@@ -68,6 +77,16 @@ export function TestSessionsFiltersBar({
         groupId,
         buildId,
         field: "testTaskIds",
+        ...params,
+      }),
+    [buildId, groupId]
+  )
+  const loadTestProjects = useCallback(
+    (params) =>
+      API.getTestSessionFilterOptions({
+        groupId,
+        buildId,
+        field: "testProjectIds",
         ...params,
       }),
     [buildId, groupId]
@@ -94,58 +113,39 @@ export function TestSessionsFiltersBar({
   )
 
   return (
-    <div
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-        background: "#fff",
-        paddingTop: 10,
-        paddingBottom: 10,
-        marginBottom: 12,
-        borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
-      }}
-    >
-      <Text
-        type="secondary"
-        style={{ whiteSpace: "nowrap", flexShrink: 0, lineHeight: "24px" }}
-      >
-        Session filters
-        <HintIcon title={FILTER_SCOPE_HINT} style={{ marginLeft: 6 }} />
+    <div className="build-coverage-filters-bar build-coverage-filters-bar--sticky">
+      <Text type="secondary" className="build-coverage-filters-bar__label">
+        Filters
+        <HintIcon title={FILTER_SCOPE_HINT} ariaLabel="About session filters" />
       </Text>
-      <TestSessionFilters
-        size="small"
-        testTaskIds={testTaskIds}
-        createdBys={createdBys}
-        results={results}
-        loadTestTasks={loadTestTasks}
-        loadCreatedBys={loadCreatedBys}
-        loadResults={loadResults}
-        filterHints={TEST_SESSION_FILTER_HINTS}
-        onTestTaskIdsChange={onTestTaskIdsChange}
-        onCreatedBysChange={onCreatedBysChange}
-        onResultsChange={onResultsChange}
-      />
-      {onClear && hasActiveFilters && (
-        <Button
+      <div className="build-coverage-filters-bar__controls">
+        <TestSessionFilters
           size="small"
-          type="link"
-          onClick={onClear}
-          style={{
-            height: 24,
-            padding: "0 4px",
-            lineHeight: "24px",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
-        >
-          Clear
-        </Button>
-      )}
+          testTaskIds={testTaskIds}
+          testProjectIds={testProjectIds}
+          createdBys={createdBys}
+          results={results}
+          loadTestTasks={loadTestTasks}
+          loadTestProjects={loadTestProjects}
+          loadCreatedBys={loadCreatedBys}
+          loadResults={loadResults}
+          filterHints={TEST_SESSION_FILTER_HINTS}
+          onTestTaskIdsChange={onTestTaskIdsChange}
+          onTestProjectIdsChange={onTestProjectIdsChange}
+          onCreatedBysChange={onCreatedBysChange}
+          onResultsChange={onResultsChange}
+        />
+        {onClear && hasActiveFilters ? (
+          <Button
+            size="small"
+            type="link"
+            onClick={onClear}
+            className="build-coverage-filters-bar__clear"
+          >
+            Clear
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }

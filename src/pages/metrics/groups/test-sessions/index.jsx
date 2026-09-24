@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Typography } from "antd"
 import { useNavigate, useParams } from "react-router-dom"
 import { TestSessionsFiltersBar } from "../../../../components/metrics/test-sessions-filters-bar"
 import { TestSessionsListView } from "../../../../components/metrics/test-sessions-list-view"
 import { useTestSessionsSearchParams } from "../build-detail/use-test-sessions-search-params"
-
-const { Title } = Typography
 
 export const TestSessionsPage = () => {
   const { groupId } = useParams()
   const navigate = useNavigate()
   const {
     testTaskIds,
+    testProjectIds,
     createdBys,
     results,
     updateQueryParams,
@@ -38,15 +36,16 @@ export const TestSessionsPage = () => {
 
   return (
     <>
-      <Title level={3} style={{ marginTop: 0, marginBottom: 16 }}>
-        Test Sessions
-      </Title>
       <TestSessionsFiltersBar
         groupId={groupId}
         testTaskIds={testTaskIds}
+        testProjectIds={testProjectIds}
         createdBys={createdBys}
         results={results}
         onTestTaskIdsChange={(value) => updateQueryParams({ testTaskIds: value, page: 1 })}
+        onTestProjectIdsChange={(value) =>
+          updateQueryParams({ testProjectIds: value, page: 1 })
+        }
         onCreatedBysChange={(value) => updateQueryParams({ createdBys: value, page: 1 })}
         onResultsChange={(value) => updateQueryParams({ results: value, page: 1 })}
         onClear={clearFilters}

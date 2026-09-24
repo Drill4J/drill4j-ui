@@ -14,33 +14,32 @@
  * limitations under the License.
  */
 import { useEffect, useState } from "react"
-import { InfoCircleOutlined, LoadingOutlined } from "@ant-design/icons"
-import { Tooltip, Typography } from "antd"
+import { LoadingOutlined } from "@ant-design/icons"
+import { Typography } from "antd"
 import dayjs from "dayjs"
 import * as API from "../../modules/metrics/api-metrics"
+import { TitleHelpTooltip } from "./title-help-tooltip"
 
 const { Text } = Typography
 
 const FRESHNESS_HINT = (
-  <div style={{ width: 320, lineHeight: 1.55 }}>
-    <ul style={{ margin: 0, paddingLeft: 18 }}>
-      <li style={{ marginBottom: 8 }}>
-        Drill4j processes metrics on the server as new test data arrives.
-      </li>
-      <li style={{ marginBottom: 8 }}>
-        Updates run automatically in the background and can take a few moments.
-      </li>
-      <li style={{ marginBottom: 8 }}>
-        Metrics are updated independently for each group.
-      </li>
-      <li style={{ marginBottom: 8 }}>
-        The timestamp shows the point in time to which metrics are updated.
-      </li>
-      <li>
-        Time is shown in server time which can differ from your local timezone.
-      </li>
-    </ul>
-  </div>
+  <ul>
+    <li>
+      Drill4j processes metrics on the server as new test data arrives.
+    </li>
+    <li>
+      Updates run automatically in the background and can take a few moments.
+    </li>
+    <li>
+      Metrics are updated independently for each group.
+    </li>
+    <li>
+      The timestamp shows the point in time to which metrics are updated.
+    </li>
+    <li>
+      Time is shown in server time which can differ from your local timezone.
+    </li>
+  </ul>
 )
 
 function formatFreshnessDate(value) {
@@ -125,20 +124,12 @@ export function MetricsFreshnessBar({ groupId, updateFailedAt = null }) {
         flexShrink: 0,
       }}
     >
-      <Tooltip
+      <TitleHelpTooltip
         title={FRESHNESS_HINT}
+        ariaLabel="How metrics updates work"
+        className="title-help-tooltip__trigger--flush"
         placement="bottomRight"
-        overlayStyle={{ maxWidth: 360 }}
-      >
-        <InfoCircleOutlined
-          aria-label="How metrics updates work"
-          style={{
-            fontSize: 12,
-            color: "rgba(0, 0, 0, 0.45)",
-            cursor: "help",
-          }}
-        />
-      </Tooltip>
+      />
       <Text
         type={danger ? "danger" : "secondary"}
         style={{ fontSize: 13, whiteSpace: "nowrap" }}

@@ -15,18 +15,19 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Typography, message } from "antd"
-import { Link, useLocation, useOutletContext, useParams } from "react-router-dom"
-import { KeyValuePanel } from "../../../../components/metrics/key-value-panel"
+import { useLocation, useOutletContext, useParams } from "react-router-dom"
 import { MetricsDataTable } from "../../../../components/metrics/metrics-data-table"
 import { SessionCoverageFiltersBar } from "../../../../components/metrics/session-coverage-filters-bar"
-import { StatRow } from "../../../../components/metrics/stat-row"
+import { SessionResultsSummary } from "../../../../components/metrics/session-results-summary"
+import { SessionSelectedBuildPanel } from "../../../../components/metrics/session-selected-build-panel"
+import { TestSessionBuildsTable } from "../../../../components/metrics/test-session-builds-table"
 import {
   buildTestSessionResultsUrl,
   copyScopeLinkToClipboard,
 } from "../../../../modules/metrics/copy-scope-link"
 import * as API from "../../../../modules/metrics/api-metrics"
 import { TestSessionCoverageSection } from "./coverage"
-import { buildTestFileColumns, buildTestLaunchColumns, renderResultTag } from "./results-columns"
+import { buildTestFileColumns, buildTestLaunchColumns } from "./results-columns"
 import { useTestSessionCoverageSearchParams } from "./use-test-session-coverage-search-params"
 import { useTestSessionSearchParams } from "./use-test-session-search-params"
 import "./results.css"
@@ -109,11 +110,14 @@ function TestFileLaunchesPanel({
 }
 
 export const TestSessionResultsPage = () => {
-  const { groupId, testSessionId, buildId } = useParams()
+  const { groupId, testSessionId } = useParams()
   const { pathname, search } = useLocation()
-  const { session, sessionLoading } = useOutletContext() ?? {}
+  const { session, sessionLoading, sessionSyncing, sessionReportPending, sessionRefreshKey } =
+    useOutletContext() ?? {}
+  const hideCoverageReport = sessionSyncing || sessionReportPending
   const { testDefinitionId, updateCoverageParams } = useTestSessionCoverageSearchParams()
   const {
+    buildId,
     path: selectedPath,
     launchId,
     testResults,
@@ -129,6 +133,8 @@ export const TestSessionResultsPage = () => {
     pageSize,
     launchesPage,
     launchesPageSize,
+    buildsPage,
+    buildsPageSize,
     queryState,
     updateQueryParams,
     clearSelectedPath,
@@ -144,16 +150,17 @@ export const TestSessionResultsPage = () => {
       API.getTestFileLaunchPathOptions({
         groupId,
         testSessionId,
-        buildId,
         ...params,
       }),
-    [buildId, groupId, testSessionId]
+    [groupId, testSessionId]
   )
 
   const [testFiles, setTestFiles] = useState([])
   const [launches, setLaunches] = useState([])
+  const [builds, setBuilds] = useState([])
   const [testFilesTotal, setTestFilesTotal] = useState(0)
   const [launchesTotal, setLaunchesTotal] = useState(0)
+  const [buildsTotal, setBuildsTotal] = useState(0)
   const [fileFilterOptions, setFileFilterOptions] = useState({
     testPaths: [],
     results: [],
@@ -166,6 +173,7 @@ export const TestSessionResultsPage = () => {
   const [loading, setLoading] = useState({
     testFiles: false,
     launches: false,
+    builds: false,
   })
   const [highlightedLaunchId, setHighlightedLaunchId] = useState()
   const [highlightTick, setHighlightTick] = useState(0)
@@ -184,7 +192,6 @@ export const TestSessionResultsPage = () => {
         const { data, paging } = await API.getTestFileLaunches({
           groupId,
           testSessionId,
-          buildId,
           testPaths,
           results: fileResults,
           sortBy,
@@ -214,7 +221,6 @@ export const TestSessionResultsPage = () => {
   }, [
     groupId,
     testSessionId,
-    buildId,
     testPaths,
     fileResults,
     sortBy,
@@ -226,7 +232,7 @@ export const TestSessionResultsPage = () => {
   useEffect(() => {
     let cancelled = false
 
-    API.getTestFileLaunchFilterOptions({ groupId, testSessionId, buildId })
+    API.getTestFileLaunchFilterOptions({ groupId, testSessionId })
       .then((data) => {
         if (!cancelled) {
           setFileFilterOptions({
@@ -244,7 +250,7 @@ export const TestSessionResultsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, buildId])
+  }, [groupId, testSessionId])
 
   useEffect(() => {
     if (!selectedPath) {
@@ -261,7 +267,6 @@ export const TestSessionResultsPage = () => {
         const { data, paging } = await API.getTestLaunches({
           groupId,
           testSessionId,
-          buildId,
           path: selectedPath,
           testNames,
           testResults,
@@ -293,7 +298,6 @@ export const TestSessionResultsPage = () => {
   }, [
     groupId,
     testSessionId,
-    buildId,
     selectedPath,
     testNames,
     testResults,
@@ -313,7 +317,6 @@ export const TestSessionResultsPage = () => {
     API.getTestLaunchFilterOptions({
       groupId,
       testSessionId,
-      buildId,
       path: selectedPath,
     })
       .then((data) => {
@@ -334,7 +337,49 @@ export const TestSessionResultsPage = () => {
     return () => {
       cancelled = true
     }
-  }, [groupId, testSessionId, buildId, selectedPath])
+  }, [groupId, testSessionId, selectedPath])
+
+  useEffect(() => {
+    if (hideCoverageReport) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    const loadBuilds = async () => {
+      setLoading((state) => ({ ...state, builds: true }))
+      try {
+        const { data, paging } = await API.getTestSessionBuilds(groupId, testSessionId, {
+          page: buildsPage,
+          pageSize: buildsPageSize,
+        })
+        if (!cancelled) {
+          setBuilds(data)
+          setBuildsTotal(paging.total)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error(`Failed to fetch affected builds. ${error?.message}`)
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading((state) => ({ ...state, builds: false }))
+        }
+      }
+    }
+
+    loadBuilds()
+    return () => {
+      cancelled = true
+    }
+  }, [
+    groupId,
+    testSessionId,
+    buildsPage,
+    buildsPageSize,
+    sessionRefreshKey,
+    hideCoverageReport,
+  ])
 
   useEffect(() => {
     if (!selectedPath || loading.testFiles || testFiles.some((file) => file.testPath === selectedPath)) {
@@ -359,7 +404,6 @@ export const TestSessionResultsPage = () => {
         const { page: targetPage } = await API.getTestFileLaunchPage({
           groupId,
           testSessionId,
-          buildId,
           path: selectedPath,
           testPaths,
           results: fileResults,
@@ -384,7 +428,6 @@ export const TestSessionResultsPage = () => {
       cancelled = true
     }
   }, [
-    buildId,
     fileResults,
     groupId,
     loading.testFiles,
@@ -441,7 +484,6 @@ export const TestSessionResultsPage = () => {
         const { page: targetPage } = await API.getTestLaunchPage({
           groupId,
           testSessionId,
-          buildId,
           path: selectedPath,
           launchId,
           testNames,
@@ -468,7 +510,6 @@ export const TestSessionResultsPage = () => {
       cancelled = true
     }
   }, [
-    buildId,
     groupId,
     launchId,
     launches,
@@ -532,68 +573,6 @@ export const TestSessionResultsPage = () => {
     []
   )
 
-  const sessionInfoItems = useMemo(() => {
-    const buildHref =
-      groupId && session?.appId && session?.buildId
-        && `/metrics/${groupId}/apps/${encodeURIComponent(session.appId)}/builds/${encodeURIComponent(session.buildId)}`
-    const sessionHref =
-      groupId && session?.testSessionId
-        && `/metrics/${groupId}/test-sessions/${encodeURIComponent(session.testSessionId)}`
-
-    return [
-      {
-        label: "Session ID",
-        value: session?.testSessionId && (
-          sessionHref
-            ? <Link to={sessionHref}>{session.testSessionId}</Link>
-            : session.testSessionId
-        ),
-      },
-      { label: "Test task", value: session?.testTaskId },
-      {
-        label: "Started at",
-        value: session?.sessionStartedAt
-          && new Date(session.sessionStartedAt).toLocaleString(),
-      },
-      { label: "Created by", value: session?.createdBy },
-      { label: "Result", value: session?.result && renderResultTag(session.result) },
-      { label: "App", value: session?.appId },
-      {
-        label: "Build",
-        value: session?.buildId && (
-          buildHref
-            ? <Link to={buildHref}>{session.buildId}</Link>
-            : session.buildId
-        ),
-      },
-      { label: "Branch", value: session?.branch },
-    ]
-  }, [groupId, session])
-
-  const statItems = useMemo(
-    () => [
-      { title: "Tests", value: session?.testDefinitions ?? "—", loading: sessionLoading },
-      { title: "Failures", value: session?.failed ?? "—", loading: sessionLoading },
-      {
-        title: "Smart skips",
-        value: session?.smartSkipped ?? "—",
-        loading: sessionLoading,
-      },
-      {
-        title: "Duration",
-        value: session?.testDurationFormatted ?? "—",
-        loading: sessionLoading,
-      },
-      { title: "Successful", value: session?.success ?? "—", loading: sessionLoading },
-      {
-        title: "Time saved",
-        value: session?.timeSaved > 0 ? session.timeSavedFormatted : "—",
-        loading: sessionLoading,
-      },
-    ],
-    [session, sessionLoading]
-  )
-
   const tablePagination = useMemo(
     () => ({
       page,
@@ -612,12 +591,36 @@ export const TestSessionResultsPage = () => {
     [launchesPage, launchesPageSize, launchesTotal]
   )
 
+  const buildsPagination = useMemo(
+    () => ({
+      page: buildsPage,
+      pageSize: buildsPageSize,
+      total: buildsTotal,
+    }),
+    [buildsPage, buildsPageSize, buildsTotal]
+  )
+
   const handleTableChange = (tablePagination) => {
     updateQueryParams({
       page: tablePagination.current,
       pageSize: tablePagination.pageSize,
     })
   }
+
+  const handleBuildsTableChange = (tablePagination) => {
+    updateQueryParams({
+      buildsPage: tablePagination.current,
+      buildsPageSize: tablePagination.pageSize,
+    })
+  }
+
+  const handleBuildClick = useCallback(
+    (build) => {
+      updateQueryParams({ buildId: build.buildId })
+      requestAnimationFrame(scrollToSessionCoverageCharts)
+    },
+    [updateQueryParams]
+  )
 
   const handleLaunchesTableChange = useCallback(
     (tablePagination) => {
@@ -823,39 +826,97 @@ export const TestSessionResultsPage = () => {
 
   return (
     <>
-      <div style={{ marginBottom: 24 }}>
-        <KeyValuePanel title="Session details" items={sessionInfoItems} />
-      </div>
-
-      <StatRow stats={statItems} />
-
-      <Title level={5} style={{ marginBottom: 16 }}>
-        Test files
-      </Title>
-      <MetricsDataTable
-        className="test-files-table"
-        rowKey="testPath"
-        columns={testFileColumns}
-        dataSource={testFiles}
-        loading={loading.testFiles}
-        pagination={tablePagination}
-        onTableChange={handleTableChange}
-        expandable={expandable}
-        onRow={(record) => ({
-          style: record.testDefinitions > 0 ? { cursor: "pointer" } : undefined,
-        })}
+      <SessionResultsSummary
+        testSessionId={session?.testSessionId ?? testSessionId}
+        testTaskId={session?.testTaskId}
+        testProjectId={session?.testProjectId}
+        sessionStartedAt={session?.sessionStartedAt}
+        createdBy={session?.createdBy}
+        result={session?.result}
+        total={session?.testDefinitions}
+        successful={session?.success}
+        failures={session?.failed}
+        smartSkips={session?.smartSkipped}
+        skipped={session?.skipped}
+        durationFormatted={session?.testDurationFormatted}
+        timeSavedFormatted={session?.timeSavedFormatted}
+        timeSaved={session?.timeSaved}
+        loading={sessionLoading}
       />
 
-      <div id={SESSION_COVERAGE_CHARTS_ID} style={{ marginTop: 16 }}>
-        <SessionCoverageFiltersBar
-          groupId={groupId}
-          testSessionId={testSessionId}
-          buildId={buildId}
-          testDefinitionId={testDefinitionId}
-          onTestDefinitionIdChange={(value) => updateCoverageParams({ testDefinitionId: value })}
+      <section className="test-session-section">
+        <Title level={5} className="test-session-section__title">
+          Test files
+        </Title>
+        <MetricsDataTable
+          className="test-files-table"
+          rowKey="testPath"
+          columns={testFileColumns}
+          dataSource={testFiles}
+          loading={loading.testFiles}
+          pagination={tablePagination}
+          onTableChange={handleTableChange}
+          expandable={expandable}
+          onRow={(record) => ({
+            style: record.testDefinitions > 0 ? { cursor: "pointer" } : undefined,
+          })}
         />
-        <TestSessionCoverageSection />
-      </div>
+      </section>
+
+      <section className="test-session-section">
+        <Title level={5} className="test-session-section__title">
+          Affected builds
+        </Title>
+        {hideCoverageReport ? (
+          <div className="test-session-coverage-preparing" role="status" aria-live="polite">
+            <div className="test-session-coverage-preparing__timer" aria-hidden="true">
+              <span className="test-session-coverage-preparing__dot" />
+              <span className="test-session-coverage-preparing__dot" />
+              <span className="test-session-coverage-preparing__dot" />
+            </div>
+            <Text strong className="test-session-coverage-preparing__title">
+              Detailed test report is being prepared
+            </Text>
+            <Text type="secondary" className="test-session-coverage-preparing__hint">
+              {sessionReportPending
+                ? "Come back in a minute and reload the page to see the results."
+                : "This can take a few minutes. Please come back later to see affected builds and coverage for this session."}
+            </Text>
+          </div>
+        ) : (
+          <>
+            <TestSessionBuildsTable
+              groupId={groupId}
+              builds={builds}
+              loading={loading.builds}
+              pagination={buildsPagination}
+              selectedBuildId={buildId}
+              onTableChange={handleBuildsTableChange}
+              onRowClick={handleBuildClick}
+            />
+
+            {buildId ? (
+              <div id={SESSION_COVERAGE_CHARTS_ID} className="test-session-section__impact">
+                <SessionSelectedBuildPanel groupId={groupId} buildId={buildId} />
+                <SessionCoverageFiltersBar
+                  groupId={groupId}
+                  testSessionId={testSessionId}
+                  buildId={buildId}
+                  testDefinitionId={testDefinitionId}
+                  onTestDefinitionIdChange={(value) =>
+                    updateCoverageParams({ testDefinitionId: value })
+                  }
+                />
+                <TestSessionCoverageSection buildId={buildId} />
+              </div>
+            ) : (
+              <Text type="secondary" className="test-session-section__hint">
+                Select a build to view coverage.
+              </Text>
+            )}
+          </>
+        )}
+      </section>
     </>
   )
 }

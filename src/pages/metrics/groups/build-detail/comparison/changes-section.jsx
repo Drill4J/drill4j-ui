@@ -21,7 +21,7 @@ import { ComparisonChangesFilterChips } from "./comparison-changes-filter-chips"
  * @param {{
  *   build: object,
  *   baselineBuild: object,
- *   coverageFilters?: { testResults?: string[], envIds?: string[], branches?: string[] },
+ *   coverageFilters?: { testResults?: string[], testProjectIds?: string[], envIds?: string[], branches?: string[] },
  *   includeOtherBuilds?: boolean,
  *   changeTypes?: string[],
  *   hasImpactedTests?: boolean,
@@ -64,7 +64,11 @@ export function ChangesSection({
   onImpactedMethodsTotalChange,
 }) {
   return (
-    <Space direction="vertical" size={16} style={{ display: "flex" }}>
+    <Space
+      direction="vertical"
+      size={16}
+      style={{ display: "flex", width: "100%", maxWidth: "100%", minWidth: 0 }}
+    >
       <ComparisonChangesFilterChips
         changeTypes={changeTypes}
         hasImpactedTests={hasImpactedTests}

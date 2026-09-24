@@ -54,7 +54,6 @@ export function WhatIsGroupTipBanner() {
       icon={<ClusterOutlined />}
       visual={<MockGroupVisual />}
       dismissAriaLabel="Dismiss group explanation"
-      style={{ marginTop: 0, marginBottom: 16 }}
     />
   )
 }

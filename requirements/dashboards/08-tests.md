@@ -7,7 +7,7 @@
 
 Group-scoped list of test sessions for the selected group. Same table, filters, sort, and pagination as the build Tests tab ([04-build-tests.md](./04-build-tests.md)), but **without** a fixed `buildId` — sessions span all apps/builds in the group.
 
-Entry: **Test Sessions** button on the group apps page (`/metrics/:groupId`). Row click → session detail ([09-tests-results.md](./09-tests-results.md)).
+Entry: **Test Sessions** button on the group apps page (`/metrics/:groupId`). Row click → session page ([09-tests-results.md](./09-tests-results.md)) without a build preselected (user picks build on the page to see coverage).
 
 ## Routing, auth & sidebar
 

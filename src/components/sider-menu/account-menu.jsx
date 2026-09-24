@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ApiOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons"
+import { ApiOutlined, LockOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons"
 import { Link } from "react-router-dom"
 
 const ACCOUNT_SUBMENU_KEY = "account-submenu"
@@ -40,8 +40,8 @@ export function getAccountMenuItems() {
         },
         {
           key: "/my-account",
-          icon: <UserOutlined />,
-          label: <Link to="/my-account">My Account</Link>,
+          icon: <LockOutlined />,
+          label: <Link to="/my-account">Password</Link>,
         },
         {
           key: "/preferences",
