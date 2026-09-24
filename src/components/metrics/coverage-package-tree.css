@@ -31,20 +31,21 @@
   word-break: break-word;
 }
 
-/* Nested panels break out under sibling columns; cells must not clip them. */
+/* Panels sit in the first column; let them paint under sibling columns. */
 .coverage-package-tree td.ant-table-cell:has(.coverage-package-classes-panel),
 .coverage-package-classes-panel td.ant-table-cell:has(.coverage-class-methods-panel) {
   overflow: visible !important;
 }
 
 /*
- * Nested panels live in the first column. Extend them under fixed-width
- * sibling columns + horizontal cell paddings so nested coverage bars stay
- * the same width as the parent row.
+ * Extend under fixed sibling columns to the parent row's right edge.
+ * Negative margin keeps the extra width out of the cell's layout size.
  */
 .coverage-package-classes-panel {
-  /* Coverage column 180 + 16px cell padding */
-  width: calc(100% + 196px);
+  /* Coverage 180 + 16px cell padding */
+  --coverage-panel-overhang: 196px;
+  width: calc(100% + var(--coverage-panel-overhang));
+  margin-right: calc(-1 * var(--coverage-panel-overhang));
   margin-top: 8px;
   padding: 10px 0 6px;
   border-top: 1px solid var(--d4j-line, #d3dee8);
@@ -58,14 +59,29 @@
 
 .coverage-package-classes-panel__header {
   margin-bottom: 8px;
+  padding-inline: 8px;
   font-size: 12px;
   font-family: var(--d4j-display, "Space Grotesk", sans-serif);
   color: var(--d4j-muted, #5a7186);
 }
 
 .coverage-class-methods-panel {
-  /* Methods 110 + Coverage 180 + 16px cell padding */
-  width: calc(100% + 306px);
+  /*
+   * Flush with the classes table (not the packages tree).
+   * 100% is the Class cell content box; pull back 8px cell padding and
+   * extend only under Methods (110) + Coverage (180).
+   */
+  --coverage-cell-pad: 8px;
+  --coverage-methods-col: 110px;
+  --coverage-bar-col: 180px;
+  width: calc(
+    100% + var(--coverage-cell-pad) + var(--coverage-methods-col) + var(--coverage-bar-col) +
+      var(--coverage-cell-pad)
+  );
+  margin-left: calc(-1 * var(--coverage-cell-pad));
+  margin-right: calc(
+    -1 * (var(--coverage-methods-col) + var(--coverage-bar-col) + var(--coverage-cell-pad))
+  );
   margin-top: 8px;
   padding: 8px 0 4px;
   box-sizing: border-box;
@@ -76,6 +92,7 @@
 .coverage-class-methods-panel__header {
   margin-top: 4px;
   margin-bottom: 8px;
+  padding-inline: 8px;
   font-size: 12px;
   font-family: var(--d4j-display, "Space Grotesk", sans-serif);
   color: var(--d4j-muted, #5a7186);
@@ -86,7 +103,7 @@
  * `.ant-table-wrapper:only-child` sits under a tbody. Cancel only that.
  */
 .coverage-package-classes-panel .ant-table-wrapper:only-child .ant-table,
-.coverage-class-methods-panel .ant-table-wrapper:only-child .ant-table {
+.coverage-class-methods-panel .ant-table-wrapper .ant-table {
   margin-block: 0 !important;
   margin-inline-start: 0 !important;
   margin-inline-end: 0 !important;
