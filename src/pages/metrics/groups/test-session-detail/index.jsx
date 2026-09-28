@@ -14,5 +14,4 @@
  * limitations under the License.
  */
 export { TestSessionLayout } from "./layout"
-export { TestSessionLegacyBuildRedirect } from "./legacy-build-redirect"
 export { TestSessionResultsPage } from "./results"

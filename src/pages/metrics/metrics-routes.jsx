@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createRoutesFromElements, Navigate, Outlet, Route, useParams } from "react-router-dom"
+import { createRoutesFromElements, Outlet, Route } from "react-router-dom"
 import { GroupMetricsLayout } from "./group-metrics-layout"
 import { GroupsPage } from "./groups"
 import { GroupAppsPage } from "./groups/group-apps"
@@ -26,14 +26,8 @@ import { BuildDetailLayout, BuildSummaryPage, BuildTestsPage, BuildComparisonPag
 import { TestSessionsPage } from "./groups/test-sessions"
 import {
   TestSessionLayout,
-  TestSessionLegacyBuildRedirect,
   TestSessionResultsPage,
 } from "./groups/test-session-detail"
-
-function SettingsToDataManagementRedirect() {
-  const { groupId } = useParams()
-  return <Navigate to={`/metrics/${groupId}/data-management`} replace />
-}
 
 /**
  * Group is the metrics context (like Report Portal project).
@@ -50,10 +44,6 @@ export const metricsRoutes = (
         path="data-management"
         handle={{ breadcrumb: "Data Management" }}
         element={<DataManagementPage />}
-      />
-      <Route
-        path="settings"
-        element={<SettingsToDataManagementRedirect />}
       />
       <Route path="apps/:appId" handle={{ breadcrumb: "appId" }} element={<Outlet />}>
         <Route element={<AppDetailLayout />}>
@@ -87,10 +77,6 @@ export const metricsRoutes = (
           element={<TestSessionLayout />}
         >
           <Route index element={<TestSessionResultsPage />} />
-          <Route
-            path="builds/:buildId"
-            element={<TestSessionLegacyBuildRedirect />}
-          />
         </Route>
       </Route>
     </Route>

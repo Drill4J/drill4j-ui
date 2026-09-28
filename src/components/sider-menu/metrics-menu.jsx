@@ -40,7 +40,6 @@ const PATH_ROUTES = {
   "test-sessions/:testSessionId": { level: "test-sessions", page: "test-session" },
   "test-sessions": { level: "test-sessions", page: "test-sessions" },
   "data-management": { level: "group", page: "data-management" },
-  settings: { level: "group", page: "data-management" },
   "": { level: "group", page: "apps" },
 }
 
