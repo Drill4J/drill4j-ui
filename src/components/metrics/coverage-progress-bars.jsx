@@ -84,6 +84,7 @@ function normalizeSlices(slices = []) {
  *   slices?: { name: string, value: number }[],
  *   loading?: boolean,
  *   sliceLabel?: "percent" | "count",
+ *   showLegend?: boolean,
  *   className?: string,
  * }} props
  */
@@ -93,6 +94,7 @@ export function CoverageProgressBar({
   slices = [],
   loading = false,
   sliceLabel = "percent",
+  showLegend = true,
   className,
 }) {
   const byKey = sliceValueMap(slices)
@@ -119,7 +121,7 @@ export function CoverageProgressBar({
       <div className="coverage-progress-bar__header">
         <div className="coverage-progress-bar__title-row">
           <h3 className="coverage-progress-bar__title">{title}</h3>
-          {help ? (
+          {help && showLegend ? (
             <TitleHelpTooltip
               title={help}
               ariaLabel={`How ${coverageUnit ?? "coverage"} coverage works`}
@@ -130,7 +132,7 @@ export function CoverageProgressBar({
           <span className="coverage-progress-bar__percent">
             {formatCoveragePercent(coverageRatio)}
           </span>
-          {total > 0 ? (
+          {showLegend && total > 0 ? (
             <span className="coverage-progress-bar__total">
               {covered.toLocaleString()} / {total.toLocaleString()}
             </span>
@@ -163,28 +165,30 @@ export function CoverageProgressBar({
         )}
       </div>
 
-      <div className="coverage-progress-bar__counts">
-        {SEGMENT_META.filter((meta) => meta.id !== "other" || segmentValue(byKey, meta) > 0).map(
-          (meta) => {
-            const value = segmentValue(byKey, meta)
-            const ratio = total > 0 ? value / total : 0
-            return (
-              <span key={meta.id} className="coverage-progress-bar__count">
-                <span
-                  className="coverage-progress-bar__swatch"
-                  style={{ background: meta.color }}
-                />
-                <span className="coverage-progress-bar__count-name">{meta.name}</span>
-                <span className="coverage-progress-bar__count-value">
-                  {sliceLabel === "count"
-                    ? value.toLocaleString()
-                    : `${value.toLocaleString()} · ${formatCoveragePercent(ratio)}`}
+      {showLegend ? (
+        <div className="coverage-progress-bar__counts">
+          {SEGMENT_META.filter((meta) => meta.id !== "other" || segmentValue(byKey, meta) > 0).map(
+            (meta) => {
+              const value = segmentValue(byKey, meta)
+              const ratio = total > 0 ? value / total : 0
+              return (
+                <span key={meta.id} className="coverage-progress-bar__count">
+                  <span
+                    className="coverage-progress-bar__swatch"
+                    style={{ background: meta.color }}
+                  />
+                  <span className="coverage-progress-bar__count-name">{meta.name}</span>
+                  <span className="coverage-progress-bar__count-value">
+                    {sliceLabel === "count"
+                      ? value.toLocaleString()
+                      : `${value.toLocaleString()} · ${formatCoveragePercent(ratio)}`}
+                  </span>
                 </span>
-              </span>
-            )
-          }
-        )}
-      </div>
+              )
+            }
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }

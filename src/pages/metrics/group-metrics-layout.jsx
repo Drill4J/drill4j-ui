@@ -18,6 +18,7 @@ import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom"
 import { DataManagementTipBanner } from "./groups/data-management/data-management-tip-banner"
 import { WhatIsAppTipBanner } from "./groups/group-apps/what-is-app-tip-banner"
 import { GroupTestSessionsTipBanner } from "./groups/test-sessions/group-test-sessions-tip-banner"
+import { ReleaseTracksTipBanner } from "./groups/release-tracks/release-tracks-tip-banner"
 import "./group-metrics-layout.css"
 
 const { Title } = Typography
@@ -25,6 +26,7 @@ const { Title } = Typography
 const TAB_ITEMS = [
   { key: "apps", label: "Apps", path: "" },
   { key: "test-sessions", label: "Test Sessions", path: "test-sessions" },
+  { key: "release-tracks", label: "Release tracks", path: "release-tracks" },
   { key: "data-management", label: "Data Management", path: "data-management" },
 ]
 
@@ -72,6 +74,7 @@ export function GroupMetricsLayout() {
       <div className="group-metrics-layout__tips">
         {activeKey === "apps" ? <WhatIsAppTipBanner /> : null}
         {activeKey === "test-sessions" ? <GroupTestSessionsTipBanner /> : null}
+        {activeKey === "release-tracks" ? <ReleaseTracksTipBanner /> : null}
         {activeKey === "data-management" ? <DataManagementTipBanner /> : null}
       </div>
       <Title level={3} className="group-metrics-layout__title">

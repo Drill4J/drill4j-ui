@@ -19,6 +19,7 @@ import {
   DatabaseOutlined,
   ExperimentOutlined,
   FileSearchOutlined,
+  FlagOutlined,
   LineChartOutlined,
   PieChartOutlined,
   StopOutlined,
@@ -37,6 +38,12 @@ const PATH_ROUTES = {
   "apps/:appId/trends": { level: "app", page: "trends" },
   "apps/:appId/method-ignore-rules": { level: "app", page: "exclusion-rules" },
   "apps/:appId": { level: "app", page: "builds" },
+  "release-tracks/:trackId/milestones/new": { level: "release-tracks", page: "milestone-new" },
+  "release-tracks/:trackId/milestones/:milestoneId": { level: "release-tracks", page: "milestone" },
+  "release-tracks/:trackId/trends": { level: "release-tracks", page: "track-trends" },
+  "release-tracks/new": { level: "release-tracks", page: "track-new" },
+  "release-tracks/:trackId": { level: "release-tracks", page: "track" },
+  "release-tracks": { level: "release-tracks", page: "release-tracks" },
   "test-sessions/:testSessionId": { level: "test-sessions", page: "test-session" },
   "test-sessions": { level: "test-sessions", page: "test-sessions" },
   "data-management": { level: "group", page: "data-management" },
@@ -65,6 +72,8 @@ function parseMetricsPath(pathname) {
     appId: undefined,
     buildId: undefined,
     testSessionId: undefined,
+    trackId: undefined,
+    milestoneId: undefined,
   }
   if (!pathname.startsWith("/metrics")) return empty
 
@@ -80,6 +89,8 @@ function parseMetricsPath(pathname) {
         appId: undefined,
         buildId: undefined,
         testSessionId: undefined,
+        trackId: undefined,
+        milestoneId: undefined,
         ...params,
         ...meta,
       }
@@ -88,16 +99,26 @@ function parseMetricsPath(pathname) {
   return empty
 }
 
-function metricsPaths({ groupId, appId, buildId, testSessionId }) {
+function metricsPaths({ groupId, appId, buildId, testSessionId, trackId, milestoneId }) {
   const group = groupId ? `/metrics/${groupId}` : "/metrics"
   const sessions = groupId && `${group}/test-sessions`
+  const releaseTracks = groupId && `${group}/release-tracks`
   const app = groupId && appId && `${group}/apps/${appId}`
   const build = app && buildId && `${app}/builds/${encodeURIComponent(buildId)}`
   const session = sessions && testSessionId && `${sessions}/${encodeURIComponent(testSessionId)}`
+  const track = releaseTracks && trackId && `${releaseTracks}/${encodeURIComponent(trackId)}`
+  const trackTrends = track && `${track}/trends`
+  const milestoneNew = track && `${track}/milestones/new`
+  const milestone = track && milestoneId && `${track}/milestones/${encodeURIComponent(milestoneId)}`
 
   return {
     group,
     sessions,
+    releaseTracks,
+    track,
+    trackTrends,
+    milestoneNew,
+    milestone,
     dataManagement: groupId && `${group}/data-management`,
     app,
     exclusionRules: app && `${app}/method-ignore-rules`,
@@ -145,6 +166,12 @@ export function getMetricsSelectedKeys(location) {
     "data-management": p.dataManagement,
     "test-sessions": p.sessions,
     "test-session": p.session,
+    "release-tracks": p.releaseTracks,
+    "track-new": p.releaseTracks,
+    track: p.track,
+    "track-trends": p.trackTrends,
+    "milestone-new": p.milestoneNew,
+    milestone: p.milestone,
     builds: p.app,
     "exclusion-rules": p.exclusionRules,
     trends: p.trends,
@@ -168,7 +195,7 @@ export function mergeMenuOpenKeys(keys) {
 /** @returns {import("antd").MenuProps["items"]} */
 export function getMetricsMenuItems(location) {
   const ctx = parseMetricsPath(location.pathname)
-  const { level, groupId, appId, buildId, testSessionId } = ctx
+  const { level, page, groupId, appId, buildId, testSessionId, trackId, milestoneId } = ctx
   const p = metricsPaths(ctx)
 
   let children = []
@@ -186,6 +213,7 @@ export function getMetricsMenuItems(location) {
       contextSection(`group-${groupId}`, groupId, [
         linkItem(p.group, "Apps", <AppstoreOutlined />),
         linkItem(p.sessions, "Test Sessions", <ExperimentOutlined />),
+        linkItem(p.releaseTracks, "Release tracks", <FlagOutlined />),
         linkItem(p.dataManagement, "Data Management", <DatabaseOutlined />),
       ]),
     ]
@@ -210,6 +238,23 @@ export function getMetricsMenuItems(location) {
           ])
         )
       }
+    }
+
+    if (level === "release-tracks" && trackId) {
+      const childrenItems = [
+        linkItem(p.track, "Milestones", <FlagOutlined />),
+        linkItem(p.trackTrends, "Trends", <LineChartOutlined />),
+      ]
+      if (page === "milestone-new" && p.milestoneNew) {
+        childrenItems.push(linkItem(p.milestoneNew, "New milestone", <FlagOutlined />))
+      }
+      if (page === "milestone" && p.milestone) {
+        childrenItems.push(linkItem(p.milestone, "Milestone report", <PieChartOutlined />))
+      }
+      children.push(
+        divider("group-track-divider"),
+        contextSection(`track-${trackId}`, trackId, childrenItems)
+      )
     }
 
     if (level === "test-sessions" && testSessionId) {

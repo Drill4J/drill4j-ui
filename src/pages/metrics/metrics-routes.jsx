@@ -28,6 +28,13 @@ import {
   TestSessionLayout,
   TestSessionResultsPage,
 } from "./groups/test-session-detail"
+import { ReleaseTracksPage } from "./groups/release-tracks"
+import { CreateTrackPage } from "./groups/release-tracks/create-track"
+import { CreateMilestonePage } from "./groups/release-tracks/create-milestone"
+import { MilestoneReportPage } from "./groups/release-tracks/milestone-report"
+import { TrackPage } from "./groups/release-tracks/track-page"
+import { TrackTrendsPage } from "./groups/release-tracks/track-trends"
+import { getTrack } from "./groups/release-tracks/mock-data"
 
 /**
  * Group is the metrics context (like Report Portal project).
@@ -68,6 +75,32 @@ export const metricsRoutes = (
           <Route path="tests" element={<BuildTestsPage />} />
           <Route path="comparison" element={<BuildComparisonPage />} />
         </Route>
+      </Route>
+      <Route path="release-tracks" handle={{ breadcrumb: "Release tracks" }} element={<Outlet />}>
+        <Route index element={<ReleaseTracksPage />} />
+        <Route path="new" handle={{ breadcrumb: "New track" }} element={<CreateTrackPage />} />
+        <Route
+          path=":trackId/trends"
+          handle={{ breadcrumb: "Trends" }}
+          element={<TrackTrendsPage />}
+        />
+        <Route
+          path=":trackId/milestones/new"
+          handle={{ breadcrumb: "New milestone" }}
+          element={<CreateMilestonePage />}
+        />
+        <Route
+          path=":trackId/milestones/:milestoneId"
+          handle={{ breadcrumb: "milestoneId" }}
+          element={<MilestoneReportPage />}
+        />
+        <Route
+          path=":trackId"
+          handle={{
+            breadcrumb: ({ params }) => getTrack(params.trackId)?.name ?? params.trackId,
+          }}
+          element={<TrackPage />}
+        />
       </Route>
       <Route path="test-sessions" handle={{ breadcrumb: "Test Sessions" }} element={<Outlet />}>
         <Route index element={<TestSessionsPage />} />

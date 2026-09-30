@@ -70,6 +70,9 @@ export const UI_TIPS = {
   exclusionRules: {
     key: "uiTips.exclusionRules.dismissed",
   },
+  releaseTracks: {
+    key: "uiTips.releaseTracks.dismissed",
+  },
 }
 
 function defaultStorageKey(tipId) {

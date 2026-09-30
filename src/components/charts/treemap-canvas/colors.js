@@ -38,6 +38,20 @@ export const COLORSCALES = {
     [0.9, "#1A9850"],
     [1.0, "#006837"],
   ],
+  /** Stronger red → amber → green for KPI text (DEFAULT is pastel for treemap fills). */
+  VIVID: [
+    [0.0, "#D32F2F"],
+    [0.1, "#E64A19"],
+    [0.2, "#EF6C00"],
+    [0.3, "#F9A825"],
+    [0.4, "#FBC02D"],
+    [0.5, "#C0CA33"],
+    [0.6, "#7CB342"],
+    [0.7, "#43A047"],
+    [0.8, "#2E7D32"],
+    [0.9, "#1B7A4E"],
+    [1.0, "#00695C"],
+  ],
 }
 
 

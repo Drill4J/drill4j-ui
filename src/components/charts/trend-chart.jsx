@@ -141,6 +141,93 @@ function formatIntegerTick(value) {
   return String(Math.round(value))
 }
 
+const HUD_TONE_FILL = {
+  up: "#149a7c",
+  down: "#e4565c",
+  warn: "#c9992e",
+  flat: "#5a7186",
+}
+
+function estimateHudWidth(text) {
+  return Math.max(56, Math.round(String(text).length * 6.8 + 18))
+}
+
+function makeSeriesDot({
+  data,
+  color,
+  clickable,
+  onPointClick,
+  annotateLatest,
+  seriesKey,
+}) {
+  const lastIndex = Math.max(0, (data?.length ?? 1) - 1)
+  const previous = lastIndex > 0 ? data[lastIndex - 1] : undefined
+
+  return function SeriesDot(props) {
+    const { cx, cy, index, payload, stroke } = props
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) {
+      return null
+    }
+    const isLatest = index === lastIndex
+    const isRecent = index >= lastIndex - 2
+    const radius = isLatest ? 6 : isRecent ? 4.5 : 3
+    const strokeColor = stroke || color
+    const annotation =
+      isLatest && annotateLatest?.seriesKey === seriesKey
+        ? annotateLatest.getAnnotation?.(payload, previous)
+        : null
+    const hudWidth = annotation ? estimateHudWidth(annotation.text) : 0
+
+    return (
+      <g
+        style={clickable ? { cursor: "pointer" } : undefined}
+        onClick={
+          clickable
+            ? (event) => {
+                event.stopPropagation()
+                if (payload) {
+                  onPointClick(payload)
+                }
+              }
+            : undefined
+        }
+      >
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="#fff"
+          stroke={strokeColor}
+          strokeWidth={isLatest ? 2.5 : 2}
+        />
+        {annotation ? (
+          <g transform={`translate(${cx}, ${cy - 20})`}>
+            <rect
+              x={-hudWidth / 2}
+              y={-11}
+              width={hudWidth}
+              height={18}
+              rx={9}
+              fill="#fff"
+              stroke="#d3dee8"
+            />
+            <text
+              textAnchor="middle"
+              y={2}
+              fill={HUD_TONE_FILL[annotation.tone] || HUD_TONE_FILL.flat}
+              fontSize={11}
+              fontWeight={700}
+              fontFamily='Space Grotesk, Figtree, "Segoe UI", sans-serif'
+            >
+              {annotation.text}
+            </text>
+          </g>
+        ) : null}
+      </g>
+    )
+  }
+}
+
 /**
  * @param {{
  *   title: string,
@@ -158,6 +245,10 @@ function formatIntegerTick(value) {
  *   yTickFormatter?: (value: number) => string,
  *   valueFormatter?: (value: number, seriesKey: string) => string,
  *   onPointClick?: (point: object) => void,
+ *   annotateLatest?: {
+ *     seriesKey: string,
+ *     getAnnotation: (latest: object, previous?: object) => { text: string, tone?: string } | null,
+ *   },
  * }} props
  */
 export function TrendChart({
@@ -176,6 +267,7 @@ export function TrendChart({
   yTickFormatter,
   valueFormatter,
   onPointClick,
+  annotateLatest,
 }) {
   const isEmpty = !data?.length
   const clickable = typeof onPointClick === "function"
@@ -251,6 +343,10 @@ export function TrendChart({
   // Paint areas under coverage first (back to front), then total as a line on top.
   const areaSeries = series.filter((item) => (item.kind || (chartType === "area" ? "area" : "line")) === "area")
   const lineSeries = series.filter((item) => (item.kind || (chartType === "area" ? "area" : "line")) === "line")
+  const useHudDots = Boolean(annotateLatest)
+  const chartMargin = useHudDots
+    ? { top: 28, right: 28, bottom: 8, left: 0 }
+    : { top: 8, right: 16, bottom: 8, left: 0 }
 
   const cardTitle = help ? (
     <span>
@@ -268,7 +364,7 @@ export function TrendChart({
           No data
         </Text>
       ) : (
-        <div style={{ width: "100%", height, overflow: "hidden" }}>
+        <div style={{ width: "100%", height, overflow: useHudDots ? "visible" : "hidden" }}>
           <ResponsiveContainer
             width="100%"
             height="100%"
@@ -280,7 +376,7 @@ export function TrendChart({
           >
             <Chart
               data={data}
-              margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
+              margin={chartMargin}
               style={clickable ? { cursor: "pointer" } : undefined}
               onClick={handleChartClick}
               onMouseMove={handleMouseMove}
@@ -330,8 +426,19 @@ export function TrendChart({
                   fillOpacity={stacked ? 0.85 : 0.35}
                   strokeWidth={2}
                   stackId={stacked ? item.stackId || "stack" : undefined}
-                  dot={defaultDot}
-                  activeDot={activeDot}
+                  dot={
+                    useHudDots
+                      ? makeSeriesDot({
+                          data,
+                          color: item.color,
+                          clickable,
+                          onPointClick,
+                          annotateLatest,
+                          seriesKey: item.key,
+                        })
+                      : defaultDot
+                  }
+                  activeDot={useHudDots ? false : activeDot}
                   isAnimationActive={false}
                 />
               ))}
@@ -343,8 +450,19 @@ export function TrendChart({
                   name={item.label}
                   stroke={item.color}
                   strokeWidth={2}
-                  dot={defaultDot}
-                  activeDot={activeDot}
+                  dot={
+                    useHudDots
+                      ? makeSeriesDot({
+                          data,
+                          color: item.color,
+                          clickable,
+                          onPointClick,
+                          annotateLatest,
+                          seriesKey: item.key,
+                        })
+                      : defaultDot
+                  }
+                  activeDot={useHudDots ? false : activeDot}
                   isAnimationActive={false}
                 />
               ))}
