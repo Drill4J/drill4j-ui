@@ -24,7 +24,7 @@ import {
   Popconfirm,
   Typography,
 } from "antd"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useHref, useLocation, useNavigate } from "react-router-dom"
 import { signIn } from "../../../modules/auth/api-auth"
 
 const SignIn = ({
@@ -34,6 +34,8 @@ const SignIn = ({
   oAuth2ButtonText,
   oAuthPath,
 }) => {
+  const oAuthHref = useHref(oAuthPath)
+
   return (
     <>
       <Typography.Text
@@ -64,7 +66,7 @@ const SignIn = ({
               type="primary"
               htmlType="submit"
               className="login-form-button"
-              onClick={() => window.location.pathname = oAuthPath}
+              onClick={() => window.location.assign(oAuthHref)}
             >
               {oAuth2ButtonText || "Sign in with Auth Provider"}
             </Button>
@@ -79,6 +81,7 @@ const SignInForm = ({ isSignUpEnabled, isOAuth2Enabled }) => {
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const redirectPath = useMemo(() => {
     const params = new URLSearchParams(location.search)

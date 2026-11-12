@@ -24,7 +24,8 @@ COPY --from=build /app/build /usr/share/nginx/html
 WORKDIR /
 # The basepath is the URL path where the UI will be served.
 # Empty string corresponds to "/"
-# Change it from "" to "/my-path" if the UI is not served from the root.
+# Set it to "/my-path" when the Ingress exposes the UI under that prefix.
+# Configure the Ingress to strip this prefix before forwarding requests to this container.
 ENV BASE_PATH=""
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

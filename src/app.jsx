@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo } from "react"
 import {
   Alert,
   App as AntdApp,
@@ -27,6 +27,7 @@ import {
   Routes,
   Navigate,
   useLocation,
+  useHref,
   Link,
 } from "react-router-dom"
 
@@ -146,11 +147,11 @@ const BaseRouter = () => {
   }
 
   if (!isSignedIn && !isAuthRoute) {
-    const currentUrl = new URL(window.location.href)
-    const existingRedirect = currentUrl.searchParams.get('redirect')
+    const currentUrl = new URLSearchParams(location.search)
+    const existingRedirect = currentUrl.get("redirect")
     const redirectPath = existingRedirect && existingRedirect.trim() !== ''
       ? existingRedirect
-      : window.location.pathname + window.location.search
+      : location.pathname + location.search
     return <Navigate to={`/sign-in?redirect=${encodeURIComponent(redirectPath)}`} />
   }
   
@@ -263,7 +264,7 @@ function renderAuthRoutes(authConfig) {
 
   const oAuthPath = "/oauth/login"
   if (!simpleAuth?.enabled && oauth2?.enabled && oauth2?.automaticSignIn) {
-    return <Navigate to={oAuthPath} />
+    return <OAuthRedirect to={oAuthPath} />
   }
 
   return (
@@ -285,6 +286,16 @@ function renderAuthRoutes(authConfig) {
       )}
     </Routes>
   )
+}
+
+const OAuthRedirect = ({ to }) => {
+  const href = useHref(to)
+
+  useEffect(() => {
+    window.location.assign(href)
+  }, [href])
+
+  return null
 }
 
 export default App
