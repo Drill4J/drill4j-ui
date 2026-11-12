@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Install deps
 COPY ./package.json ./package.json
-RUN npm install
+COPY ./package-lock.json ./package-lock.json
+RUN npm ci
 
 # Build
 COPY ./src ./src
@@ -24,7 +25,8 @@ COPY --from=build /app/build /usr/share/nginx/html
 WORKDIR /
 # The basepath is the URL path where the UI will be served.
 # Empty string corresponds to "/"
-# Change it from "" to "/my-path" if the UI is not served from the root.
+# Set it to "/my-path" when the Ingress exposes the UI under that prefix.
+# Nginx strips this prefix; Ingress prefix stripping is optional.
 ENV BASE_PATH=""
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

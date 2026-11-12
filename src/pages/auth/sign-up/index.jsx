@@ -32,7 +32,7 @@ const SignUp = () => {
         password: values.password
       })
       message.success("Sign-up completed! Redirecting...")
-      window.location.href = "/sign-in"
+      navigate("/sign-in")
     } catch (error) {
       setError(error.response?.data?.message || error.message || "Something went wrong!")
     }
