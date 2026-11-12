@@ -26,7 +26,7 @@ WORKDIR /
 # The basepath is the URL path where the UI will be served.
 # Empty string corresponds to "/"
 # Set it to "/my-path" when the Ingress exposes the UI under that prefix.
-# Configure the Ingress to strip this prefix before forwarding requests to this container.
+# Nginx strips this prefix; Ingress prefix stripping is optional.
 ENV BASE_PATH=""
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
