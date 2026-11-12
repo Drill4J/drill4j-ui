@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Install deps
 COPY ./package.json ./package.json
-RUN npm install
+COPY ./package-lock.json ./package-lock.json
+RUN npm ci
 
 # Build
 COPY ./src ./src
