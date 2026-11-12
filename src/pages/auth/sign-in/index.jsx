@@ -34,7 +34,8 @@ const SignIn = ({
   oAuth2ButtonText,
   oAuthPath,
 }) => {
-  const oAuthHref = useHref(oAuthPath)
+  const location = useLocation()
+  const oAuthHref = useHref({ pathname: oAuthPath, search: location.search })
 
   return (
     <>
